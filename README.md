@@ -1,3 +1,5 @@
+> 📍 **Roadmap geral do produto:** [Acompanhar desenvolvimento, Rádio/TV Indoor, financeiro e deploy](roadmap.md).
+
 # Meu Comercial
 
 Landing page profissional para apresentação da plataforma Meu Comercial, uma solução de TV Corporativa e Mídia Indoor em nuvem voltada para comunicação interna, sinalização digital, campanhas comerciais e gestão de conteúdo em telas.
