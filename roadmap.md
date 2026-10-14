@@ -180,6 +180,24 @@
 - **Aceite:** implementação de estrutura e APIs não equivale a homologação global. PHPUnit, MySQL migrations, TS/Vite, testes de concorrência e QA de Player **não foram executados**. GitHub Actions não foi utilizado a pedido do usuário. Progresso matemático mantém API **17/40 (42,5%)**, Admin **16/37 (43,2%)**, Site **8/31 (25,8%)**, total **41/108 = 38,0%** até aceite integral dos marcos.
 - **Próxima etapa obrigatória:** consolidar toda a base multi-tenant (agências × clientes × papéis), bootstrapping/migração de clientes e acervo legado, ingestão em lote S3 e Player TV capaz de executar overlays; depois testes ponta a ponta e observabilidade.
 
+## Refatoração de bibliotecas de áudio globais e exclusivas — 14/10/2026
+
+**Status:** implementação incremental em PRs definitivos, **não homologada**. Auditoria identificou que o domínio global/privado já existia na `main`: tabelas `musics` (title, artist, album, genre, duration_seconds, bpm, s3_key_path, is_active, direitos/licença), `commercial_spots` (tenant_id agência, client_id supermercado, tipo, validade, S3), fonte de áudio tipada em playlists Rádio e camadas `background/voiceover` de TV. **Não** criar segunda biblioteca, nem migrar/promover conteúdo legado automaticamente.
+
+- **API:** [PR #30](https://github.com/paulodias-dev/meucomercial-api/pull/30) — refatoração `AudioAssetAccess::agencyForBrowsing` com tenant ativo e membership JWT, filtros SQL por agência nas playlists (inclusive aquelas só com Music global), programações de Rádio/TV e acervo histórico client-scoped; portal cliente só lista spots próprios vigentes. Migração MySQL incremental com FK composta `commercial_spots(tenant_id,client_id)` → vínculo agency-client, CHECK exclusivo entre media_asset_id vs source type/id e CHECK de papel de áudio TV. Pré-validação de históricos inconsistentes e testes de acesso cruzado na `AudioAssetIsolationTest`. Documento `docs/audio-asset-tenancy-architecture.md` atualizado.
+- **Admin:** [PR #21](https://github.com/paulodias-dev/meucomercial-admin/pull/21) — seleção de agência por nome e propagação segura de `X-Agency-Tenant` para listagens, upload legado, playlists, Rádio, TV/Story Builder e agendamentos; serviços de API deixam de misturar filtro de agência com query string. Nenhum usuário digita tenant_id ou client_id em formulário.
+- **Site:** revisão documental sem endpoints públicos novos: música global e spot privado continuam disponíveis **somente** por JWT/backoffice/Player autorizados; não tornar S3 público nem servir spots por URLs permanentes.
+
+**Política de segurança:** Music é catálogo global apenas de leitura para usuários autenticados; Playlist, Schedule, MediaAsset legado e CommercialSpot **não são globais**. Spot pertence estritamente ao par agência/cliente; as decisões de autorização são tomadas pela API, não pelo header. O JWT de Player resolve o cliente independente do header do navegador. Spot promocional inválido/expirado não aparece no portal cliente.
+
+**Bloqueadores:** `TENANCY_ENABLED=false` é o default do sistema legado; a refatoração não autoriza ativá-la em produção sem migrar/instrumentar tenants, memberships e outros módulos do SaaS. A dependência S3 foi referenciada no Composer, porém o `composer.lock` permanece sem regeneração verificada, o que **impede deploy confiável de uploads/URLs assinadas**. Não houve execução PHPUnit, MySQL migration, build Vite ou testes físicos do Player; GitHub Actions não consultado a pedido.
+
+**Aceite pendente:** executar preflight sobre dados reais; ensaiar migration e constraints MySQL 8; regerar `composer.lock` em ambiente com Composer e realizar testes de URL temporária, MIME, licença, revogação, expiração e composição real de áudio na TV. Validar multi-tenant pleno antes de distribuir a agências. Os marcos abrangentes continuam parcialmente aceitos; **nenhum `[x]` adicional** atribuído sem QA.
+
+**Progresso global preservado:** API **17/40 = 42,5%**, Admin **16/37 = 43,2%**, Site **8/31 = 25,8%**; plataforma **41/108 = 38,0%**.
+
+**Próxima entrega:** migração assistida de mídias legadas com inventário de licenças/deduplicação SHA-256 sem conceder acesso cruzado, seguida de homologação MySQL/S3 e sincronização das camadas sonoras com o Player de TV.
+
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
 1. **P0 — Capturar leads de estabelecimentos e anunciantes em jornadas distintas, com LGPD/antispam, persistência e atribuição.**
