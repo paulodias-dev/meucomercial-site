@@ -133,6 +133,9 @@ app.post("/api/commercial-leads", async (req, res) => {
       signal: AbortSignal.timeout(12000),
     });
     const payload = await upstream.json().catch(() => ({}));
+    if (upstream.ok && payload.received !== true) {
+      return res.status(502).json({message: "A API não confirmou a persistência da solicitação."});
+    }
     res.setHeader("Cache-Control", "no-store");
     return res.status(upstream.status).json(payload);
   } catch {
