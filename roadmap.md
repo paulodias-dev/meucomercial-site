@@ -11,12 +11,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 19 | 42 | 45,2% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 18 | 39 | 46,2% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 20 | 43 | 46,5% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 19 | 40 | 47,5% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **45** | **112** | **40,2%** |
+| **Plataforma completa** | **47** | **114** | **41,2%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, quatro marcos granulares efetivamente implementados (dois na API e dois no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 45/112.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, seis marcos granulares efetivamente implementados (três na API e três no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 47/114.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -246,6 +246,20 @@
 - **Aceite granular:** 1 novo marco concluído na API e 1 no Admin (ambos `[x]`), sem concluir o Story Builder completo, preview fiel do Player, publicação, transcodificação nem homologação. API **19/42 (45,2%)**, Admin **18/39 (46,2%)**, Site **8/31 (25,8%)**, plataforma **45/112 (40,2%)**.
 - **Limites:** alterações em branches/PRs, não deploy. Migrations, PHPUnit, tsc/Vite e QA físico pendentes. GitHub Actions não consultado, conforme solicitado.
 - **Próximo passo:** adicionar catálogo visual de templates com miniaturas, revisão de versão e uso controlado em novas peças; em seguida avançar no canvas de composição e execução real dos layouts pelo Player de TV.
+
+
+## Entrega — Biblioteca visual versionada do Story Builder (14/10/2026)
+
+**Escopo implementado em código, em PRs definitivos ainda sujeitos a revisão:**
+- **API:** [PR #35](https://github.com/paulodias-dev/meucomercial-api/pull/35), branch `feat/tv-story-template-library-20261014` — PATCH de template por cliente com lock transacional e `expected_revision` (409 em conflito); alteração de nome ou sincronização a partir de cena TV salva, preservando orientação, autorização, mídia e playlists; migration reversível de revisão, Swagger e testes de regressão.
+- **Admin:** [PR #26](https://github.com/paulodias-dev/meucomercial-admin/pull/26), branch `feat/tv-story-template-library-20261014` — catálogo de templates com miniaturas das camadas, pesquisa e paginação no servidor, revisão visível, renomear, atualizar a partir da cena e aplicar no canvas sem duplicar imagens/vídeos; responsivo e pt-BR.
+- **Site:** atualização apenas documental do indicador geral; biblioteca permanece privada, sem endpoints públicos, URLs de S3, anúncios de campanhas publicadas ou conteúdo do cliente em landing page.
+
+**Aceite dos marcos desta entrega:** um marco granular novo concluído em código na API e um no Admin, adicionados à Fase 5, **sem concluir os marcos amplos do Story Builder/Player**. API **20/43 (46,5%)**, Admin **19/40 (47,5%)**, Site **8/31 (25,8%)**; plataforma **47/114 = 41,2%**. A referência anterior era **45/112 = 40,2%**. O novo denominador inclui os dois novos marcos entregues, não houve encerramento artificial de fases.
+
+**Validação:** testes de API foram acrescentados, mas PHPUnit, migração MySQL, Swagger gerado, TypeScript/Vite, teste de integração entre repositórios e homologação do Player **não foram executados** no ambiente desta entrega. Não autorizar deploy por este registro. Alteração do catálogo nunca publica layout em dispositivo, e miniatura editorial não equivale à renderização real no Player.
+
+**Próximo passo:** completar publicação versionada e manifesto do Story Builder no Player de TV, com autorização de cliente, compatibilidade de dispositivo e testes de sincronização/expiração; resolver CI e homologar a execução antes de declarar o módulo concluído.
 
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
