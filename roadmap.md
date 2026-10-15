@@ -11,14 +11,16 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 54 | 46,3% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 56 | 44,6% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 53 | 45,3% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 33 | 24,2% |
-| **Plataforma completa** | **57** | **140** | **40,7%** |
+| **Plataforma completa** | **57** | **142** | **40,1%** |
 
 **Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Replanejamento aprovado em 15/10/2026:** foram detalhados **16 novos marcos pendentes** na Fase 9 (+6 API, +8 Admin, +2 Site), vinculados à governança de planos, bibliotecas, Estúdio de Publicação, segmentação, distribuição e resultados. O total passou de **57/124 (46,0%)** para **57/140 (40,7%)**; **nenhum marco foi marcado concluído** nesta entrega documental. A redução matemática decorre exclusivamente de escopo adicional. Os 57 concluídos incluem código de PRs definitivos ainda abertos (#40 API, #31 Admin, #17 Site), não CI aprovado ou deploy.
+
+**Replanejamento técnico de 15/10/2026:** +2 marcos P0 pendentes na API para consolidação de migrations MySQL 8 e seeders/testes/Swagger; mantidos os 57 marcos anteriormente concluídos. **API 25/56 (44,6%), Admin 24/53 (45,3%), Site 8/33 (24,2%); plataforma 57/142 = 40,1%**. Critérios transversais detalhados abaixo; nenhuma refatoração de banco, execução destrutiva ou homologação ocorreu nesta atualização documental.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -126,6 +128,12 @@
 - [ ] Auditar Core Web Vitals, Lighthouse mobile, acessibilidade, SEO social/Open Graph e carregamento inicial.
 - [ ] Revisar depoimentos, cálculos comerciais, LGPD/cookies e ausência de alegações não verificadas.
 - [ ] Homologar domínio, SSL, analytics, monitoramento, backup, deploy e rollback.
+
+## Gate P0 de integração — cadastro, planos e contratos verificáveis (planejado em 15/10/2026)
+
+**Dependência obrigatória da API:** os dois novos marcos pendentes de consolidação MySQL 8/migrations, seeders modulares, PHPUnit para endpoints/serviços e L5 Swagger são contabilizados **somente no roadmap da API**. A API deve respeitar identificadores MySQL <=64 caracteres, `utf8mb4`, tipagem e índices coerentes, além de validar migrations no MySQL real.
+
+**Critérios de aceite do Site:** consumo de endpoints documentados/validados em OpenAPI; exibir somente planos e cotas reais, não presumir elegibilidade sem plano ativo; provar com fixtures e testes de integração as jornadas de agência, estabelecimento e anunciante (free, pago, sem plano, suspenso), erros/validações, isolamento de dados, SEO, acessibilidade e QA mobile-first. Exigir build/testes e CI verde. Dados demonstrativos e `migrate:fresh --seed` são restritos a ambientes descartáveis de desenvolvimento/teste, nunca produção. Esta seção não acrescenta marco próprio ao Site.
 
 ## Fase 9: Experiência de publicação intuitiva, governança SaaS e distribuição inteligente (escopo aprovado em 15/10/2026)
 
