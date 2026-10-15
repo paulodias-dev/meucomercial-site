@@ -11,10 +11,10 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 58 | 43,1% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 54 | 44,4% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 59 | 42,4% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 57 | 42,1% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 34 | 23,5% |
-| **Plataforma completa** | **57** | **146** | **39,0%** |
+| **Plataforma completa** | **57** | **150** | **38,0%** |
 
 **Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
@@ -23,6 +23,8 @@
 **Replanejamento técnico de 15/10/2026:** +2 marcos P0 pendentes na API para consolidação de migrations MySQL 8 e seeders/testes/Swagger; mantidos os 57 marcos anteriormente concluídos. **API 25/56 (44,6%), Admin 24/53 (45,3%), Site 8/33 (24,2%); plataforma 57/142 = 40,1%**. Critérios transversais detalhados abaixo; nenhuma refatoração de banco, execução destrutiva ou homologação ocorreu nesta atualização documental.
 
 **Replanejamento comercial e de execução de 15/10/2026:** +4 marcos pendentes de precificação híbrida de agências (2 API, 1 Admin, 1 Site), agora organizados em sprints integradas sem duplicar a contagem. **API 25/58 (43,1%), Admin 24/54 (44,4%), Site 8/34 (23,5%); plataforma 57/146 = 39,0%**. Comparação: 57/142 = 40,1% antes deste novo escopo. Não houve implementação da cobrança nem aceites de sprints nesta entrega documental.
+
+**Replanejamento UX/UI de 15/10/2026:** +4 marcos pendentes (1 API, 3 Admin, 0 Site), com design system Metronic, perfis, navegação, dashboard de atenção e metas de usabilidade interligados às sprints. **API 25/59 (42,4%), Admin 24/57 (42,1%), Site 8/34 (23,5%); plataforma 57/150 = 38,0%**. Referência anterior: 57/146 (39,0%). Trata-se apenas de requisitos planejados; não equivale a telas entregues, testes verdes ou homologação.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -178,6 +180,34 @@
 - [ ] **P1 · Oferta de agência com pacote ou sob demanda.** Exibir preços e franquias autorizados pelo catálogo da API, simular custo conforme clientes ativos sem prometer valores ilustrativos, explicar métrica/pró-rata/adesão e enviar ao fluxo de contratação com QA mobile/acessibilidade.
 
 **Contagem nova nesta seção: +1 tarefa [ ] Site.**
+
+## Diretriz transversal de UX/UI — espaço de trabalho orientado a tarefas (planejado em 15/10/2026)
+
+**Objetivo:** preservar a identidade visual Metronic/React, sem copiar o visual do Instagram, e aproximar a **simplicidade de interação** de publicações sociais. Substituir excesso de caminhos técnicos por ações de negócio sem esconder recursos avançados: criação, prévia, escolha dos destinos, programação, publicação e acompanhamento. Aplicar a todos os perfis sob controle real de papel, tenant, plano ativo e concessões; não usar apenas a ocultação de menus como autorização.
+
+**Arquitetura de experiência por perfil (mesma aplicação, contexto diferente):**
+- **Master:** central executiva com agências, clientes diretos e vinculados, assinaturas/faturamento, campanhas, dispositivos de toda a rede e pendências com ação auditável; seleção explícita de agência/cliente/destino, prevenção de ações globais acidentais.
+- **Agência:** espaço de operação com troca rápida de cliente autorizado (sem logout e sem mistura de dados), campanhas/publicações, playlists e dispositivos do cliente ativo, avisos do plano e faturamento; ação primária `Criar publicação`.
+- **Estabelecimento:** início enxuto: `Criar anúncio` (quando plano permitir), `Minhas TVs/Rádios`, `Minha programação`, `Resultados`. Recursos técnicos avançados recolhidos em contexto, com estado vazio explicativo e ajuda no primeiro uso.
+
+**Padrão de interação e componentes:** design system reutilizável sobre os componentes existentes do Metronic, com tokens para tipografia, cores, espaçamento, densidade compacta, botões/campos, estados focus/hover/disabled/loading/success/error, skeleton de carregamento, empty state, erro com recuperação, confirmação de ação destrutiva, toasts discretos, busca/filtros persistentes, breadcrumb contextual, atalhos por ação, upload com progresso e autosave com indicação visível. Tabelas para análises detalhadas; cards/miniaturas para campanhas e mídias; calendário visual para agendamentos; status atualizado e prévia fiel do Player para TVs horizontal/vertical e Rádio. Nunca simular exibição confirmada quando há apenas programação ou sincronização.
+
+**Navegação:** menu lateral adaptativo, sem telas redundantes, agrupamento por fluxo de trabalho (`Publicar`, `Campanhas`, `Programação`, `Dispositivos`, `Clientes`, `Resultados`, `Financeiro`, conforme permissões), botão primário de publicação; preservar acesso às funções especializadas Rádio/TV no contexto correto. Seletor de cliente/agência persistente e claramente identificado em cada tela; alternar contexto invalida/atualiza consultas, formulário e rascunhos com isolamento de dados.
+
+**Acessibilidade, responsividade e desempenho:** mobile-first e refinamento de desktop, breakpoints verificados em 320/360/375/768/1024/1440 px, sem overflow horizontal inadvertido; navegação por teclado e leitor de tela, contraste, foco visível, alvos de toque adequados, design claro/escuro reais, pt-BR e UTF-8. Evitar telas brancas/pretas sem feedback; não bloquear interface durante buscas nem travar em erro de rede; implementar feedback otimista **somente quando reversível e autorizado**.
+
+**Metas verificáveis de UX (a validar com testes de usuários reais):**
+1. Uma pessoa iniciante publica anúncio simples em até **2 minutos após selecionar a mídia**, tendo plano e destinos habilitados; fluxo de criação unificado `Criar → Destinos → Programar → Revisar/Publicar` com pré-visualização e salvamento de rascunho.
+2. Agência troca para um cliente autorizado em até **2 interações principais**, com indicação inequívoca do contexto atual, sem recarregar toda a aplicação nem mostrar mídias de outros clientes.
+3. Tarefas comuns (`Criar publicação`, consultar dispositivos e programação) acessíveis diretamente no dashboard adequado, sem exigir navegar por bibliotecas técnicas.
+4. Alertas acionáveis de TV/Rádio offline, campanha a vencer e publicação pendente, com contagens e vínculos **obtidos por API sob permissão**; mostrar status `programado`, `recebido pelo Player`, `exibido` separadamente.
+5. Testes automatizados de menu/RBAC/contexto, smoke test responsivo e acessibilidade, QA humano Master/agência/estabelecimento e telemetria de conclusão/erros sem dados sensíveis. Sem homologação, não marcar [x].
+
+**Distribuição por sprints:** Sprint 0 inventaria fluxos, telas redundantes e jornada com usuário; Sprint 1 estabelece tokens/componentes e padrão de estados; Sprint 2 entrega navegação e espaços por papel com seleção de cliente/tenant; Sprint 5 valida destinos/publicação e contexto de agência; Sprint 6 entrega Estúdio intuitivo; Sprint 7 conecta estados reais do Player; Sprint 8 executa testes de usabilidade/acessibilidade, performance e ajustes de conversão. Em caso de capacidade insuficiente, repartir marcos na revisão da sprint, sem declarar conclusões fictícias.
+
+### Critérios de aceite do Site — identidade visual e conversão (sem marco adicional)
+
+**Aplicar aos marcos já previstos de oferta e onboarding:** identidade visual consistente com a experiência Metronic sem replicar um painel administrativo; proposta de valor por perfil, demonstração real de fluxo `Criar publicação`, planos/tarifas/quotas vindos da API, CTAs claros e formulários enxutos. QA 320–1440 px, acessibilidade, performance, estados de erro/carregamento, segurança de consentimento e métricas de conversão. Não prometer Estúdio, Player ou funcionalidades ainda não homologadas. **Contagem adicional: zero;** os marcos comerciais existentes cobrem a entrega.
 
 ## Fase 9: Experiência de publicação intuitiva, governança SaaS e distribuição inteligente (escopo aprovado em 15/10/2026)
 
