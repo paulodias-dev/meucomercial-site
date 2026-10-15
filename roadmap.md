@@ -7,14 +7,26 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Entrega integrada — Captação comercial real (15/10/2026)
+
+**Estado:** implementação em PR definitivo, não homologada nem implantada. **Evidência funcional:** [API #64](https://github.com/paulodias-dev/meucomercial-api/pull/64) (`00c6440`), [Admin #35](https://github.com/paulodias-dev/meucomercial-admin/pull/35) (`02f776f`), [Site #20](https://github.com/paulodias-dev/meucomercial-site/pull/20) (`b917949`).
+
+- API: formulário público validado com consentimento, limitação de taxa, campo honeypot, UUID idempotente e persistência em `site_commercial_leads`; inbox privada somente Super-Admin, atualização de situação, OpenAPI e testes Feature incluídos. Não cria Cliente, assinatura, faturamento ou campanha automaticamente.
+- Site: fluxo de Estabelecimento/Agência/Anunciante via proxy HTTPS configurável, atribuição UTM, feedback de erro e sucesso condicionado à persistência; removida a confirmação fictícia de cadastro da newsletter.
+- Admin: fila Metronic responsiva, busca, filtros, paginação no servidor e estágio de atendimento; backend impede visualização e mutação por outro perfil, mesmo com rota conhecida.
+- **Marco aceito para cobertura de código:** Site, persistência real do formulário de demonstração com validação, consentimento e antispam. Outros marcos de CRM/automação, conversão completa, newsletter confirmada, LGPD operacional e produção permanecem pendentes.
+- **Validação pendente:** PHPUnit/MySQL 8, Swagger gerado, lint/build TS e QA manual. Não há evidência de CI verde ou lead real enviado neste momento. Configurar `MEUCOMERCIAL_API_URL` no servidor Site e executar migrations API antes da ativação comercial.
+
+**Painel global consistente nesta entrega:** API **25/59 (42,4%)**, Admin **24/57 (42,1%)**, Site **9/34 (26,5%)**, Plataforma **58/150 (38,7%)**. Inclui código em PRs abertos, não homologação de produção. Próxima prioridade: restabelecer CI verde e instalação limpa MySQL isolada; seguir com escopo/permissões SaaS e distribuição Rádio/TV.
+
 ## Painel geral da plataforma (evidência de código, não homologação)
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
 | [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 59 | 42,4% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 57 | 42,1% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 34 | 23,5% |
-| **Plataforma completa** | **57** | **150** | **38,0%** |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 9 | 34 | 26,5% |
+| **Plataforma completa** | **58** | **150** | **38,7%** |
 
 **Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
@@ -70,7 +82,7 @@
 **Situação neste repositório:** Parcial · 1/4 marcos identificados.
 
 - [x] Servidor Express oferece endpoint `/api/consult` para consultoria comercial por segmento.
-- [ ] Persistir leads de demonstração em endpoint comercial da API Laravel/CRM com validação, consentimento e antispam.
+- [x] Persistir leads de demonstração em endpoint comercial da API Laravel/CRM com validação, consentimento e antispam ([API #64](https://github.com/paulodias-dev/meucomercial-api/pull/64), [Admin #35](https://github.com/paulodias-dev/meucomercial-admin/pull/35), [Site #20](https://github.com/paulodias-dev/meucomercial-site/pull/20)).
 - [ ] Persistir inscrição de newsletter em provedor real com confirmação e descadastro; atualmente há apenas feedback visual.
 - [ ] Criar monitoramento/alertas de falhas de formulários e políticas de proteção de dados/LGPD.
 
