@@ -11,12 +11,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 20 | 43 | 46,5% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 19 | 40 | 47,5% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 21 | 44 | 47,7% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 20 | 41 | 48,8% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **47** | **114** | **41,2%** |
+| **Plataforma completa** | **49** | **116** | **42,2%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, seis marcos granulares efetivamente implementados (três na API e três no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 47/114.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, oito marcos granulares efetivamente implementados (quatro na API e quatro no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 49/116.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -262,6 +262,20 @@
 **Validação:** testes de API foram acrescentados, mas PHPUnit, migração MySQL, Swagger gerado, TypeScript/Vite, teste de integração entre repositórios e homologação do Player **não foram executados** no ambiente desta entrega. Não autorizar deploy por este registro. Alteração do catálogo nunca publica layout em dispositivo, e miniatura editorial não equivale à renderização real no Player.
 
 **Próximo passo:** completar publicação versionada e manifesto do Story Builder no Player de TV, com autorização de cliente, compatibilidade de dispositivo e testes de sincronização/expiração; resolver CI e homologar a execução antes de declarar o módulo concluído.
+
+
+## Entrega concluída em código — publicação versionada Story Builder TV (14/10/2026)
+
+**Implementação funcional nos PRs definitivos ainda sujeitos a revisão de CI:**
+- **API [PR #36](https://github.com/paulodias-dev/meucomercial-api/pull/36):** publicar/retirar layouts de TV via API autenticada, snapshot imutável em relação a edições posteriores do rascunho, revisão otimista por playlist e item (409), transação e validação de mídia pronta e pertencente ao cliente, agência/RBAC, playlist ativa; migration reversível, OpenAPI, testes de Player/concorrência/escopo, atualização do manifesto e sinalização de sincronização somente dos dispositivos TV vinculados. Ao publicar, as revisões salvas são congeladas sem alterar a mídia original. Bloqueio de mudanças estruturais na sequência enquanto existir publicação — exige retirada explícita antes.
+- **Admin [PR #27](https://github.com/paulodias-dev/meucomercial-admin/pull/27):** controles Metronic de publicar e retirar, confirmação, status da versão, detecção de alterações em rascunho, consulta da versão editada e retorno de número de telas solicitadas para sincronização. Não permite publicar enquanto a sequência tiver mudanças não salvas ou alterar ordem/orientação sem retirar versão ativa.
+- **Site:** sincronização documental. O site público não recebe JWT, mídia privada, URLs permanentes, layout editorial nem APIs de publicação.
+
+**Novo marco granular:** um concluído em código na API e um no Admin (Fase 5); nenhum marco amplo de execução/homologação do Player foi encerrado. API **21/44 = 47,7%**; Admin **20/41 = 48,8%**; Site **8/31 = 25,8%**; plataforma **49/116 = 42,2%** (matemática: 49 ÷ 116 × 100 = 42,24137931…%). Referência anterior **47/114 = 41,2%**. Inclui PRs definitivos ainda não integrados, não é percentual de produção.
+
+**Limites e critérios de aceite:** o manifesto fornece contrato aditivo `story_layout`, revisão e versão da publicação apenas para TV com orientação compatível; não existe nesta entrega prova de renderização real das camadas na aplicação Player, cache offline, execução de animações/áudio mixado nem evidência de instalação física. Falhas de CI anteriores são conhecidas; PHPUnit, migração real MySQL, build TypeScript/Vite e Player físico ainda requerem verificação. Não declarar a fase TV homologada sem testes e execução.
+
+**Próximo passo:** implementar ou adaptar o aplicativo Player TV para renderizar as camadas publicadas e reconciliar confirmação de sincronização por versão, com comportamento offline seguro. Em paralelo, resolver CI API/Admin e testar bloqueios/escopo em MySQL 8 e aparelhos de diferentes orientações.
 
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
