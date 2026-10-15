@@ -1,7 +1,7 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
 
 > **Projeto:** Site institucional / aquisição de leads · **Repositório:** `paulodias-dev/meucomercial-site`  
-> **Atualização de referência:** 14/10/2026 · **Branch de produção:** `main` · **Estado:** desenvolvimento/homologação em andamento
+> **Atualização de referência:** 15/10/2026 · **Branch de produção:** `main` · **Estado:** desenvolvimento/homologação em andamento
 
 **Visão do produto.** Plataforma SaaS de TV e Rádio Indoor com operação comercial bilateral: assinaturas recorrentes de estabelecimentos e venda de espaços publicitários a anunciantes terceiros, além de Cliente/Contrato 360º, rede de locais, inventário, campanhas, veiculações e comprovação de execução. Conecta API Laravel/MySQL, painel React/Metronic e site comercial. A aplicação executada nas TVs/radios é um componente próprio que ainda precisa ser inventariado e homologado.
 
@@ -11,12 +11,14 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 48 | 52,1% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 45 | 53,3% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **57** | **124** | **46,0%** |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 54 | 46,3% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 53 | 45,3% |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 33 | 24,2% |
+| **Plataforma completa** | **57** | **140** | **40,7%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 57/124.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+
+**Replanejamento aprovado em 15/10/2026:** foram detalhados **16 novos marcos pendentes** na Fase 9 (+6 API, +8 Admin, +2 Site), vinculados à governança de planos, bibliotecas, Estúdio de Publicação, segmentação, distribuição e resultados. O total passou de **57/124 (46,0%)** para **57/140 (40,7%)**; **nenhum marco foi marcado concluído** nesta entrega documental. A redução matemática decorre exclusivamente de escopo adicional. Os 57 concluídos incluem código de PRs definitivos ainda abertos (#40 API, #31 Admin, #17 Site), não CI aprovado ou deploy.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -44,7 +46,7 @@
 
 ## Progresso deste repositório
 
-**8/31 marcos com evidência de código = 25,8% de cobertura de implementação identificada.** Pendências de CI, staging, homologação e deploy permanecem abertas independentemente deste índice.
+**8/33 marcos com evidência de código = 24,2% de cobertura de implementação identificada.** Pendências de CI, staging, homologação e deploy permanecem abertas independentemente deste índice.
 
 ## Fase 1: Descoberta e Estruturação (Auditoria)
 
@@ -124,6 +126,39 @@
 - [ ] Auditar Core Web Vitals, Lighthouse mobile, acessibilidade, SEO social/Open Graph e carregamento inicial.
 - [ ] Revisar depoimentos, cálculos comerciais, LGPD/cookies e ausência de alegações não verificadas.
 - [ ] Homologar domínio, SSL, analytics, monitoramento, backup, deploy e rollback.
+
+## Fase 9: Experiência de publicação intuitiva, governança SaaS e distribuição inteligente (escopo aprovado em 15/10/2026)
+
+**Objetivo do produto:** transformar o Meu Comercial em uma plataforma SaaS fechada de criação, distribuição e monetização de Rádio/TV Indoor, com a facilidade de publicação de Instagram/Facebook e recursos visuais do Canva, **sem** transformá-la em rede social pública. Esta fase desdobra requisitos específicos ainda não integralmente atendidos pelas Fases 4, 5, 6 e 7; não substitui nem dá aceite automático aos marcos anteriores. **Estado: planejada; nenhum dos marcos abaixo está concluído.**
+
+**Papéis e hierarquia de escopo:**
+- **Fundador / Super Admin:** controle integral de agências, clientes próprios ou de agências, tenants, planos, permissões, mídia, campanhas e todos os dispositivos. Pode selecionar toda a rede (inclusive clientes subordinados a agências), segmentos comerciais ou destinos individuais; ações globais exigem prévia de impacto, confirmação e auditoria. A autoridade administrativa não elimina direitos autorais, contratos e exigências legais.
+- **Agência (ex.: MS Produções):** possui seu próprio âmbito de gestão e migração de carteira; pode operar somente os estabelecimentos autorizados, delegar **apenas permissões que possui** e publicar simultaneamente para um, vários ou todos os seus clientes. Planos podem limitar a 10, 50, 100 ou outros números configuráveis de estabelecimentos, além de mídia/dispositivos.
+- **Estabelecimento / cliente final:** acessa apenas suas unidades, rádios/TVs e mídias autorizadas; anúncios próprios, edições, publicação e gestão dependem de plano ativo e concessões explícitas. Pode contratar Rádio, TV ou ambos, com limites independentes de locais e dispositivos.
+- **Anunciante terceiro:** papel contextual de Cliente 360º, eventualmente o mesmo CNPJ do estabelecimento; compra inserção contratada na rede permitida. Titularidade do criativo, autorização de uso, execução e faturamento não devem ser confundidos com assinatura do estabelecimento.
+- **Três controles cumulativos para cada ação:** escopo/hierarquia (tenant, agência, cliente e destinos) + concessões RBAC sem escalada + direitos do **plano/assinatura ativa** (inclusive free/freemium). Cadastro sem plano ativo não habilita operação; plano gratuito ativo também vale, sujeito a cotas. Definir política explícita para inadimplência, tolerância, suspensão e preservação dos dados. Não utilizar somente botões ocultos como controle de acesso.
+
+**Política de conteúdos:**
+- **Música:** catálogo lógico global único, compartilhado por master, agências e estabelecimentos, inclusive quando o upload é feito por uma agência ou cliente **que tenha permissão**. Não duplicar arquivos por tenant; validar licença, metadados, segurança e estado de disponibilidade antes de liberar a todos.
+- **Spot/jingle comercial, vídeo publicitário e peça de campanha:** conteúdo privado do proprietário (cliente/agência autorizada), invisível a outros tenants sem concessão. Distribuir para vários destinos **não transfere titularidade nem abre a biblioteca**; o Player recebe apenas os ativos estritamente autorizados, com expiração e revogação.
+- **Acordos comerciais:** estabelecer quem pode vender ou publicar publicidade em cada local/dispositivo, conforme contrato; separar receita de assinatura do estabelecimento de receita de publicidade do anunciante, sem duplicar recebíveis.
+
+**Experiência-alvo de publicação (mesma jornada para Rádio e TV, adaptada ao formato):** 
+1. **Criar:** escolher foto, vídeo ou áudio, gravar/enviar, recortar, selecionar modelo, inserir texto, figurinhas, música licenciada, narração/spot, efeitos e transições suportados; pré-visualização fiel em horizontal/vertical e versionamento do rascunho.
+2. **Público e destinos:** selecionar um, vários, todos os clientes da agência, categoria de negócio (padarias, supermercados, academias), locais/unidades ou, **somente master**, toda a rede inclusive agências. Mostrar contagem obtida por API, restrições contratuais, permissões e dispositivos elegíveis, sem exigir IDs manuais; oferecer simulação antes de distribuir.
+3. **Quando e quanto:** publicar já ou agendar datas, horário, frequência, campanha, orçamento/inventário reservado e duração; validar cotas e conflitos, sem inserir anúncio automaticamente em grade incompatível.
+4. **Revisar e publicar:** mostrar criativo, destinos reais autorizados, cobrança/termos se aplicável e programação; confirmar, criar versão única do criativo e referências por destino com idempotência e auditoria; permitir retirar, acompanhar sincronização e distinguir **publicado**, **recebido pelo Player** e **realmente exibido**.
+
+**Princípios de UX e arquitetura:** fluxo progressivo sem estética de formulário/Wizard rígido; modo **Simples** com poucas decisões e modo **Avançado** para agências, autosave, modelos, arrastar/soltar quando aplicável, ações reversíveis, mensagens claras, pt-BR, mobile-first, dark/light, acessibilidade, performance e ausência de formulários com IDs técnicos. Referência de UX: teste com usuários novos para concluir a publicação simples em até 2 minutos após escolher a mídia, **sem sacrificar validações legais/comerciais**. Reutilizar API Laravel/MySQL, React/Metronic, Cliente/Contrato 360º, planos, assinaturas, recebíveis, biblioteca e Player existentes; não criar módulos duplicados. Processar segmentação/contagem, regras e operações em lote no servidor; evitar duplicação de blobs ao distribuir para milhares de dispositivos.
+
+**Ordem de entrega e critérios de aceite inter-repositórios:** (P0) contratos de escopo, plano, RBAC e biblioteca; (P0) engine de segmentação/reserva/distribuição e validação dos Players; (P1) Estúdio Simples Rádio/TV e publicação guiada; (P1) modo Avançado, self-service e pareamento; (P1) comprovação de exibição, relatórios e otimização de conversão. Exigir Swagger/OpenAPI, isolamento por tenant, testes automatizados de elevação de permissão, cotas e concorrência, QA UX mobile/desktop, CI verde e homologação física. Publicação global só após revisão do impacto e política contratual. **Planejamento não equivale a implementação ou produção homologada.**
+
+### Marcos adicionais de responsabilidade deste repositório (SITE)
+
+- [ ] **P1 · Oferta SaaS por público e catálogo de planos real.** Explicar jornadas Estabelecimento, Agência e Anunciante; exibir funcionalidades e cotas aprovadas de free/freemium/pagos consultadas de fonte autorizada, CTAs coerentes e demonstração honesta do Estúdio/Publicação Simples, sem inventar alcance ou preços.
+- [ ] **P1 · Onboarding comercial e conversão segura.** Orientar cadastro de agência/estabelecimento/anunciante para plano e contrato ativo antes de operação, com convite de agência e importação assistida de carteira; consentimento LGPD, antispam, UTM, telemetria de conversão, SEO/acessibilidade e QA mobile-first.
+
+**Critério de contagem:** 2 novos marcos **[ ]** desta responsabilidade; dependências dos demais repositórios são descritas acima, mas contabilizadas uma única vez no roadmap correspondente. Nenhum recurso desta seção foi aceito apenas por estar planejado.
 
 ## Entrega de Rádio Indoor — 14/10/2026 (PRs #19/#10/#2 integrados à main; não homologados)
 
