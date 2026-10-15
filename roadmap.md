@@ -11,12 +11,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 24 | 47 | 51,1% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 23 | 44 | 52,3% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 48 | 52,1% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 45 | 53,3% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **55** | **122** | **45,1%** |
+| **Plataforma completa** | **57** | **124** | **46,0%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, quatorze marcos granulares efetivamente implementados (sete na API e sete no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 55/122.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 57/124.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -318,6 +318,18 @@
 
 **Próxima etapa:** tratar os workflows GitHub Actions com falha e executar integração TV real; em seguida migrar mídias antigas do disco público com estratégia de rollback, proteção por link temporário e teste de não regressão em mídia, prévia e playlists.
 
+## Entrega concluída em código — migração operacional TV legada e transparência no painel (15/10/2026)
+
+**Implementação em PRs definitivos:**
+- **API [PR #40](https://github.com/paulodias-dev/meucomercial-api/pull/40):** comando CLI `indoor:secure-tv-media` com inventário sem alteração por padrão, migração `--apply` por cópia verificada SHA-256 e tamanho para disco privado, `--inspect-private` para auditoria, retirada pública opt-in `--prune --confirm-public-links` e `--rollback` autenticado pela marca de migração. Bloqueia diretórios inválidos, symlinks/path traversal, arquivos compartilhados e dados divergentes. Processamento isolável por cliente/ID/limite, sincronização das TVs por cliente uma única vez no lote, testes de regressão e runbook.
+- **Admin [PR #31](https://github.com/paulodias-dev/meucomercial-admin/pull/31):** biblioteca Metronic identifica status de armazenamento TV privado, público legado ou ausente, exibindo alerta de risco de links antigos em resultados. A API emite apenas `storage_visibility` no payload já protegido por RBAC/agência; hashes e metadados internos não aparecem no painel.
+- **Site [PR #17](https://github.com/paulodias-dev/meucomercial-site/pull/17):** sincronização do roadmap sem mudanças funcionais públicas.
+
+**Progresso matemático em código:** API **25/48 = 52,1%**, Admin **24/45 = 53,3%**, Site **8/31 = 25,8%**; total **57/124 = 45,96774193…% ≈ 46,0%**. Base anterior 55/122 = 45,1%; +1 marco API, +1 marco Admin. Estes índices incluem código em PR aberto sujeito a testes, não representam aceite de produção.
+
+**Segurança e aceite:** a migração não foi executada em dados reais; os arquivos legados continuam públicos até `--prune`, feito apenas por operador com backup/snapshot e confirmação. Rollback reabre o URL público. Arquivos compartilhados/corrompidos exigem intervenção manual. GitHub Actions das últimas entregas falha em poucos segundos sem steps registrados e devolve log BlobNotFound; não é possível atribuir causalidade ao código nem afirmar CI verde. Exigir testes PHPUnit, build TypeScript e homologação em servidor/TV antes de realizar `--apply` ou `--prune`.
+
+**Próximo passo:** obter diagnósticos do ambiente GitHub Actions (runners/permissões/quota/políticas) e restabelecer CI verificável; após homologação, executar piloto de migração por cliente, testar vídeo Range e imagem em TVs físicas e somente então retirar originais públicos com backup.
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
 1. **P0 — Capturar leads de estabelecimentos e anunciantes em jornadas distintas, com LGPD/antispam, persistência e atribuição.**
