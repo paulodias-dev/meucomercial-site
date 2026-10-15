@@ -11,12 +11,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 22 | 45 | 48,9% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 21 | 42 | 50,0% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 23 | 46 | 50,0% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 22 | 43 | 51,2% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **51** | **118** | **43,2%** |
+| **Plataforma completa** | **53** | **120** | **44,2%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dez marcos granulares efetivamente implementados (cinco na API e cinco no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 51/118.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, doze marcos granulares efetivamente implementados (seis na API e seis no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 53/120.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -293,6 +293,18 @@
 **Validação:** sintaxe JavaScript dos módulos confirmada por compilação na sessão e 6 verificações diretas de validação de camadas passaram (não equivalem ao teste completo de navegador). O GitHub Actions registrou falha nas execuções Laravel, Metronic e no novo workflow Node, sem logs/etapas consultáveis nesta sessão. PHPUnit, MySQL, build Vite/TS e testes Node em runner/browsers físicos continuam **sem evidência verde**. Revisão de PR não equivale a homologação.
 
 **Próximo passo:** testar fim a fim em TV real com ambiente TLS/CORS e URLs acessíveis; fortalecer segurança do token do Player e implantar cache offline com expiração fail-closed e execução de áudio/mixagem em hardware suportado. Corrigir os bloqueios do CI (incluindo lockfile Composer/S3) antes do deploy.
+
+## Entrega de código — resiliência de Player TV e cache volátil com lease (15/10/2026)
+
+- **API [PR #38](https://github.com/paulodias-dev/meucomercial-api/pull/38):** `IndoorManifestService` emite `server_time`, `refresh_after` e `playback_lease_seconds=45` para manifesto ativo, sem grade e bloqueado. O Player pode calcular validade sem depender do relógio incorreto do aparelho. Regressão Laravel para os três estados. Revogação e alteração de agenda não são garantidas em tempo real: a reprodução é interrompida no máximo ao final do lease anterior.
+- **Admin/Player [PR #29](https://github.com/paulodias-dev/meucomercial-admin/pull/29):** pré-carregamento e cache **somente em RAM** de imagens TV com teto global de 20 MiB, 6 MiB por imagem e cinco imagens; download em streaming sujeito a aborto/timeout, rotação por versão, expiração e revogação imediata do object URL; guarda temporal adicional monotônica, relógio de servidor, atualização de URLs assinadas sem interromper vídeos, CSP ajustada para camadas editoriais tipadas e blobs locais; testes Node e manual atualizados.
+- **Site [PR #15](https://github.com/paulodias-dev/meucomercial-site/pull/15):** sincronização dos roadmaps, sem distribuir qualquer token, mídia privada ou Player no site público.
+
+**Marcos implementados nesta entrega:** +1 API, +1 Admin/Player (Fase 5). API **23/46 = 50,0%**, Admin **22/43 = 51,2%**, Site **8/31 = 25,8%**; **plataforma 53/120 = 44,2%**. O percentual mede marcos com código entregue em PR, não testes aprovados nem porcentagem de prontidão para produção.
+
+**Aceite pendente:** CI do Laravel e Metronic, teste Node do Player em runner GitHub e homologação presencial de TVs. Não existe cache persistente: dados se perdem ao reiniciar e não se exibe conteúdo após o lease. Vídeo offline, mixagem de áudio, direitos de mídia, prova de exibição, proteção de token por origem dedicada e validação CORS/TLS ficam pendentes. Não considerar produção liberada.
+
+**Próxima implementação:** corrigir falhas de CI e conectar URLs de mídia TV protegidas/assinadas com acessibilidade em navegadores e streaming HTTP Range; em seguida executar cenários completos de pareamento, interrupção de rede, assinatura expirada e troca de orientação em TVs reais.
 
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
