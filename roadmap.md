@@ -11,12 +11,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 23 | 46 | 50,0% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 22 | 43 | 51,2% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 24 | 47 | 51,1% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 23 | 44 | 52,3% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **53** | **120** | **44,2%** |
+| **Plataforma completa** | **55** | **122** | **45,1%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, doze marcos granulares efetivamente implementados (seis na API e seis no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 53/120.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, quatorze marcos granulares efetivamente implementados (sete na API e sete no Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 55/122.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -305,6 +305,18 @@
 **Aceite pendente:** CI do Laravel e Metronic, teste Node do Player em runner GitHub e homologação presencial de TVs. Não existe cache persistente: dados se perdem ao reiniciar e não se exibe conteúdo após o lease. Vídeo offline, mixagem de áudio, direitos de mídia, prova de exibição, proteção de token por origem dedicada e validação CORS/TLS ficam pendentes. Não considerar produção liberada.
 
 **Próxima implementação:** corrigir falhas de CI e conectar URLs de mídia TV protegidas/assinadas com acessibilidade em navegadores e streaming HTTP Range; em seguida executar cenários completos de pareamento, interrupção de rede, assinatura expirada e troca de orientação em TVs reais.
+
+## Entrega de código — links assinados e streaming HTTP Range para Player TV (15/10/2026)
+
+- **API [PR #39](https://github.com/paulodias-dev/meucomercial-api/pull/39):** novos uploads TV (imagem/MP4) são salvos em disco privado; manifesto do Player oferece URL temporária assinada por `asset`, `device` e `manifest_version` por 70 segundos, sem token do dispositivo na URL. Endpoint binário revalida, por requisição inclusive `Range`, a assinatura, dispositivo e assinatura ativos, cliente, playlist agendada e versão atual. `BinaryFileResponse` suporta range/206; prévia de dois minutos é emitida somente em endpoints administrativos com permissão/agência. Testes de upload, expiração, adulteração de URL, bloqueio, mudança de grade, cliente cruzado e compatibilidade do legado. Swagger/OpenAPI de novas rotas.
+- **Admin/Player [PR #30](https://github.com/paulodias-dev/meucomercial-admin/pull/30):** cache RAM por identidade do ativo para reutilizar a mesma imagem após renovação de URL assinada, com invalidação por manifesto/versão; erro de streaming de vídeo após carregamento ativa standby e reconsulta; regressão Node e manual TLS/CORS e rotas temporárias.
+- **Site [PR documental](https://github.com/paulodias-dev/meucomercial-site/pulls):** sincronização do indicador geral. Não expõe mídia, token do dispositivo ou serviços privados na landing page.
+
+**Marcos desta entrega (código, não homologação):** um implementado na API e um no Admin/Player (Fase 5). API **24/47 = 51,1%**; Admin **23/44 = 52,3%**; Site **8/31 = 25,8%**. Global **55/122 = 45,1%** (55 ÷ 122 × 100 = 45,08196721…%). Referência anterior: 53/120 = 44,2%. CI verde e deploy não são premissas desses índices.
+
+**Riscos de produção:** arquivos anteriores no disco `public` seguem acessíveis por seus links históricos; migração explicitamente planejada antes de alegar isolamento completo do acervo. `APP_URL` HTTPS, proxies TLS, CORS e URLs temporárias do Player precisam de validação em ambiente real. Prévia é capacidade temporária compartilhável até sua expiração. Não habilitar produção sem PHPUnit, build Metronic, teste Node, vídeo Range de MP4 e dispositivos homologados.
+
+**Próxima etapa:** tratar os workflows GitHub Actions com falha e executar integração TV real; em seguida migrar mídias antigas do disco público com estratégia de rollback, proteção por link temporário e teste de não regressão em mídia, prévia e playlists.
 
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
