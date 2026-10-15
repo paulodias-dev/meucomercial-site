@@ -111,6 +111,35 @@ A comunicação visual é a forma mais poderosa de se conectar com seu público.
 *Fale com nossos consultores para desenhar o plano de implantação ideal para sua empresa!*`
 };
 
+
+// Proxy same-origin to Laravel. API base is server-only, never exposed in Vite.
+// Configure MEUCOMERCIAL_API_URL ending in /api; example: https://api.example.com/api.
+app.post("/api/commercial-leads", async (req, res) => {
+  const configured = process.env.MEUCOMERCIAL_API_URL?.trim();
+  if (!configured) {
+    return res.status(503).json({message: "Canal de solicitações temporariamente indisponível."});
+  }
+
+  try {
+    const base = new URL(configured.endsWith("/") ? configured : configured + "/");
+    if (base.protocol !== "https:" && !(process.env.NODE_ENV !== "production" && base.hostname === "localhost")) {
+      return res.status(503).json({message: "Configuração de canal comercial indisponível."});
+    }
+    const endpoint = new URL("site/commercial-leads", base);
+    const upstream = await fetch(endpoint, {
+      method: "POST",
+      headers: {"Content-Type": "application/json", "Accept": "application/json"},
+      body: JSON.stringify(req.body),
+      signal: AbortSignal.timeout(12000),
+    });
+    const payload = await upstream.json().catch(() => ({}));
+    res.setHeader("Cache-Control", "no-store");
+    return res.status(upstream.status).json(payload);
+  } catch {
+    return res.status(503).json({message: "Serviço de contato indisponível. Tente novamente."});
+  }
+});
+
 // API: Strategic consultation
 app.post("/api/consult", async (req, res) => {
   const { segment, additionalInfo } = req.body;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Tv, 
   Settings, 
@@ -82,6 +82,12 @@ export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalSource, setModalSource] = useState("Geral");
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+  const [leadKind, setLeadKind] = useState<"establishment" | "agency" | "advertiser">("establishment");
+  const [companyWebsite, setCompanyWebsite] = useState(""); // Bot honeypot
+  const submissionKey = useRef<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -91,10 +97,6 @@ export default function App() {
     segmento: "escritorio",
     mensagem: ""
   });
-
-  // Footer Newsletter submission
-  const [newsletterSubmitted, setNewsletterSubmitted] = useState(false);
-  const [newsletterEmail, setNewsletterEmail] = useState("");
 
   useEffect(() => {
     const handleScroll = () => {
@@ -215,29 +217,63 @@ export default function App() {
       segmento: selectedSegment
     }));
     setIsModalOpen(true);
+    setFormError("");
+    setFormSubmitted(false);
+    setPrivacyConsent(false);
+    setCompanyWebsite("");
+    submissionKey.current = null;
   };
 
-  // Lead Form submission handler
-  const handleLeadSubmit = (e: React.FormEvent) => {
+  // Commercial inquiries are only marked successful after API persistence.
+  // Keep the same UUID across retries to make network timeouts safe.
+  const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API Call sending lead info
-    setTimeout(() => {
+    if (formSubmitting || !privacyConsent) return;
+    if (!submissionKey.current) submissionKey.current = crypto.randomUUID();
+    setFormSubmitting(true);
+    setFormError("");
+    const params = new URLSearchParams(window.location.search);
+
+    try {
+      const response = await fetch("/api/commercial-leads", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Accept": "application/json"},
+        body: JSON.stringify({
+          idempotency_key: submissionKey.current,
+          kind: leadKind,
+          name: formData.nome.trim(),
+          company: formData.empresa.trim(),
+          email: formData.email.trim(),
+          whatsapp: formData.whatsapp.trim(),
+          screens_count: leadKind === "establishment" ? Number(formData.telas) : null,
+          segment: formData.segmento,
+          message: formData.mensagem.trim() || null,
+          source: modalSource,
+          utm_source: params.get("utm_source")?.slice(0, 100) || null,
+          utm_medium: params.get("utm_medium")?.slice(0, 100) || null,
+          utm_campaign: params.get("utm_campaign")?.slice(0, 100) || null,
+          consent: privacyConsent,
+          website: companyWebsite,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(response.status === 429
+          ? "Muitas solicitações em sequência. Tente novamente em alguns minutos."
+          : response.status === 422
+          ? "Revise os campos e confirme a autorização de contato."
+          : response.status === 409
+          ? "Ocorreu um conflito no envio. Atualize a página e tente novamente."
+          : typeof data.message === "string" && response.status < 500
+          ? data.message : "Não foi possível registrar sua solicitação. Tente novamente.");
+      }
       setFormSubmitted(true);
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setFormSubmitted(false);
-        // Reset form
-        setFormData({
-          nome: "",
-          email: "",
-          whatsapp: "",
-          empresa: "",
-          telas: "5",
-          segmento: "escritorio",
-          mensagem: ""
-        });
-      }, 3500);
-    }, 1200);
+      submissionKey.current = null;
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Falha de conexão. Tente novamente.");
+    } finally {
+      setFormSubmitting(false);
+    }
   };
 
   // Helper markdown bold + syntax visualizer
@@ -1746,34 +1782,11 @@ export default function App() {
                 Assine nossa newsletter semanal com as melhores táticas de engajamento interno para RH e trade marketing.
               </p>
               
-              {newsletterSubmitted ? (
-                <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-100 text-xs text-blue-600 font-semibold">
-                  ✓ E-mail cadastrado com sucesso!
-                </div>
-              ) : (
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (newsletterEmail.trim()) setNewsletterSubmitted(true);
-                  }}
-                  className="flex gap-2"
-                >
-                  <input
-                    type="email"
-                    required
-                    placeholder="Seu melhor e-mail"
-                    value={newsletterEmail}
-                    onChange={(e) => setNewsletterEmail(e.target.value)}
-                    className="bg-white border border-black/10 rounded-xl px-3 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 flex-1 min-w-0 placeholder:text-black/30"
-                  />
-                  <button
-                    type="submit"
-                    className="p-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors shrink-0 cursor-pointer shadow-sm"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </form>
-              )}
+              <p className="text-xs text-black/50 mb-3">A inscrição automática por e-mail ainda não está disponível. Para falar com nossa equipe:</p>
+              <button type="button" onClick={() => openLeadModal("Rodapé - Atendimento")}
+                className="px-4 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">
+                Solicitar atendimento
+              </button>
             </div>
 
           </div>
@@ -1837,7 +1850,7 @@ export default function App() {
                     Falar com um Especialista
                   </h3>
                   <p className="text-xs text-black/60 mt-1">
-                    Preencha o formulário e nossa equipe comercial entrará em contato em menos de 15 minutos!
+                    Conte sobre sua empresa. Nossa equipe analisará a solicitação e entrará em contato.
                   </p>
                 </div>
                 <button
@@ -1860,12 +1873,20 @@ export default function App() {
                   </div>
                   <h4 className="text-lg font-bold text-[#1D1D1F]">Solicitação Recebida!</h4>
                   <p className="text-sm text-black/60 max-w-xs mx-auto">
-                    Excelente, <strong>{formData.nome || "Parceiro"}</strong>! Nossa equipe já foi notificada da sua solicitação oriunda de <strong>"{modalSource}"</strong>.
+                    Obrigado, <strong>{formData.nome || "parceiro"}</strong>! Seu pedido foi registrado. A equipe comercial entrará em contato pelos dados informados.
                   </p>
-                  <span className="text-xs text-emerald-600 font-mono font-bold">Retornaremos em instantes no WhatsApp!</span>
+                  <button type="button" className="text-xs text-blue-700 underline" onClick={() => setIsModalOpen(false)}>Fechar</button>
                 </motion.div>
               ) : (
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
+                  <div>
+                    <label htmlFor="lead-kind" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Como deseja usar o Meu Comercial?</label>
+                    <select id="lead-kind" value={leadKind} onChange={e => setLeadKind(e.target.value as typeof leadKind)} className="w-full rounded-xl border border-black/10 bg-white p-2.5 text-xs">
+                      <option value="establishment">Instalar TV ou Rádio Indoor no estabelecimento</option>
+                      <option value="agency">Gerenciar clientes como agência</option>
+                      <option value="advertiser">Anunciar na rede de estabelecimentos</option>
+                    </select>
+                  </div>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -1919,7 +1940,7 @@ export default function App() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Quantidade de TVs *</label>
+                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Quantidade de TVs (estimativa)</label>
                       <select
                         value={formData.telas}
                         onChange={(e) => setFormData({...formData, telas: e.target.value})}
@@ -1959,6 +1980,17 @@ export default function App() {
                     />
                   </div>
 
+                  <input aria-hidden="true" tabIndex={-1} autoComplete="off"
+                    style={{position: "absolute", left: "-10000px"}}
+                    value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)}
+                    name="website" />
+                  <label className="flex gap-2.5 items-start text-xs text-black/70 leading-relaxed">
+                    <input type="checkbox" checked={privacyConsent}
+                      onChange={e => setPrivacyConsent(e.target.checked)}
+                      required className="mt-0.5 accent-blue-600" />
+                    <span>Autorizo o contato comercial do Meu Comercial por e-mail ou WhatsApp sobre esta solicitação. Meus dados serão utilizados para este atendimento.</span>
+                  </label>
+                  {formError && <div role="alert" aria-live="polite" className="rounded-lg border border-red-200 bg-red-50 text-red-800 p-3 text-xs">{formError}</div>}
                   {/* Submission buttons */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <button
@@ -1970,14 +2002,15 @@ export default function App() {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold text-center shadow-sm transition-all cursor-pointer"
+                      disabled={formSubmitting || !privacyConsent}
+                      className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold text-center shadow-sm transition-all cursor-pointer"
                     >
-                      Enviar Solicitação
+                      {formSubmitting ? "Registrando..." : "Enviar solicitação"}
                     </button>
                   </div>
 
                   <span className="block text-[9px] text-center text-black/40 font-mono mt-2 font-semibold">
-                    🔒 Seus dados estão 100% protegidos e serão utilizados apenas para nossa consultoria comercial.
+                    Seus dados são usados para atender ao pedido. Não realizamos contratação ou cobrança a partir deste formulário.
                   </span>
 
                 </form>
