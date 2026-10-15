@@ -11,16 +11,18 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 56 | 44,6% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 53 | 45,3% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 33 | 24,2% |
-| **Plataforma completa** | **57** | **142** | **40,1%** |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 58 | 43,1% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 54 | 44,4% |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 34 | 23,5% |
+| **Plataforma completa** | **57** | **146** | **39,0%** |
 
 **Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Replanejamento aprovado em 15/10/2026:** foram detalhados **16 novos marcos pendentes** na Fase 9 (+6 API, +8 Admin, +2 Site), vinculados à governança de planos, bibliotecas, Estúdio de Publicação, segmentação, distribuição e resultados. O total passou de **57/124 (46,0%)** para **57/140 (40,7%)**; **nenhum marco foi marcado concluído** nesta entrega documental. A redução matemática decorre exclusivamente de escopo adicional. Os 57 concluídos incluem código de PRs definitivos ainda abertos (#40 API, #31 Admin, #17 Site), não CI aprovado ou deploy.
 
 **Replanejamento técnico de 15/10/2026:** +2 marcos P0 pendentes na API para consolidação de migrations MySQL 8 e seeders/testes/Swagger; mantidos os 57 marcos anteriormente concluídos. **API 25/56 (44,6%), Admin 24/53 (45,3%), Site 8/33 (24,2%); plataforma 57/142 = 40,1%**. Critérios transversais detalhados abaixo; nenhuma refatoração de banco, execução destrutiva ou homologação ocorreu nesta atualização documental.
+
+**Replanejamento comercial e de execução de 15/10/2026:** +4 marcos pendentes de precificação híbrida de agências (2 API, 1 Admin, 1 Site), agora organizados em sprints integradas sem duplicar a contagem. **API 25/58 (43,1%), Admin 24/54 (44,4%), Site 8/34 (23,5%); plataforma 57/146 = 39,0%**. Comparação: 57/142 = 40,1% antes deste novo escopo. Não houve implementação da cobrança nem aceites de sprints nesta entrega documental.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -134,6 +136,48 @@
 **Dependência obrigatória da API:** os dois novos marcos pendentes de consolidação MySQL 8/migrations, seeders modulares, PHPUnit para endpoints/serviços e L5 Swagger são contabilizados **somente no roadmap da API**. A API deve respeitar identificadores MySQL <=64 caracteres, `utf8mb4`, tipagem e índices coerentes, além de validar migrations no MySQL real.
 
 **Critérios de aceite do Site:** consumo de endpoints documentados/validados em OpenAPI; exibir somente planos e cotas reais, não presumir elegibilidade sem plano ativo; provar com fixtures e testes de integração as jornadas de agência, estabelecimento e anunciante (free, pago, sem plano, suspenso), erros/validações, isolamento de dados, SEO, acessibilidade e QA mobile-first. Exigir build/testes e CI verde. Dados demonstrativos e `migrate:fresh --seed` são restritos a ambientes descartáveis de desenvolvimento/teste, nunca produção. Esta seção não acrescenta marco próprio ao Site.
+
+## Planejamento de execução por sprints — proposta operacional de 15/10/2026
+
+**Decisão:** adotar sprints como unidade de planejamento, priorização, revisão e aceite da plataforma inteira (API + Admin/Player + Site), no lugar de entregas isoladas organizadas somente por fases. **Cadência sugerida:** Sprint 0 de preparação com 1 semana; Sprints 1–8 com timebox de 2 semanas, sujeito à capacidade real da equipe e replanejamento ao final de cada ciclo. Este planejamento **não cria novos marcos nem altera o significado de [x]/[ ]**: tarefas de produto continuam contadas uma única vez nas fases por repositório. Sprints representam agrupamentos dessas tarefas e dependências, não promessa de conclusão automática nem calendário contratual.
+
+| Sprint | Foco / objetivo demonstrável | Entregáveis e critérios mínimos | Repositório(s) |
+|---|---|---|---|
+| **0 — Preparação** (1 semana) | Inventário técnico, CI e segurança da refatoração | Conferir PRs pendentes/base real, ambientes MySQL, migrations/FKs, dependências, backups, isolamento de ambientes e pipelines; organizar backlog de risco e estratégia de rollback. **Não executar destruição de dados**. | API, Admin, Site |
+| **1 — Fundamentos** (2 semanas) | Banco de desenvolvimento reconstruível e testes executáveis | Consolidar migrations por domínios em PRs revisáveis, seeders por módulo com Master/agência/clientes/plano/mídias, rodar `migrate:fresh --seed` **somente em banco descartável**, executar PHPUnit/MySQL, L5 Swagger e builds/CI. Se exceder capacidade, priorizar núcleo Master/planos/Indoor e replaniﬁcar restante sem falsos aceites. | API; Admin/Site testam contratos |
+| **2 — Identidade e planos** (2 semanas) | Master → agência → cliente com autorização e entitlement ativos | Matriz RBAC sem escalada, vínculo entre organização/agência/estabelecimento, plano ativo paid/free/freemium, quotas e testes contra vazamento; permissões refletidas nas telas. | API + Admin |
+| **3 — Faturamento híbrido** (2 semanas) | Agência contrata pacote ou paga conforme clientes ativos | Catálogo versionado, ativação/desativação e medição auditável, pacote 10/50/100 ou avulso sem mínimo, cálculo/prévia de valores e proporcionalidade, migração segura entre modalidades, proteção contra duplicidade, UX Master/Agência e vitrine de oferta. Valores R$ 500/10 e R$ 55–60/cliente são **exemplos, não preços aprovados**. | API + Admin + Site |
+| **4 — Acervo e licenças** (2 semanas) | Música global e publicidade privada | Música global liberada somente após validação de direitos, spots e vídeos privados por cliente; autorização de reprodução, migração controlada de mídia pública legada, compatibilidade do Player; segurança e QA. | API + Admin/Player |
+| **5 — Distribuição** (2 semanas) | Publicação direcionada sem playlist manual por destino | Motor de segmentação por cliente, agência, categoria, unidades e toda a rede (somente Master), simulação de elegibilidade, contratos e reserva, fan-out por referência com idempotência, programações e retirada auditável. | API + Admin/Player |
+| **6 — Estúdio simples** (2 semanas) | Criar e publicar anúncio de Rádio ou TV com poucos passos | Criativo por imagem/vídeo/áudio, modelos/texto/música licenciada, prévia fiel às capacidades reais do Player, autosave, fluxo criar → destinos → programação → revisão, QA mobile. Alvo UX: publicação simples em até 2 min após selecionar mídia. | Admin + API + Player |
+| **7 — Players e comprovação** (2 semanas) | Reprodução e prova de veiculação verificáveis | Homologação TV/Rádio em dispositivos reais, sync/offline/retomada, confirmação idempotente de exibição, distinção entre publicação/recebimento/exibição, segurança de links e métricas confiáveis. | API + Admin/Player |
+| **8 — Comercial e estabilização** (2 semanas) | SaaS demonstrável para agência e estabelecimento | Onboarding do site, planos com dados reais, relatórios por agência/cliente, pareamento assistido, documentação operacional, testes E2E de venda → player → faturamento → comprovação, acessibilidade/mobile e fechamento de defeitos. | Todos |
+
+**Cerimônias e regras:** no planejamento de cada sprint registrar objetivo, tickets/marcos envolvidos, responsável, dependências, estimativa por esforço, critério de aceite e riscos; checkpoint curto durante a execução; ao final apresentar demonstração do fluxo real, PRs **não draft**, testes reproduzíveis, revisão de bloqueios e retro curta. Não misturar PR de produto incompleto com afirmação de homologação. Preferir PRs pequenos e revisáveis (até cinco arquivos por PR quando viável), sem sacrificar integridade transacional e migrations relacionadas.
+
+**Definição de pronto (DoD):** código integrado ou PR definitivo claramente identificado; controle de escopo/tenant/plano; PHPUnit (unitário + Feature/controller) e casos negativos; migração/seed validado no MySQL real quando houver mudança de BD; documentação L5 Swagger/contrato atualizada; lint/build React, UX mobile, regressão, segurança e CI verde; Player físico validado quando afetado. **Código escrito e PR aberto ≠ sprint homologada**; indicar separadamente implementação, testes/CI, homologação e deploy.
+
+**Relatório ao fechar cada sprint:** objetivo, marcos concluídos com evidência, PR/commit, falhas abertas, percentual matemático de marcos `[x]` sobre total do roadmap e escopo planejado para a sprint seguinte. Impedimentos de ambiente/CI são registrados antes de iniciar novas frentes críticas.
+
+**Decisão de segurança:** `php artisan migrate:fresh --seed` apaga dados; utilizar apenas base descartável de desenvolvimento ou homologação isolada e confirmada, com backup quando aplicável; jamais aplicar automaticamente em produção. Refatoração de migrations existentes exige revisão de compatibilidade e plano de restauração dos ambientes com dados.
+
+### Decisão de produto — planos de agência em pacote ou sob demanda (aprovada em 15/10/2026)
+
+**Modelo de precificação único, configurável pelo Master, sem dois motores financeiros:**
+- **Pacote fixo:** limite de clientes ativos contratados (exemplos configuráveis: 10, 50, 100); mensalidade combinada e tratamento contratual para vagas não usadas. Exemplo ilustrativo: 10 clientes / R$ 500/mês.
+- **Sob demanda (pay-per-active-client):** agência habilita gradualmente clientes, sem pacote inicial obrigatório; mensalidade proporcional ao número de clientes ativos faturáveis, por preço unitário vigente (exemplo **não aprovado**: R$ 55 a R$ 60 por cliente/mês). Quantidade não limitada por um pacote, mas sujeita a governança/antifraude e limites técnicos previamente definidos.
+- **Métrica de cobrança:** cliente ativo faturável é uma organização da carteira da agência com **serviço/assinatura Indoor ativo e habilitado** no ciclo; lead/cadastro sem ativação não gera cobrança. Contar a mesma organização apenas uma vez por agência e ciclo mesmo quando houver várias TVs/rádios, salvo adicionais previstos em contrato. Situações de suspensão/inadimplência, período de tolerância e desativação devem ter regras explícitas, sem exclusão de dados.
+- **Fatura auditável e previsível:** armazenar política/preço/versionamento vigentes, ciclos e eventos de ativação/desativação, snapshots do consumo, prévia antes da contratação, pró-rata quando ativação ou troca ocorrerem no meio do ciclo, política de arredondamento DECIMAL e impostos/termos conforme contrato. Garantir idempotência em reprocessamentos e webhooks, sem cobrar duas vezes; usar domínio financeiro já existente, sem duplicar recebíveis.
+- **Troca de modalidade:** pacote ↔ sob demanda, mantendo clientes, mídia, dispositivos e campanhas; mostrar impacto na próxima fatura antes de confirmar; decidir corte/pró-rata e tratar clientes acima da capacidade na passagem para pacote sem desativação silenciosa.
+- **Experiência:** painel Master administra ambos os modelos, preços, vigência, regras, campanhas/descontos e auditoria; agência vê ativos faturáveis, uso, previsão da fatura, histórico, opção de alterar e recomendação de economia (sem trocar automaticamente); Site só divulga preços realmente publicados pela API.
+
+**Aceite transversal:** autorização Master/Agência e plano ativo; testes de 0, 1, 10, 11 e 50 clientes, múltiplos serviços para a mesma organização, alteração de preços futura, ativação no meio do ciclo, reversão, concorrência, duplicidade de eventos, acesso cruzado entre agências, cancelamento e inadimplência. Documentar os endpoints no L5 Swagger, executar PHPUnit contra MySQL 8 e homologar com faturas simuladas antes de conectar a cobrança real. **Não considerar implementado apenas por constar no roadmap.**
+
+### Marco novo de responsabilidade do Site — cobrança híbrida (pendente)
+
+- [ ] **P1 · Oferta de agência com pacote ou sob demanda.** Exibir preços e franquias autorizados pelo catálogo da API, simular custo conforme clientes ativos sem prometer valores ilustrativos, explicar métrica/pró-rata/adesão e enviar ao fluxo de contratação com QA mobile/acessibilidade.
+
+**Contagem nova nesta seção: +1 tarefa [ ] Site.**
 
 ## Fase 9: Experiência de publicação intuitiva, governança SaaS e distribuição inteligente (escopo aprovado em 15/10/2026)
 
