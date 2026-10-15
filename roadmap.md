@@ -198,6 +198,32 @@
 
 **Próxima entrega:** migração assistida de mídias legadas com inventário de licenças/deduplicação SHA-256 sem conceder acesso cruzado, seguida de homologação MySQL/S3 e sincronização das camadas sonoras com o Player de TV.
 
+## Entrega de refatoração UI/UX — TV Indoor e Áudio Indoor (14/10/2026)
+
+**Escopo implementado nas branches de PR**, ainda pendente de homologação e merge. A alteração estrutura a plataforma por contexto operacional, sem remover dados, dispositivos ou funcionalidades comerciais existentes.
+
+**API:** [PR #31](https://github.com/paulodias-dev/meucomercial-api/pull/31)
+- KPIs completos via agregação SQL (total, online, offline, TV, áudio, locados, disponíveis) com filtros antes da paginação; não usar apenas primeira página.
+- Tipos físicos **compatíveis** com os Players: `tv_app` / `radio_app`; orientação TV horizontal/vertical persistida em `metadata.orientation`. Impede troca de tipo após pareamento.
+- Migração `indoor_devices.rental_status` com `available|rented|null`, independente de `hardware_type` e do faturamento; registros legados não são classificados artificialmente.
+- Cadastro, edição e PIN com código/MAC, local ativo do cliente, assinatura, orientação e metadados preservados. Segurança, RBAC e scoping agência/cliente no controller quando `TENANCY_ENABLED=true`; Swagger e testes `IndoorDevicesWorkspaceTest` adicionados.
+- Contrato técnico e limitações em `docs/indoor-device-tv-radio-ux.md`.
+
+**Admin:** [PR #22](https://github.com/paulodias-dev/meucomercial-admin/pull/22)
+- Sidebar substitui o grupo genérico poluído por **TV Indoor** (Dashboard, Dispositivos, Story Builder/Anúncios, Grades e Agendamentos) e **Áudio Indoor** (Dashboard Rádio, Bibliotecas, Playlists, Grades e Players de Som).
+- Dispositivos são exibidos em listagem limpa: KPI real, filtro de tipo/conexão/cliente/local/comercial, busca por MAC/código, paginação, RBAC e ações editar/sincronizar/bloquear/excluir. Cadastro e pareamento por PIN disponíveis somente por modal.
+- Formulário registra TV horizontal/vertical, som, nome, código/MAC, cliente, local, assinatura, observações, propriedade e situação comercial. Toast, React Query invalidation e auto-refresh de conectividade a cada 30 segundos.
+- Unidades/ambientes, equipamentos patrimoniais, inventário publicitário e ordens deixam de poluir a Sidebar: acesso contextual dentro da gestão de dispositivos; rotas anteriores continuam válidas.
+- Novo editor de sequência Story Builder organiza imagens/vídeos e orientação, prévia visual do arquivo, e abre editor já existente de trilha/locução. **Canvas drag-and-drop com templates, layout versionado e preview fiel no Player TV continuam pendentes**.
+
+**Site:** somente alinhamento documental; não expor métricas, Players ou acervos privados à landing pública.
+
+**QA e aceite:** a entrega não equivale a publicação final. Validar manualmente mobile/tablet/desktop, paginação com milhares de registros, renovação heartbeat, permissões restritas, contrato e vínculo patrimonial, URL do Player TV/Rádio, build TS/Vite, migração e PHPUnit em homologação. Não foram executados GitHub Actions por solicitação. A tenancy global continua parcialmente pendente, independentemente do guard específico dos dispositivos.
+
+**Progresso geral preservado até homologação:** API 17/40 (42,5%) + Admin 16/37 (43,2%) + Site 8/31 (25,8%) = **41/108 (38,0%)**; não marcar os marcos de Story Builder completo / Player real como prontos.
+
+**Próxima entrega:** Canvas real do Story Builder (templates, drag-and-drop, múltiplas camadas, prévia executável e versionamento), com testes de manifesto/sincronização; depois aprimorar filtros e multi-tenant canônico dos módulos de patrimônio e locais.
+
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
 1. **P0 — Capturar leads de estabelecimentos e anunciantes em jornadas distintas, com LGPD/antispam, persistência e atribuição.**
