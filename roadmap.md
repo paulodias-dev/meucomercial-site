@@ -11,12 +11,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 17 | 40 | 42,5% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 16 | 37 | 43,2% |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 18 | 41 | 43,9% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 17 | 38 | 44,7% |
 | [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 8 | 31 | 25,8% |
-| **Plataforma completa** | **41** | **108** | **38,0%** |
+| **Plataforma completa** | **43** | **110** | **39,1%** |
 
-**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
+**Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dois marcos granulares efetivamente implementados (API e Admin) foram acrescentados ao escopo e concluídos em código; por isso o resultado atual é 43/110.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
 **Escopo:** este roadmap acompanha a **plataforma inteira** (API, painel, site e Player/TV externo ainda sem repositório específico identificado). O roadmap histórico de remoção/modernização continua em `docs/roadmap-simplificacao-agencia-indoor.md`, mas seus **87,5% não são reutilizados** para medir o SaaS inteiro.
 
@@ -223,6 +223,20 @@
 **Progresso geral preservado até homologação:** API 17/40 (42,5%) + Admin 16/37 (43,2%) + Site 8/31 (25,8%) = **41/108 (38,0%)**; não marcar os marcos de Story Builder completo / Player real como prontos.
 
 **Próxima entrega:** Canvas real do Story Builder (templates, drag-and-drop, múltiplas camadas, prévia executável e versionamento), com testes de manifesto/sincronização; depois aprimorar filtros e multi-tenant canônico dos módulos de patrimônio e locais.
+
+## Entrega incremental concluída em código — Canvas Visual TV (14/10/2026)
+
+**API:** [PR #33](https://github.com/paulodias-dev/meucomercial-api/pull/33). Salva layout visual de item de TV no JSON existente `IndoorPlaylistItem.metadata.story_layout`, com texto/faixas, no máximo 12 camadas, coordenadas normalizadas, validação estrita, RBAC `indoor_playlists.update`, escopo de agência/cliente e controle de concorrência por `expected_revision` (409). O item mantém identidade mesmo com reordenação: atualização transacional de posições sem violar unique, camadas de áudio preservadas a partir dos dados enviados e descarte de cena somente por consentimento explícito. Cobertura de testes escrita em `IndoorTvStoryLayoutTest`; não executada aqui.
+
+**Admin:** [PR #24](https://github.com/paulodias-dev/meucomercial-admin/pull/24). Componente `TvStoryCanvas` responsivo com textos/faixas arrastáveis via Pointer Events, suporte teclado, edição de posição/tamanho/cores/alinhamento, orientação TV horizontal/vertical, preview editorial de imagem/vídeo e salvamento independente versionado. Edição habilitada após salvar a sequência; exclusão de composição exige confirmação. Não duplica mídia e mantém links de trilha/locução existentes.
+
+**Site:** apenas documentação de dependência. Não apresentar canvas, contratos, arquivos ou playlist privada como dados públicos; eventual demonstração pública exige DTO sem mídia privada e revisão de direitos.
+
+**Limite explícito:** a composição salva é **rascunho administrativo**, não um layout publicado. Permanecem pendentes renderização pelo Player, templates reutilizáveis, animação, versionamento de publicação, compatibilidade offline, aprovação, programação e prova de exibição. Não houve compilação Vite, PHPUnit/MySQL ou validação do Player; GitHub Actions não foi utilizado, conforme solicitação.
+
+**Novo marco granular desta entrega:** 1 no API e 1 no Admin, adicionados e marcados `[x]` na Fase 5. Os marcos abrangentes do Story Builder continuam `[ ]`. Base anterior 41/108, acrescida de 2 tarefas novas implementadas: **43/110 = 39,1%** (marcos com evidência de código, não homologação), API **18/41 = 43,9%**, Admin **17/38 = 44,7%**, Site **8/31 = 25,8%**.
+
+**Próximo passo:** composição de templates com blocos reutilizáveis e renderização fiel pelo Player de TV usando um manifesto versionado, com validação de licenças/tenancy e homologação real antes de publicar campanhas.
 
 ## Ordem de execução e dependências (revisada para operação bilateral)
 
