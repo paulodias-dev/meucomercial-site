@@ -282,7 +282,9 @@
 **Implementações verificáveis nos PRs definitivos:**
 - **API [PR #37](https://github.com/paulodias-dev/meucomercial-api/pull/37):** `POST /api/v1/player/sync-result-v2`, autenticado por token de dispositivo, validação transacional de `manifest_version`, playlist da grade atual, `story_publication_version`, estado financeiro/dispositivo e resultado de sincronização; registros de sucesso/falha e reconciliação sem aceitar confirmações antigas. Preserva endpoint legado, inclui OpenAPI e testes de regressão.
 - **Admin [PR #28](https://github.com/paulodias-dev/meucomercial-admin/pull/28):** novo Player TV estático para navegadores (`public/indoor-player/`), implantação preferencial em origem exclusiva; pareamento por PIN, manifesto TV, imagem/vídeo em sequência, layouts publicados de texto/faixa em 16:9/9:16, expiração/bloqueio com suspensão, heartbeat, sincronização v2, tela cheia, desvinculação e validação estrita de mídia/esquema. Testes `node:test`, workflow e manual `docs/player-tv-browser.md`.
-- **Site:** apenas atualização documental do progresso; sem exposição de conteúdo privado ou token de Player para visitantes.
+- **Site [PR #14](https://github.com/paulodias-dev/meucomercial-site/pull/14):** apenas atualização documental do progresso; sem exposição de conteúdo privado ou token de Player para visitantes.
+
+**Commits de implementação:** API `93c5a89` (sync v2) e `76ff440` (testes); Admin `f58aaed` (Player, orientação e carregamento), `a722cdd` / `d6a5691` (contrato de manifesto), `357c019` (testes Node), `ff44527` (manual). Site `3b2e697` (roadmap). Commits de documentação complementares nas branches não são evidência de homologação.
 
 **Marcos desta entrega:** 1 novo marco de implementação na API + 1 no Admin (Fase 5). API **22/45 = 48,9%**, Admin **21/42 = 50,0%**, Site **8/31 = 25,8%**. **Plataforma 51/118 = 43,2%**, contra 49/116 = 42,2% na base anterior. O denominador cresceu apenas com os dois marcos efetivamente implementados; não concluir integralmente o Story Builder, Player nativo nem homologação de produção.
 
