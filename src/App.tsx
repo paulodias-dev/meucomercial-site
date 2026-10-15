@@ -29,7 +29,6 @@ import {
   FileText,
   Mail,
   ShieldCheck,
-  Send,
   Loader2,
   ArrowUp
 } from "lucide-react";
@@ -256,8 +255,8 @@ export default function App() {
           website: companyWebsite,
         }),
       });
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.received !== true) {
         throw new Error(response.status === 429
           ? "Muitas solicitações em sequência. Tente novamente em alguns minutos."
           : response.status === 422
@@ -1779,7 +1778,7 @@ export default function App() {
             <div className="md:col-span-3">
               <h4 className="text-xs uppercase font-mono tracking-wider text-[#1D1D1F] font-bold mb-4">Dicas de Mídia Indoor</h4>
               <p className="text-xs text-black/60 leading-relaxed mb-3">
-                Assine nossa newsletter semanal com as melhores táticas de engajamento interno para RH e trade marketing.
+                Estamos preparando conteúdos práticos sobre TV e Rádio Indoor para negócios locais.
               </p>
               
               <p className="text-xs text-black/50 mb-3">A inscrição automática por e-mail ainda não está disponível. Para falar com nossa equipe:</p>
