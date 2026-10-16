@@ -196,7 +196,7 @@ test('Studio saves drafts before activation and never reuses the Admin JWT',()=>
   assert.ok(studio.includes("studio-activate',token"))
   assert.ok(studio.includes("studio-duplicate',token"))
   assert.ok(studio.includes("studio-create',token"))
-  assert.ok(studio.includes("studio-update',token"))
+  assert.ok(studio.includes("editing?'studio-update':'studio-create'"))
   assert.ok(studio.includes('previous.length')===false)
   assert.ok(studio.includes('items.length>=30'))
   assert.ok(!studio.includes('localStorage.setItem'))
