@@ -33,7 +33,7 @@ type Media = {id:number;name:string;type:string;status:string;duration_seconds:n
 type View = 'devices'|'campaigns'|'services'|'locations'|'media'|'publications'|'studio'
 type PortalResponse<T>={data:T}
 
-async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device',
+async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device'|'claim-device',
   token:string|null,options:{page?:number;method?:'POST';body?:Record<string,string>;signal?:AbortSignal}={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
@@ -74,6 +74,7 @@ export default function ClientPortal(){
   const [deviceActionBusy,setDeviceActionBusy]=useState<number|null>(null)
   const [deviceActionMessage,setDeviceActionMessage]=useState('')
   const [pairingPin,setPairingPin]=useState<{deviceId:number;pin:string;expiresAt:string}|null>(null)
+  const [playerPinByDevice,setPlayerPinByDevice]=useState<Record<number,string>>({})
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
@@ -91,7 +92,7 @@ export default function ClientPortal(){
   const [loading,setLoading]=useState(false)
   const clearSession=()=>{
     activeToken.current=null
-    setPairingPin(null);setDeviceActionBusy(null);setDeviceActionMessage('')
+    setPairingPin(null);setPlayerPinByDevice({});setDeviceActionBusy(null);setDeviceActionMessage('')
     setPublishFromStudio(null)
     setSession(null);setOverview(null);setDevices(null);setCampaigns(null);setServices(null);setLocations(null);setMedia(null)
     setPassword('');setPage(1);setError('')
@@ -179,6 +180,29 @@ export default function ClientPortal(){
       }else setDeviceActionMessage(e instanceof Error?e.message:'Não foi possível solicitar a operação.')
     }finally{if(activeToken.current===token)setDeviceActionBusy(null)}
   }
+  const claimFromPlayer=async(device:Device)=>{
+    if(!session||deviceActionBusy!==null)return
+    const pin=(playerPinByDevice[device.id]??'').trim()
+    if(!/^\d{6}$/.test(pin)){
+      setDeviceActionMessage('Informe os seis números exibidos na tela do Player.');return
+    }
+    const token=session.token
+    setDeviceActionBusy(device.id);setDeviceActionMessage('')
+    try{
+      const result=await portalRequest<{data:{device_id:number;paired:boolean;status:string}}>(
+        'claim-device',token,{method:'POST',body:{device_id:String(device.id),pin}})
+      if(activeToken.current!==token)return
+      if(result.data.device_id!==device.id||!result.data.paired)
+        throw new Error('Não foi possível autorizar este aparelho.')
+      setPlayerPinByDevice(old=>({...old,[device.id]:''}))
+      setPairingPin(null)
+      setDeviceActionMessage('Pareamento autorizado. O Player irá resgatar a credencial com segurança e iniciar a comunicação.')
+      setRefresh(n=>n+1)
+    }catch(error){
+      if(activeToken.current===token)setDeviceActionMessage(error instanceof Error?error.message:'Falha ao autorizar o Player.')
+    }finally{if(activeToken.current===token)setDeviceActionBusy(null)}
+  }
+
   const changeView=(next:View)=>{
     setPublishFromStudio(null)
     setView(next);setPage(1);setPairingPin(null);setDeviceActionMessage('')
@@ -351,10 +375,27 @@ export default function ClientPortal(){
               {(['active','trialing'].includes(d.subscription_status??''))&&d.status!=='blocked'&&
                 <div className='mt-4 pt-4 border-t border-black/10'>
                   {d.status==='pending_pairing'
-                    ? <button type='button' disabled={deviceActionBusy!==null||loading}
-                        onClick={()=>void doDeviceAction('pair-device',d)}
-                        className='min-h-11 px-4 py-2.5 bg-blue-700 text-white rounded-xl text-xs font-bold disabled:opacity-50'>
-                        {deviceActionBusy===d.id?'Gerando PIN…':'Gerar PIN de pareamento'}</button>
+                    ? <div className='space-y-3'>
+                        <p className='text-xs text-black/60'>Abra o aplicativo Meu Comercial nesta TV ou Rádio, toque em “Gerar código” e informe aqui os 6 dígitos exibidos no aparelho.</p>
+                        <div className='flex flex-col sm:flex-row gap-2'>
+                          <label htmlFor={'player-pin-'+d.id} className='sr-only'>Código mostrado no Player {d.name}</label>
+                          <input id={'player-pin-'+d.id} type='text' inputMode='numeric' autoComplete='one-time-code'
+                            pattern='[0-9]{6}' maxLength={6} placeholder='PIN do Player'
+                            value={playerPinByDevice[d.id]??''}
+                            onChange={e=>setPlayerPinByDevice(old=>({...old,[d.id]:e.target.value.replace(/[^0-9]/g,'').slice(0,6)}))}
+                            className='min-h-11 rounded-xl border border-black/20 px-4 text-sm tracking-widest w-full sm:w-44'/>
+                          <button type='button' disabled={deviceActionBusy!==null||loading||(playerPinByDevice[d.id]??'').length!==6}
+                            onClick={()=>void claimFromPlayer(d)}
+                            className='min-h-11 px-4 py-2.5 bg-blue-700 text-white rounded-xl text-xs font-bold disabled:opacity-50'>
+                            {deviceActionBusy===d.id?'Autorizando…':'Conectar este Player'}
+                          </button>
+                        </div>
+                        <button type='button' disabled={deviceActionBusy!==null||loading}
+                          onClick={()=>void doDeviceAction('pair-device',d)}
+                          className='text-xs text-blue-700 underline'>
+                          Pareamento legado: gerar PIN para Player antigo
+                        </button>
+                      </div>
                     : <button type='button' disabled={deviceActionBusy!==null||loading}
                         onClick={()=>void doDeviceAction('sync-device',d)}
                         className='min-h-11 px-4 py-2.5 border border-blue-700 text-blue-800 rounded-xl text-xs font-bold disabled:opacity-50'>
