@@ -15,7 +15,7 @@ test('FAQ has 8 distinct topics of licensing, online status and technical report
 })
 test('radio guides explicitly distinguish software from music rights',()=>{
   assert.ok(component.includes('não concede automaticamente direitos'))
-  assert.ok(component.includes('não é uma medição independente de audiência'))
+  assert.ok(component.includes('não uma medição independente de audiência'))
   assert.ok(guide.includes('não equivale à aquisição automática de direitos autorais'))
 })
 test('illustrative schedule is not presented as playable audio',()=>{
@@ -44,9 +44,9 @@ test('accordion has unique stable ids and accessible disclosure controls',()=>{
 })
 test('contractual reporting does not claim verified audience',()=>{
   assert.ok(component.includes('não identificam ouvintes individuais'))
-  assert.ok(component.includes('não comprova'))
+  assert.ok(component.includes('não representam uma garantia de alcance'))
   assert.ok(guide.includes('não comprova ouvintes'))
-  assert.ok(guide.includes('Downloads e heartbeats'))
+  assert.ok(guide.includes('downloads e heartbeats'))
 })
 test('no fabricated checkout, recurring price or live music download is advertised',()=>{
   assert.ok(component.includes('não promete reprodução permanente'))
