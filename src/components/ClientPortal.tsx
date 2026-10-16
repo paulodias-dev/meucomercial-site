@@ -76,6 +76,7 @@ export default function ClientPortal(){
   const [deviceActionMessage,setDeviceActionMessage]=useState('')
   const [pairingPin,setPairingPin]=useState<{deviceId:number;pin:string;expiresAt:string}|null>(null)
   const [playerPinByDevice,setPlayerPinByDevice]=useState<Record<number,string>>({})
+  const [scannedPin,setScannedPin]=useState<string|null>(null)
   const [diagnosticsId,setDiagnosticsId]=useState<number|null>(null)
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
@@ -92,6 +93,14 @@ export default function ClientPortal(){
   const [locations,setLocations]=useState<Page<Location>|null>(null)
   const [media,setMedia]=useState<Page<Media>|null>(null)
   const [loading,setLoading]=useState(false)
+  useEffect(()=>{
+    // The QR PIN is carried only in the fragment: never sent to Express/API,
+    // analytics, Referer or localStorage. Clear browser history immediately.
+    const match=/^#pair=([0-9]{6})$/.exec(window.location.hash)
+    if(!match)return
+    window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search)
+    setScannedPin(match[1]);setView('devices')
+  },[])
   const clearSession=()=>{
     activeToken.current=null
     setPairingPin(null);setPlayerPinByDevice({});setDiagnosticsId(null);setDeviceActionBusy(null);setDeviceActionMessage('')
@@ -379,6 +388,10 @@ export default function ClientPortal(){
                   {d.status==='pending_pairing'
                     ? <div className='space-y-3'>
                         <p className='text-xs text-black/60'>Abra o aplicativo Meu Comercial nesta TV ou Rádio, toque em “Gerar código” e informe aqui os 6 dígitos exibidos no aparelho.</p>
+                        {scannedPin&&<button type='button' className='text-xs font-semibold text-blue-800 underline'
+                          onClick={()=>{setPlayerPinByDevice(old=>({...old,[d.id]:scannedPin}));setScannedPin(null)}}>
+                          Usar PIN lido no QR nesta tela: {d.name}
+                        </button>}
                         <div className='flex flex-col sm:flex-row gap-2'>
                           <label htmlFor={'player-pin-'+d.id} className='sr-only'>Código mostrado no Player {d.name}</label>
                           <input id={'player-pin-'+d.id} type='text' inputMode='numeric' autoComplete='one-time-code'

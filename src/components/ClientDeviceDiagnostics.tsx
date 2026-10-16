@@ -58,11 +58,11 @@ export default function ClientDeviceDiagnostics({token,deviceId}:{token:string;d
             <p className='text-black/60 mt-1'>{l.protocol===2?'Confirmação autenticada v2':'Protocolo legado'}</p>
           </div>)}
         </div>}
-      <h5 className='font-semibold text-xs mt-4 mb-2'>Relatos de exibição de conteúdo próprio (24h): {data.own_playback_reported_24h??0}</h5>
+      <h5 className='font-semibold text-xs mt-4 mb-2'>Relatos de exibição TV e spots próprios de Rádio (24h): {data.own_playback_reported_24h??0}</h5>
       {!data.own_playback_events?.length?<p className='text-xs text-black/60'>Sem relatos do Player.</p>
         :<div className='space-y-2'>
           {data.own_playback_events.map(e=><p key={e.event_uuid} className='text-xs rounded-xl bg-white border border-black/10 p-3'>
-            {e.content_type==='video'?'Vídeo':'Imagem'} · item #{e.playlist_item_id} · manifesto v{e.manifest_version} · {when(e.occurred_at)}
+            {e.content_type==='audio'?'Spot institucional de Rádio':e.content_type==='video'?'Vídeo TV':'Imagem TV'} · item #{e.playlist_item_id} · manifesto v{e.manifest_version} · {when(e.occurred_at)}
           </p>)}
         </div>}
       <p className='text-xs text-black/60 mt-2'>Esses registros são relatos autenticados do próprio Player, não uma certificação independente de reprodução ou audiência.</p>

@@ -313,3 +313,18 @@ test('own-TV completion telemetry is client-scoped and not mislabeled as certifi
   assert.ok(!deviceDiagnostics.includes('device_token'))
   assert.ok(!deviceDiagnostics.includes('ip_address'))
 })
+
+test('QR pairing fragment is consumed once, wiped from address, and never auto-claims a device',()=>{
+  assert.ok(portal.includes("const match=/^#pair=([0-9]{6})$/"))
+  assert.ok(portal.includes("window.history.replaceState(window.history.state"))
+  assert.ok(portal.includes("setScannedPin(match[1])"))
+  assert.ok(portal.includes("Usar PIN lido no QR nesta tela"))
+  assert.ok(portal.includes("setScannedPin(null)"))
+  assert.ok(portal.includes("'claim-device',token"))
+  assert.ok(!portal.includes("fetch('https://api.qrserver.com"))
+})
+test('radio audit identifies owned institutional spots without claiming independent audience',()=>{
+  assert.ok(deviceDiagnostics.includes('Spot institucional de Rádio'))
+  assert.ok(deviceDiagnostics.includes('relatos autenticados do próprio Player'))
+  assert.ok(!deviceDiagnostics.includes('playback_confirmed:true'))
+})
