@@ -90,7 +90,19 @@ export default function AudienceJourneys({onContact}:{
           return <button key={j.id} type='button' role='tab'
             id={'audience-tab-'+j.id} aria-controls='audience-panel'
             aria-selected={active===j.id}
+            tabIndex={active===j.id?0:-1}
             onClick={()=>setActive(j.id)}
+            onKeyDown={event=>{
+              const keys=['ArrowRight','ArrowLeft','Home','End']
+              if(!keys.includes(event.key))return
+              event.preventDefault()
+              const current=journeys.findIndex(item=>item.id===j.id)
+              const next=event.key==='Home'?0:event.key==='End'?journeys.length-1:
+                (current+(event.key==='ArrowRight'?1:-1)+journeys.length)%journeys.length
+              const target=journeys[next]
+              setActive(target.id)
+              document.getElementById('audience-tab-'+target.id)?.focus()
+            }}
             className={'text-left p-5 border-2 rounded-2xl transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 '+
               (active===j.id?'bg-blue-50 border-blue-600':'bg-white border-black/10 hover:border-blue-200')}>
             <JIcon size={22} className='text-blue-700' aria-hidden/>
