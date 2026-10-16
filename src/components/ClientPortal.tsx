@@ -3,6 +3,7 @@ import ClientPublications from './ClientPublications'
 import ClientStudio from './ClientStudio'
 import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'
 import ClientOnboarding from './ClientOnboarding'
+import ClientPlaybackOverview from './ClientPlaybackOverview'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Session = {token:string; client:{id:number;name?:string;email?:string}}
@@ -340,6 +341,7 @@ export default function ClientPortal(){
           </button>
         </div>
       <ClientOnboarding token={session.token} onNavigate={changeView}/>
+      {view==='devices'&&<ClientPlaybackOverview key={session.client.id} token={session.token}/>}
       {view==='studio'
         ? <ClientStudio key={session.client.id} token={session.token} onPublish={selection=>{
             setPublishFromStudio(selection);setView('publications')
