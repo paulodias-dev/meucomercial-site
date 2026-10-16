@@ -21,10 +21,14 @@ type Campaign = {
   submitted_at:string|null;approved_at:string|null;created_at:string|null
 }
 type Page<T> = {data:T[];pagination:{page:number;last_page:number;total:number;per_page:number}}
-type View = 'devices'|'campaigns'
+type Service = {
+  id:number;status:string;expires_at:string|null
+  plan:{name:string;description:string|null;interval:string|null}|null
+}
+type View = 'devices'|'campaigns'|'services'
 type PortalResponse<T>={data:T}
 
-async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns',
+async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services',
   token:string|null,options:{page?:number;method?:'POST';body?:Record<string,string>;signal?:AbortSignal}={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
@@ -71,9 +75,10 @@ export default function ClientPortal(){
   const [overview,setOverview]=useState<PortalOverview|null>(null)
   const [devices,setDevices]=useState<Page<Device>|null>(null)
   const [campaigns,setCampaigns]=useState<Page<Campaign>|null>(null)
+  const [services,setServices]=useState<Page<Service>|null>(null)
   const [loading,setLoading]=useState(false)
   const clearSession=()=>{
-    setSession(null);setOverview(null);setDevices(null);setCampaigns(null)
+    setSession(null);setOverview(null);setDevices(null);setCampaigns(null);setServices(null)
     setPassword('');setPage(1);setError('')
   }
   const signOut=()=>{
@@ -100,17 +105,20 @@ export default function ClientPortal(){
     const abort=new AbortController()
     setLoading(true);setError('')
     // Responses from an old page/role must not appear while switching scope.
-    setDevices(null);setCampaigns(null)
+    setDevices(null);setCampaigns(null);setServices(null)
     Promise.all([
       portalRequest<PortalResponse<PortalOverview>>('overview',session.token,{signal:abort.signal}),
       view==='devices'
         ? portalRequest<Page<Device>>('devices',session.token,{page,signal:abort.signal})
-        : portalRequest<Page<Campaign>>('campaigns',session.token,{page,signal:abort.signal}),
+        : view==='campaigns'
+          ? portalRequest<Page<Campaign>>('campaigns',session.token,{page,signal:abort.signal})
+          : portalRequest<Page<Service>>('services',session.token,{page,signal:abort.signal}),
     ]).then(([summary,list])=>{
       if(abort.signal.aborted)return
       setOverview(summary.data)
       if(view==='devices')setDevices(list as Page<Device>)
-      else setCampaigns(list as Page<Campaign>)
+      else if(view==='campaigns')setCampaigns(list as Page<Campaign>)
+      else setServices(list as Page<Service>)
     }).catch(err=>{
       if(abort.signal.aborted)return
       if(err instanceof Error&&err.message.startsWith('Acesso não autorizado')){
@@ -121,7 +129,7 @@ export default function ClientPortal(){
   },[session,view,page,refresh])
 
   const changeView=(next:View)=>{setView(next);setPage(1)}
-  const list=view==='devices'?devices:campaigns
+  const list=view==='devices'?devices:view==='campaigns'?campaigns:services
   const cards=[
     ['Total de Players',overview?.devices.total??0,Monitor],
     ['Online',overview?.devices.online??0,BadgeCheck],
@@ -211,6 +219,11 @@ export default function ClientPortal(){
               (view==='devices'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
             Meus dispositivos
           </button>
+          <button type='button' aria-pressed={view==='services'} onClick={()=>changeView('services')}
+            className={'px-4 py-3 rounded-xl text-sm font-bold '+
+              (view==='services'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
+            Meus serviços
+          </button>
           <button type='button' aria-pressed={view==='campaigns'} onClick={()=>changeView('campaigns')}
             className={'px-4 py-3 rounded-xl text-sm font-bold '+
               (view==='campaigns'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
@@ -218,11 +231,14 @@ export default function ClientPortal(){
           </button>
         </div>
         <div className='p-4 sm:p-6'>
-          <h2 className='font-bold text-lg'>{view==='devices'?'Situação dos Players':'Pedidos como anunciante'}</h2>
+          <h2 className='font-bold text-lg'>{view==='devices'?'Situação dos Players':
+            view==='campaigns'?'Pedidos como anunciante':'Assinaturas e planos'}</h2>
           <p className='text-xs text-black/60 mt-1 mb-6'>
             {view==='devices'
               ? 'Dispositivos deste cadastro. Pareamento e alteração de programação são operações autorizadas no painel de gestão.'
-              : 'A aprovação de uma ordem não garante automaticamente inserções concluídas ou audiência.'}
+              : view==='campaigns'
+                ? 'A aprovação de uma ordem não garante automaticamente inserções concluídas ou audiência.'
+                : 'Consulte o plano, a vigência e o estado do serviço. Cobranças e pagamentos permanecem no financeiro do contrato.'}
           </p>
           {!loading&&list?.data.length===0&&<p className='text-sm text-black/60 bg-[#F5F7FA] rounded-xl p-6'>
             Nenhum registro encontrado nesta categoria.
@@ -243,7 +259,7 @@ export default function ClientPortal(){
               <p className='mt-2 text-xs text-black/60'>
                 {d.needs_sync?'Aguardando sincronização de programação.':'Nenhuma sincronização pendente sinalizada.'}
               </p>
-            </article>):(campaigns?.data??[]).map(c=><article key={c.id}
+            </article>):view==='campaigns'?(campaigns?.data??[]).map(c=><article key={c.id}
               className='rounded-xl border border-black/10 p-4 sm:p-5'>
               <h3 className='font-bold text-sm'>{c.title}</h3>
               <p className='text-xs mt-3'>Status: {labels[c.status]??c.status}</p>
@@ -251,6 +267,12 @@ export default function ClientPortal(){
                 Criativo: {labels[c.creative_status]??c.creative_status}
               </p>
               <p className='text-xs text-black/60 mt-2'>Solicitado em: {date(c.submitted_at||c.created_at)}</p>
+            </article>):(services?.data??[]).map(service=><article key={service.id}
+              className='rounded-xl border border-black/10 p-4 sm:p-5'>
+              <h3 className='font-bold text-sm'>{service.plan?.name||'Serviço #'+service.id}</h3>
+              <p className='text-xs mt-3'>Situação: {labels[service.status]??service.status}</p>
+              <p className='text-xs text-black/60 mt-2'>Vigência até: {date(service.expires_at)}</p>
+              <p className='text-xs text-black/60 mt-2'>{service.plan?.description||'Consulte o contrato para conhecer os recursos do plano.'}</p>
             </article>)}
           </div>
           {list&&<div className='flex flex-wrap justify-between items-center gap-4 mt-6 border-t border-black/10 pt-5 text-xs'>
