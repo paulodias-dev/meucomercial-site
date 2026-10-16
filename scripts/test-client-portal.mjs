@@ -11,15 +11,16 @@ const onboarding=read('src/components/ClientOnboarding.tsx')
 const targets=read('src/components/ClientPublicationTargets.tsx')
 const deviceDiagnostics=read('src/components/ClientDeviceDiagnostics.tsx')
 const playbackReports=read('src/components/ClientPlaybackReports.tsx')
+const playbackOverview=read('src/components/ClientPlaybackOverview.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only twenty-eight allowlisted endpoints',()=>{
+test('same-origin portal proxies only twenty-nine allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
   for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device','device-diagnostics','device-reports',
     'publication-options','publication-destinations','publication-history',
     'publication-preview','publication-create','publication-withdraw',
     'studio-catalog','studio-list','studio-create','studio-get','studio-update',
-    'studio-activate','studio-duplicate','onboarding','publication-targets']){
+    'studio-activate','studio-duplicate','onboarding','publication-targets','playback-overview']){
     assert.ok(server.includes("'"+name+"': {method:"),name)
   }
   assert.ok(server.includes('req.method !== route.method'))
@@ -365,4 +366,29 @@ test('daily UTC playback trend is client-scoped, mobile scrollable and independe
   assert.ok(playbackReports.includes("não confirma equipamento desligado"))
   assert.ok(!playbackReports.includes("localStorage.setItem"))
   assert.ok(!playbackReports.includes("req.query.client_id"))
+})
+
+test('network-level playback reports use fixed owner-only proxy with constrained filters',()=>{
+  assert.ok(server.includes("'playback-overview': {method: 'GET', backend: 'client/indoor/playback-summary', auth: true}"))
+  assert.ok(server.includes("action === 'playback-overview'"))
+  assert.ok(server.includes("action === 'device-reports' || action === 'playback-overview'"))
+  assert.ok(server.includes("['1','7','30'].includes"))
+  assert.ok(server.includes("['all','tv','radio'].includes"))
+  assert.ok(!server.includes("req.query.client_id"))
+  assert.ok(!server.includes('req.body?.client_id'))
+})
+test('owner-wide playback component uses server aggregates and explicit daily evidence',()=>{
+  assert.ok(portal.includes("import ClientPlaybackOverview from './ClientPlaybackOverview'"))
+  assert.ok(portal.includes("view==='devices'&&<ClientPlaybackOverview"))
+  assert.ok(playbackOverview.includes("fetch(url,{method:'GET'"))
+  assert.ok(playbackOverview.includes("Authorization:'Bearer '+token"))
+  assert.ok(playbackOverview.includes("credentials:'omit',cache:'no-store'"))
+  assert.ok(playbackOverview.includes('summary?.devices_total'))
+  assert.ok(playbackOverview.includes('summary?.devices_with_reports'))
+  assert.ok(playbackOverview.includes('summary?.by_day.map'))
+  assert.ok(playbackOverview.includes('data.pagination.last_page'))
+  assert.ok(playbackOverview.includes('não comprovam audiência independente'))
+  assert.ok(!playbackOverview.includes('device_token'))
+  assert.ok(!playbackOverview.includes('localStorage'))
+  assert.ok(!playbackOverview.includes('sessionStorage'))
 })
