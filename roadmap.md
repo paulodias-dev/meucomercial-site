@@ -7,9 +7,33 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint MVP integrada — Autopublicação controlada do estabelecimento (16/10/2026)
+
+**Escopo implementado em código nas branches desta sprint:** API Laravel, Site React e Admin Metronic. PRs definitivos ainda sujeitos a revisão e merge coordenado; testes físicos e deploy não realizados.
+
+**Critérios técnicos — 11/14 implementados em código (78,6%); três gates continuam pendentes:**
+- [x] Consultar exclusivamente playlists ativas do cliente, com paginação e mídia sem links privados.
+- [x] Enumerar Players próprios elegíveis para TV/Rádio, informando impedimentos de localização, assinatura e conflito de grade.
+- [x] Pré-validação técnica sem gravação, verificando mídia/licença, plano, agência, formato, direitos, período e destino.
+- [x] Publicação de conteúdo **próprio** com lock por estabelecimento, chave UUID idempotente, referência de playlist, grade e versões de manifesto; sem duplicar mídia.
+- [x] Histórico paginado e retirada idempotente somente de publicações do próprio assinante, preservando publicação administrativa separada.
+- [x] Modelo de autoria segregado: `initiated_by_client_id` e `withdrawn_by_client_id` distintos das FKs de usuário operador; migration aditiva e rollback.
+- [x] Concessão explícita `can_self_publish` por agência, desativada por padrão, validação Laravel fail-closed e revogação sem elevação de privilégios.
+- [x] API do operador com RBAC `indoor_schedules.view/update`, pertença verificada e auditoria de quem concedeu/revogou.
+- [x] Metronic mobile-first: controle contextual de permissão no workspace de Dispositivos, sem aproveitar estado de outra agência.
+- [x] Portal responsivo: playlist → destinos → período → validação → confirmação, histórico/retirada; gateway HTTPS por seis rotas allowlist; JWT e UUID apenas em memória.
+- [x] Testes de regressão PHPUnit escritos e guardas estáticas executadas: Site **19/19**, Admin **12/12**; documentação operacional e critérios de implantação.
+- [ ] Execução verde de PHPUnit/MySQL 8 e validação real de migration/Swagger com logs.
+- [ ] Execução verde de `npm ci`, TypeScript/Vite, teste HTTP real do proxy e QA responsivo por navegador.
+- [ ] Homologação do Player TV/Rádio, streaming S3 privado, sincronização/ACK, concorrência em banco real e instalação física.
+
+**Roadmap macro sem inflação:** API **29/59**, Admin **25/57**, Site **13/34**; **67/150 = 44,7%**. Esta entrega resolve subcritérios concretos do marco amplo de publicação/autoatendimento, mas não encerra sua totalidade: continuam criação de conteúdo, QR, revisão visual fiel, autorizações globais de rede, quotas e homologação de exibição. Este indicador representa cobertura de marcos, não prontidão de produção.
+
+**Próximo bloco:** estender o Estúdio Simples de TV/Rádio ao portal com criação segura de conteúdo, preview audiovisual quando tecnicamente viável, QR para o primeiro Player e status de publicação recebido/exibido separados; resolver CI e homologação física antes de liberar produção.
+
 ## Sprint MVP — Comandos próprios do assinante, PIN e sincronização (16/10/2026)
 
-**Estado:** PRs definitivos [API #76](https://github.com/paulodias-dev/meucomercial-api/pull/76) e [Site #24](https://github.com/paulodias-dev/meucomercial-site/pull/24) abertos (não draft); nenhum merge, deploy, CI, migração ou reset executado. Continuação direta do portal de leitura da sprint anterior. API + Site dependem um do outro.
+**Estado:** PRs definitivos [API #76](https://github.com/paulodias-dev/meucomercial-api/pull/76) e [Site #24](https://github.com/paulodias-dev/meucomercial-site/pull/24) **mesclados na main**; sem evidência de deploy, CI verde, migração executada ou homologação física. Continuação direta do portal de leitura da sprint anterior. API + Site dependem um do outro.
 
 **Critérios da entrega — 9/12 implementados em código:**
 - [x] Gerar PIN temporário de 6 dígitos somente para dispositivo próprio, ainda não pareado e com assinatura ativa/trialing.
