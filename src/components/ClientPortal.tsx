@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState, type FormEvent} from 'react'
 import ClientPublications from './ClientPublications'
 import ClientStudio from './ClientStudio'
+import ClientOnboarding from './ClientOnboarding'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Session = {token:string; client:{id:number;name?:string;email?:string}}
@@ -303,6 +304,7 @@ export default function ClientPortal(){
             Anúncios contratados
           </button>
         </div>
+      <ClientOnboarding token={session.token} onNavigate={changeView}/>
       {view==='studio'
         ? <ClientStudio key={session.client.id} token={session.token} onPublish={selection=>{
             setPublishFromStudio(selection);setView('publications')
