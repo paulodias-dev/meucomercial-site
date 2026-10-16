@@ -38,3 +38,13 @@ QA manual em 320, 375, 390, 768, 1024 e 1440px; Chrome, Safari e Firefox; sessã
 ## Próxima evolução
 
 Autenticação BFF HttpOnly + SameSite + CSRF com renovação segura; recuperação de senha; pareamento guiado pelo cliente com autorização forte, atribuição de locais e publicação de playlist com confirmações. Integração de pagamentos e visualização de prova de veiculação exige contratos e RBAC distintos.
+
+
+## Operações de dispositivo do assinante — continuação MVP (16/10/2026)
+
+- `POST /api/client/indoor/devices/{device}/pairing-pin`: `auth:client`, cliente ativo, assinatura `active`/`trialing`, Player não bloqueado, ativo, sem `paired_at` e sem token existente. Retorna PIN de seis dígitos e expiração (10 minutos) em resposta `private, no-store`. Repetição antes da expiração reutiliza o mesmo código; não repareia equipamentos já autenticados. Throttle: 5/minuto.
+- `POST /api/client/indoor/devices/{device}/sync`: mesmo escopo, mas exige Player pareado. Transação com lock na linha do Player, reaproveita `sync_now` pendente e incrementa a versão somente ao gerar novo comando. Corpo do comando marca a origem `client_portal`, mas `created_by` de operador fica nulo. Throttle: 10/minuto. Retorna **202 queued**, nunca ACK/reprodução.
+- O Site expõe **somente** `/api/portal/pair-device` e `/api/portal/sync-device` pelo proxy HTTPS de mesma origem; aceita `device_id` inteiro seguro no corpo, não aceita IDs de agência/cliente nem URL livre. A UI mantém JWT e PIN em memória, limpa ambos no logout e invalida respostas assíncronas de sessão anterior.
+- Falhas: 401 sem sessão de cliente, 403 cliente inativo, 404 Player de terceiro, 409 sem direito de operar (dispositivo bloqueado, pareado no fluxo de PIN, sem assinatura ou sem pareamento na sync), 422 ID inválido no gateway, 429 throttle. A API nunca retorna device_token, PIN alheio, URLs privadas, serial ou metadados de outros clientes.
+- Testes de contrato/API escritos nesta branch, mas `php artisan test`, `l5-swagger:generate`, MySQL 8, `npm ci && npm run build` e E2E HTTP/Player **não executados neste ambiente**. A documentação não autoriza ativação em produção sem homologar instalação, cobrança e reprodução.
+

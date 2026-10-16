@@ -155,6 +155,8 @@ const portalRoutes = {
   'services': {method: 'GET', backend: 'client/services', auth: true},
   'locations': {method: 'GET', backend: 'client/indoor/locations', auth: true},
   'media': {method: 'GET', backend: 'client/indoor/media', auth: true},
+  'pair-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
+  'sync-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
 } as const;
 
 app.all('/api/portal/:action', async (req, res) => {
@@ -177,7 +179,17 @@ app.all('/api/portal/:action', async (req, res) => {
     if (route.auth && !/^Bearer [A-Za-z0-9._~-]+$/.test(bearer)) {
       return res.status(401).set('Cache-Control','no-store').json({message:'Entre novamente no portal.'});
     }
-    const endpoint = new URL(route.backend, base);
+    // Only a numeric device ID may extend either allowlisted route.
+    // Caller-controlled URLs, client IDs and agency contexts never reach the API.
+    const deviceAction = action === 'pair-device' || action === 'sync-device';
+    const rawId = req.body?.device_id;
+    if (deviceAction && (!Number.isSafeInteger(rawId) || rawId <= 0)) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Dispositivo inválido.'});
+    }
+    const endpoint = new URL(deviceAction
+      ? 'client/indoor/devices/' + rawId + (action === 'pair-device' ? '/pairing-pin' : '/sync')
+      : route.backend, base);
     if (req.method === 'GET') {
       const page = req.query.page;
       const perPage = req.query.per_page;
