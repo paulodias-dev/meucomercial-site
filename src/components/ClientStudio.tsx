@@ -178,6 +178,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
     return source?.name||({media:'Imagem/vídeo',music:'Música',commercial_spot:'Spot'}[item.source_type]+' #'+item.source_id)
   }
   const previewFor=(item:Item)=>catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.preview_url
+  const isVideo=(item:Item)=>catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.kind==='video'
 
   return <section aria-label='Estúdio Simples' className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-4'>
     <div className='bg-white rounded-2xl border border-black/10 p-4 sm:p-6 min-w-0'>
@@ -304,7 +305,11 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
           </div>
           {previewFor(item)&&kind==='tv'&&
             <div className={'mt-3 rounded-xl bg-gray-100 overflow-hidden mx-auto '+(orientation==='portrait'?'max-w-32':'max-w-sm')}>
-              <img loading='lazy' src={previewFor(item)} alt={'Prévia da mídia '+(index+1)} className='w-full max-h-44 object-contain'/>
+              {isVideo(item)
+                ?<video controls muted playsInline preload='metadata' src={previewFor(item)}
+                    className='w-full max-h-44 object-contain' aria-label={'Prévia de vídeo '+(index+1)}/>
+                :<img loading='lazy' src={previewFor(item)} alt={'Prévia da mídia '+(index+1)}
+                    className='w-full max-h-44 object-contain'/>}
             </div>}
         </div>)}
         {items.length===0&&<p className='p-6 text-center rounded-xl bg-gray-50 text-black/50 text-sm'>Use + na biblioteca para montar sua sequência.</p>}
