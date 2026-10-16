@@ -14,7 +14,7 @@
 
 **Objetivo do bloco:** ligar públicos distintos a leads reais e à qualificação na API/Admin, eliminar depoimentos/preços sem evidência e preservar contratos da plataforma. Repositórios integrados Site + API + Admin; `main` é produção e permanece intacta até revisão/merge dos PRs.
 
-**Critérios da sprint — 16/18 (88,9%) implementados em código; 2 gates de QA ainda pendentes:**
+**Critérios da sprint — 17/19 (89,5%) implementados em código; 2 gates de QA ainda pendentes:**
 - [x] Jornada de estabelecimento com TV/Rádio, licenciamento, instalação, programação, etapas e CTA específico.
 - [x] Jornada de agência com carteira autorizada, escopo, clientes/Players, contratos e CTA próprio.
 - [x] Jornada de anunciante com inventário, reserva, vigência, criativo, evidência e proposta de mídia separada da assinatura.
@@ -28,9 +28,10 @@
 - [x] API Super Admin adiciona `summary.total/statuses/kinds` via agregação SQL de toda a base, independente de filtros de página.
 - [x] Admin Metronic mostra funil total, etapas e três públicos, mantendo filtros, detalhes, PATCH de qualificação e acesso Master apenas.
 - [x] Admin limpa os resultados da pesquisa anterior ao alterar filtros e aborta requisições obsoletas.
+- [x] Contato rápido manual por ligação/WhatsApp na fila do Master; links formados apenas com telefone validado, sem mensagem ou dados do lead pré-enviados.
 - [x] Site: oito testes Node de contratos/jornadas/segurança comercial adicionados à cadeia `npm run build`, com **8 cenários de regras executados e aprovados nesta sessão**.
 - [x] API: dois testes PHPUnit novos (públicos/etapas, paginação e Master RBAC) no conjunto já existente; **definidos, não executados** por CI.
-- [x] Admin: 16 verificações estáticas executadas e aprovadas, integradas ao build; novo `AGENTS.md` do Site e guia `docs/MVP_COMMERCIAL_FUNNEL.md`.
+- [x] Admin: 19 verificações estáticas executadas e aprovadas, integradas ao build; novo `AGENTS.md` do Site e guia `docs/MVP_COMMERCIAL_FUNNEL.md`.
 - [ ] CI verde de site (`npm ci/lint/build`), Admin (`tsc/Vite`), API (`composer/phpunit/MySQL8/Swagger`), com logs dos jobs, bloqueado por GitHub Actions **0 steps**.
 - [ ] Homologar fluxo em domínio HTTPS com proxy de API, navegação 320–1440px, formulários com acesso, CRM Admin, LGPD e perfis reais.
 
