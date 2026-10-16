@@ -9,6 +9,9 @@
 
 ## Sprint 40% — Conteúdo Rádio Indoor, orientação de licenças e arquitetura (15/10/2026)
 
+**PRs definitivos da sprint:** [Site #21](https://github.com/paulodias-dev/meucomercial-site/pull/21) e [API #71](https://github.com/paulodias-dev/meucomercial-api/pull/71), ambos sobre `main`, sem draft ou merge automático.
+
+
 **Entrega de produto:** seção **Rádio Indoor** integrada ao site e à navegação mobile/desktop, com oito respostas acessíveis, sequência didática de programação (sem reprodução fictícia), explicação de licença e prestação de contas, CTA de captação com consentimento já existente, [guia comercial/operacional](docs/RADIO_INDOOR_GUIA.md) e oito testes de regressão obrigatórios no build `npm run test:radio`. Sem inventar áudio licenciado, transmissão ativa ou audiência comprovada.
 
 **Marco encerrado nesta sprint:** “Produzir conteúdo de documentação e FAQs do Rádio sobre licença, curadoria e programação”. A **demonstração sonora real** e a integração de horários de spots com API permanecem **pendentes** e não são marcadas como entregues.
