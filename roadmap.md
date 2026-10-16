@@ -7,6 +7,16 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint 40% — Conteúdo Rádio Indoor, orientação de licenças e arquitetura (15/10/2026)
+
+**Entrega de produto:** seção **Rádio Indoor** integrada ao site e à navegação mobile/desktop, com oito respostas acessíveis, sequência didática de programação (sem reprodução fictícia), explicação de licença e prestação de contas, CTA de captação com consentimento já existente, [guia comercial/operacional](docs/RADIO_INDOOR_GUIA.md) e oito testes de regressão obrigatórios no build `npm run test:radio`. Sem inventar áudio licenciado, transmissão ativa ou audiência comprovada.
+
+**Marco encerrado nesta sprint:** “Produzir conteúdo de documentação e FAQs do Rádio sobre licença, curadoria e programação”. A **demonstração sonora real** e a integração de horários de spots com API permanecem **pendentes** e não são marcadas como entregues.
+
+**Progresso matemático coordenado:** Site **10/34 = 29,4%**, API **27/59 = 45,8%** (DER versionado e AGENTS normativo), Admin **24/57 = 42,1%**. **Total 61/150 = 40,7%**, acima da meta de 40%; progresso baseado em marcos completos, sem reclassificar CI ou homologação sem execução.
+
+**Próxima entrega:** garantir CI verde/execução de testes, portal de demonstração Rádio com áudio legalmente autorizado e uso do Player real, avanços de conversão bilateral e onboarding.
+
 ## Entrega integrada — Captação comercial real (15/10/2026)
 
 **Estado:** implementação em PR definitivo, não homologada nem implantada. **Evidência funcional:** [API #64](https://github.com/paulodias-dev/meucomercial-api/pull/64) (`00c6440`), [Admin #35](https://github.com/paulodias-dev/meucomercial-admin/pull/35) (`02f776f`), [Site #20](https://github.com/paulodias-dev/meucomercial-site/pull/20) (`b917949`).
@@ -104,7 +114,7 @@
 
 - [ ] Publicar página de demonstração real de Rádio Indoor com exemplo de playlists e locução comercial.
 - [ ] Conectar exemplos de grade/intervalo de spots à API Rádio (somente quando a engine estiver pronta).
-- [ ] Produzir conteúdo de documentação e FAQs do Rádio sobre licença, curadoria e programação.
+- [x] Produzir conteúdo de documentação e FAQs do Rádio sobre licença, curadoria e programação.
 
 ## Fase 5: Módulo de TV Indoor e Story Builder
 
