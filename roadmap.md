@@ -1,5 +1,21 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
 
+## Sprint integrada — Ativação orientada e recuperação operacional (16/10/2026)
+
+**Meta do bloco:** tornar utilizável e mensurável a jornada já implementada de ativação, pareamento, Estúdio, publicação própria e diagnóstico. Alterações coordenadas na API, Portal e Admin, em PRs definitivos contra main, sem deploy/merge automático.
+
+- [x] API: checklist autenticado recebe oitava etapa para relatos recentes do Player, quantificação dos últimos sete dias, próxima ação orientada e escopo estrito por cliente.
+- [x] API: testes Feature acrescentados para janela, isolamento de clientes e resposta sem segredos; adequação de expectativa legada de evidência de sincronização.
+- [x] Portal: chamada à ação contextual, orientação por etapa, atividades relatadas por Player e atualização ao navegar entre Estúdio/Dispositivos/Publicação.
+- [x] Portal: teste de contrato para ação prioritária e distinção entre reprodução relatada e audiência independente.
+- [x] Admin: fila de prioridades dos Players por aparelhos bloqueados, não pareados, offline e sincronização pendente, com consulta restrita à agência e cliente autorizados.
+- [x] Admin: invariantes estáticas da fila incorporadas à suíte de verificação existente.
+- [ ] Executar PHP lint, PHPUnit/MySQL 8, Swagger, npm ci, TypeScript/Vite e testes E2E completos em ambiente com dependências.
+- [ ] Homologar em hardware TV/Rádio real o ciclo cadastro → PIN → mídia → publicação → manifesto → reprodução relatada.
+
+**Progresso global de referência:** 67/150 macromarcos aceitos (44,7%); código da sprint não constitui homologação do Player físico. **Próximo bloco:** observabilidade por aparelho/estabelecimento com consulta agregada sem carregar toda paginação; diagnóstico e recuperação guiados e testes de contrato em todas as camadas.
+
+
 > **Projeto:** Site institucional / aquisição de leads · **Repositório:** `paulodias-dev/meucomercial-site`  
 > **Atualização de referência:** 15/10/2026 · **Branch de produção:** `main` · **Estado:** desenvolvimento/homologação em andamento
 
