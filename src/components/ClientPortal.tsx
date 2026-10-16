@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState, type FormEvent} from 'react'
 import ClientPublications from './ClientPublications'
 import ClientStudio from './ClientStudio'
+import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'
 import ClientOnboarding from './ClientOnboarding'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
@@ -75,6 +76,7 @@ export default function ClientPortal(){
   const [deviceActionMessage,setDeviceActionMessage]=useState('')
   const [pairingPin,setPairingPin]=useState<{deviceId:number;pin:string;expiresAt:string}|null>(null)
   const [playerPinByDevice,setPlayerPinByDevice]=useState<Record<number,string>>({})
+  const [diagnosticsId,setDiagnosticsId]=useState<number|null>(null)
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
@@ -92,7 +94,7 @@ export default function ClientPortal(){
   const [loading,setLoading]=useState(false)
   const clearSession=()=>{
     activeToken.current=null
-    setPairingPin(null);setPlayerPinByDevice({});setDeviceActionBusy(null);setDeviceActionMessage('')
+    setPairingPin(null);setPlayerPinByDevice({});setDiagnosticsId(null);setDeviceActionBusy(null);setDeviceActionMessage('')
     setPublishFromStudio(null)
     setSession(null);setOverview(null);setDevices(null);setCampaigns(null);setServices(null);setLocations(null);setMedia(null)
     setPassword('');setPage(1);setError('')
@@ -401,6 +403,13 @@ export default function ClientPortal(){
                         className='min-h-11 px-4 py-2.5 border border-blue-700 text-blue-800 rounded-xl text-xs font-bold disabled:opacity-50'>
                         {deviceActionBusy===d.id?'Solicitando…':'Solicitar sincronização'}</button>}
                 </div>}
+              <button type='button'
+                onClick={()=>setDiagnosticsId(current=>current===d.id?null:d.id)}
+                className='mt-4 min-h-11 border border-blue-100 text-blue-700 rounded-xl px-4 text-xs font-semibold'>
+                {diagnosticsId===d.id?'Fechar diagnóstico':'Ver histórico e diagnóstico'}
+              </button>
+              {diagnosticsId===d.id&&session&&
+                <ClientDeviceDiagnostics key={d.id} token={session.token} deviceId={d.id}/>}
               {pairingPin?.deviceId===d.id&&<div className='mt-4 rounded-xl bg-blue-50 border border-blue-200 p-4' role='status'>
                 <p className='text-xs font-semibold text-blue-900'>Código temporário — informe somente no seu Player</p>
                 <code className='block mt-2 text-2xl font-bold tracking-widest text-blue-950 select-all'>{pairingPin.pin}</code>
