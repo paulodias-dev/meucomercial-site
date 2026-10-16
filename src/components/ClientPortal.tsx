@@ -303,6 +303,7 @@ export default function ClientPortal(){
         {' · '}{overview.campaigns.total} pedidos comerciais
         {' · '}Sincronização e conexão não comprovam reprodução ou audiência.
       </div>}
+      {view==='devices'&&<ClientPlaybackOverview key={session.client.id} token={session.token}/>}
         <div className='flex flex-wrap gap-2 p-3 sm:p-4 mb-4 rounded-2xl bg-white border border-black/10' role='group' aria-label='Consulta do portal'>
           <button type='button' aria-pressed={view==='devices'} onClick={()=>changeView('devices')}
             className={'px-4 py-3 rounded-xl text-sm font-bold '+
@@ -341,7 +342,6 @@ export default function ClientPortal(){
           </button>
         </div>
       <ClientOnboarding token={session.token} onNavigate={changeView}/>
-      {view==='devices'&&<ClientPlaybackOverview key={session.client.id} token={session.token}/>}
       {view==='studio'
         ? <ClientStudio key={session.client.id} token={session.token} onPublish={selection=>{
             setPublishFromStudio(selection);setView('publications')
