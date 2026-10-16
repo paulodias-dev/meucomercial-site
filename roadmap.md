@@ -9,7 +9,7 @@
 
 ## Sprint — Reconciliação offline e histórico TV/Rádio por estabelecimento (16/10/2026)
 
-**Integração:** ramo `feat/player-offline-reconciliation-reports-20261016` criado a partir da `main` nos 3 repositórios. Conferidos no GitHub: **API #82, Admin #48 e Site #30 estão mesclados na main**. Os PRs desta sprint são definitivos, revisáveis, não draft e a implantação deve seguir **API → Site**, com Player/Admin independentemente após suas verificações. **Nenhum reset, merge ou deploy automático.**
+**Integração:** PRs definitivos [API #83](https://github.com/paulodias-dev/meucomercial-api/pull/83), [Site #31](https://github.com/paulodias-dev/meucomercial-site/pull/31) e [Admin #49](https://github.com/paulodias-dev/meucomercial-admin/pull/49) **abertos, não draft, mescláveis, contra `main`**. Os anteriores API #82, Admin #48 e Site #30 estão mesclados na `main`. Integrar **API #83 → Site #31**, e Admin/Player #49 após QA. Workflows [API #83](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38969498152) e [Admin #49](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38969515777) terminaram em **failure, com zero etapas disponibilizadas nos jobs consultados**: PHPUnit/MySQL e TS/Vite **não comprovadamente executados**. Site #31 sem workflow PR visível. **Nenhum reset, merge ou deploy automático.**
 
 **Critérios da sprint: 16/19 implementados em código (84,2%); 3 gates de QA/homologação pendentes.**
 - [x] Confirmar integração real dos PRs anteriores (API #82, Admin #48 e Site #30) na main.
