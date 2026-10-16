@@ -27,10 +27,10 @@ Sua comunicação interna precisa ser ágil e engajadora para conectar equipes r
 * **Quarta-feira:** Destaques de bem-estar ou "Dica do Especialista".
 * **Sexta-feira:** Fotos de happy hour e aniversariantes do final de semana.
 
-#### 3. ROI Estimado
-* **Redução de 75%** no envio de e-mails internos ignorados.
-* **Aumento de 40%** na absorção de comunicados institucionais.
-* **Engajamento:** Equipes alinhadas produzem até 21% mais.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Pronto para ver isso rodando em suas TVs? Fale agora mesmo com nossos especialistas para agendarmos uma demonstração real!*`,
 
@@ -47,10 +47,10 @@ Sua tela deve ser uma máquina de conversão e ponto de contato visual imediato 
 * Altere ofertas de acordo com o horário (ex: café da manhã vs. almoço em supermercados).
 * Use campanhas dinâmicas integradas a tabelas de preços ou atualize ofertas em menos de 10 segundos pelo celular.
 
-#### 3. ROI Estimado
-* **Aumento de até 33%** nas vendas de itens promovidos em tela.
-* **Diminuição de 45%** na percepção de tempo de espera em filas.
-* **Upgrade Visual:** Visual moderno e tecnológico para seu ponto de venda.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Quer converter mais clientes no PDV hoje? Fale agora mesmo com nosso time comercial!*`,
 
@@ -67,10 +67,10 @@ Mantenha seus alunos focados, motivados e informados sobre as novidades da acade
 * Incentive posts com a hashtag da sua academia no Instagram e mostre em tempo real na tela!
 * Promova produtos adicionais como suplementos, parcerias locais e venda de planos anuais diretamente na TV.
 
-#### 3. ROI Estimado
-* **Redução de 30%** na taxa de cancelamento (churn) devido a maior sensação de pertencimento.
-* **Aumento de 25%** na receita de vendas de produtos internos (suplementos, roupas).
-* **Comunicação Direta:** Redução de custos com cartazes e panfletos impressos.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Mude a experiência da sua academia agora. Fale com um especialista da Meu Comercial!*`,
 
@@ -87,10 +87,10 @@ Transforme a sala de espera em um ambiente acolhedor, educativo e esteticamente 
 * Intercale dicas de saúde com curiosidades leves para acalmar pacientes ansiosos.
 * Utilize a divisão de tela com integração opcional de senhas de atendimento (TV + Chamada de Senha).
 
-#### 3. ROI Estimado
-* **Redução de 60%** na ansiedade de espera dos pacientes.
-* **Aumento de 20%** no agendamento de exames e procedimentos adicionais recomendados na tela.
-* **Imagem Profissional:** Transmita credibilidade e tecnologia aos seus pacientes.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Torne sua clínica referência em inovação. Solicite contato de um consultor hoje!*`,
 
@@ -213,7 +213,7 @@ app.post("/api/consult", async (req, res) => {
   const normalizedSegment = String(segment).toLowerCase().trim();
   const infoText = additionalInfo ? String(additionalInfo).trim() : "";
 
-  console.log(`Recebida consulta para o segmento: ${normalizedSegment}. Detalhes adicionais: ${infoText}`);
+  // Do not log free-text consultation details: they may contain personal data.
 
   const answer = FALLBACKS[normalizedSegment] || FALLBACKS.geral;
   await new Promise((resolve) => setTimeout(resolve, 800));
