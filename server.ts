@@ -143,6 +143,65 @@ app.post("/api/commercial-leads", async (req, res) => {
   }
 });
 
+// Allowlisted, same-origin proxy for CLIENT credentials only. It never
+// forwards arbitrary paths, operator JWTs, cookies or query-controlled URLs.
+// All JWTs remain in memory in the React portal; this gateway does not log them.
+const portalRoutes = {
+  'login': {method: 'POST', backend: 'client/login', auth: false},
+  'logout': {method: 'POST', backend: 'client/logout', auth: true},
+  'overview': {method: 'GET', backend: 'client/indoor/overview', auth: true},
+  'devices': {method: 'GET', backend: 'client/indoor/devices', auth: true},
+  'campaigns': {method: 'GET', backend: 'client/indoor/campaigns', auth: true},
+} as const;
+
+app.all('/api/portal/:action', async (req, res) => {
+  const action = req.params.action as keyof typeof portalRoutes;
+  const route = portalRoutes[action];
+  if (!route || req.method !== route.method) {
+    return res.status(404).set('Cache-Control','no-store').json({message:'Recurso indisponível.'});
+  }
+  const configured = process.env.MEUCOMERCIAL_API_URL?.trim();
+  if (!configured) return res.status(503).set('Cache-Control','no-store')
+    .json({message:'Portal temporariamente indisponível.'});
+
+  try {
+    const base = new URL(configured.endsWith('/') ? configured : configured + '/');
+    if (base.protocol !== 'https:' &&
+      !(process.env.NODE_ENV !== 'production' && ['localhost','127.0.0.1'].includes(base.hostname))) {
+      throw new Error('invalid-upstream');
+    }
+    const bearer = req.get('authorization') ?? '';
+    if (route.auth && !/^Bearer [A-Za-z0-9._~-]+$/.test(bearer)) {
+      return res.status(401).set('Cache-Control','no-store').json({message:'Entre novamente no portal.'});
+    }
+    const endpoint = new URL(route.backend, base);
+    if (req.method === 'GET') {
+      const page = req.query.page;
+      const perPage = req.query.per_page;
+      if (typeof page === 'string') endpoint.searchParams.set('page', page.slice(0,5));
+      if (typeof perPage === 'string') endpoint.searchParams.set('per_page', perPage.slice(0,3));
+    }
+    const upstream = await fetch(endpoint, {
+      method: route.method,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(route.auth ? {Authorization: bearer} : {}),
+      },
+      body: req.method === 'POST' ? JSON.stringify(action === 'login'
+        ? {email: req.body?.email, password: req.body?.password} : {}) : undefined,
+      signal: AbortSignal.timeout(12000),
+      redirect: 'error',
+    });
+    const payload = await upstream.json().catch(()=>({message:'Resposta inválida do serviço.'}));
+    return res.status(upstream.status).set('Cache-Control','private, no-store')
+      .set('Referrer-Policy','no-referrer').json(payload);
+  } catch {
+    return res.status(503).set('Cache-Control','no-store')
+      .json({message:'Não foi possível consultar o portal. Tente novamente.'});
+  }
+});
+
 // API: Strategic consultation
 app.post("/api/consult", async (req, res) => {
   const { segment, additionalInfo } = req.body;
