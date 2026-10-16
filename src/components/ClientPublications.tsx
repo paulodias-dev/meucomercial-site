@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useRef, useState} from 'react'
 import {CalendarDays, CheckCircle2, Monitor, RefreshCcw, Send, ShieldCheck} from 'lucide-react'
+import ClientPublicationTargets from './ClientPublicationTargets'
 
 type Medium='tv'|'radio'
 type Page<T>={data:T[];pagination:{page:number;per_page:number;last_page:number;total:number}}
@@ -66,6 +67,7 @@ export default function ClientPublications({token,initialSelection}:{token:strin
   const [loadingDest,setLoadingDest]=useState(true)
   const [submitting,setSubmitting]=useState(false)
   const [withdrawing,setWithdrawing]=useState<number|null>(null)
+  const [visibleBatch,setVisibleBatch]=useState<number|null>(null)
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
   const [preview,setPreview]=useState<{signature:string;data:Preview}|null>(null)
@@ -299,6 +301,10 @@ export default function ClientPublications({token,initialSelection}:{token:strin
           <h4 className='text-sm font-bold'>{h.playlist_name||'Playlist não disponível'}</h4>
           <p className='text-xs text-black/60 mt-2'>{h.device_count} Players · {h.status==='published'?'Publicada':'Retirada'}</p>
           <p className='text-xs text-black/60 mt-1'>Criada em: {prettyDate(h.published_at)}</p>
+          <button type='button' onClick={()=>setVisibleBatch(v=>v===h.id?null:h.id)}
+            className={button+' border-blue-200 text-blue-800 mt-3 mr-2'}>
+            {visibleBatch===h.id?'Ocultar situação':'Ver Players'}
+          </button>
           {h.status==='published'&&<button type='button' disabled={withdrawing!==null}
             onClick={()=>void withdraw(h)} className={button+' border-red-300 text-red-800 mt-3'}>
             {withdrawing===h.id?'Retirando…':'Retirar publicação'}
@@ -306,6 +312,8 @@ export default function ClientPublications({token,initialSelection}:{token:strin
         </article>)}
         {!loading&&history?.data.length===0&&<p className='text-sm text-black/60 p-4'>Você ainda não publicou conteúdo pelo portal.</p>}
       </div>
+      {visibleBatch!==null&&<ClientPublicationTargets key={visibleBatch}
+        token={token} batchId={visibleBatch} onClose={()=>setVisibleBatch(null)}/>}
       <div className='flex gap-2 items-center mt-3 text-xs'>
         <button type='button' disabled={historyPage<=1} onClick={()=>setHistoryPage(p=>p-1)}
           className={button+' border-black/15'}>Anterior</button>
