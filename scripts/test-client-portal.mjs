@@ -15,7 +15,8 @@ test('same-origin portal proxies only sixteen allowlisted endpoints',()=>{
     assert.ok(server.includes("'"+name+"': {method:"),name)
   }
   assert.ok(server.includes('req.method !== route.method'))
-  assert.ok(server.includes('new URL(route.backend, base)'))
+  assert.ok(server.includes('const endpoint = new URL(deviceAction'))
+  assert.ok(server.includes(': route.backend, base)'))
   assert.ok(!server.includes('new URL(req.params.action, base)'))
 })
 test('portal gateway never forwards arbitrary client_id or cross-tenant filters',()=>{
