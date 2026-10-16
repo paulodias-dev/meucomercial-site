@@ -133,9 +133,10 @@ export default function RadioGuide({onContact}:{onContact:(source:string)=>void}
                 <ChevronDown size={18} aria-hidden className={'shrink-0 transition-transform '+(expanded===faq.id?'rotate-180':'')}/>
               </button>
             </h4>
-            {expanded===faq.id && <p id={'radio-faq-'+faq.id} className="px-4 sm:px-6 pb-5 text-sm leading-7 text-black/65">
+            <p id={'radio-faq-'+faq.id} hidden={expanded!==faq.id}
+              className="px-4 sm:px-6 pb-5 text-sm leading-7 text-black/65">
               {faq.answer}
-            </p>}
+            </p>
           </article>)}
         </div>
         <p className="text-xs text-black/50 mt-6">
