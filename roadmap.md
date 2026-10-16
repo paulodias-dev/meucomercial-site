@@ -9,7 +9,7 @@
 
 ## Sprint MVP ampliada — Estúdio Simples + ativação assistida + diagnóstico de Players (16/10/2026)
 
-**Estado:** código em branch `feat/mvp-simple-studio-radio-tv-20261016`, PRs definitivos API/Site a integrar em conjunto; sem merge, migração, reset, CI verde ou deploy nesta sprint. PRs anteriores **API #77, Site #25 e Admin #45 já foram mesclados na main**.
+**Estado:** PRs definitivos [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) abertos, não draft, mescláveis e dependentes de integração conjunta; sem merge, migração, reset ou deploy. **API #77, Site #25 e Admin #45 já foram mesclados na main**. O workflow Laravel da API disparado no PR #78 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38924801603)) concluiu como **failure em jobs sem etapas exibidas**; motivo ainda não confirmado, CI não é verde.
 
 **Critérios de sprint, 15/18 implementados em código (83,3%); três homologações pendentes:**
 - [x] Consultar catálogo TV pronto exclusivamente do cliente com paginação SQL, sem revelar armazenamento e com prévia local assinada curta.
