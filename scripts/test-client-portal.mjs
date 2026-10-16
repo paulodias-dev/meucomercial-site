@@ -385,7 +385,7 @@ test('owner-wide playback component uses server aggregates and explicit daily ev
   assert.ok(playbackOverview.includes("credentials:'omit',cache:'no-store'"))
   assert.ok(playbackOverview.includes('summary?.devices_total'))
   assert.ok(playbackOverview.includes('summary?.devices_with_reports'))
-  assert.ok(playbackOverview.includes('summary?.by_day.map'))
+  assert.ok(playbackOverview.includes('summary.by_day.map'))
   assert.ok(playbackOverview.includes('data.pagination.last_page'))
   assert.ok(playbackOverview.includes('não comprovam audiência independente'))
   assert.ok(!playbackOverview.includes('device_token'))
