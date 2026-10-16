@@ -9,7 +9,7 @@
 
 ## Sprint ampliada — Recuperação API #81 + relatos Rádio + QR offline (16/10/2026)
 
-**Estado:** implementação em branch baseada na `main` dos três repositórios; PRs desta sprint definitivos a revisar. Auditoria constatou que **API #81 foi mesclado apenas na branch intermediária do #80, e não na main**: modelo, rota, serviço e migration de TV não estavam na main, apesar do estado "merged". Este PR recoloca esses arquivos corretamente antes de estender a Rádio. **API #80, Site #29 e Admin #47 já constam como integrados na main.**
+**Estado:** PRs definitivos [API #82](https://github.com/paulodias-dev/meucomercial-api/pull/82), [Admin #48](https://github.com/paulodias-dev/meucomercial-admin/pull/48) e [Site #30](https://github.com/paulodias-dev/meucomercial-site/pull/30) **abertos, não draft, mescláveis**, todos com base em `main`. Ordem de implantação: **API e migrations → Admin/Player Web → Site**. Workflows [API #82](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38954488233) e [Admin #48](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38954494410) falharam com **zero etapas visíveis nos jobs consultados**, portanto sem comprovação de PHPUnit/MySQL, Node ou build Vite; Site sem workflow PR visível. Auditoria constatou que **API #81 foi mesclado apenas na branch intermediária do #80, e não na main**: modelo, rota, serviço e migration de TV não estavam na main, apesar do estado "merged". Este PR recoloca esses arquivos corretamente antes de estender a Rádio. **API #80, Site #29 e Admin #47 já constam como integrados na main.**
 
 **Critérios implementados: 15/18 = 83,3%; 3 gates de QA abertos.**
 - [x] Auditar e documentar a divergência entre PR API #81 merged e o conteúdo real da main.
