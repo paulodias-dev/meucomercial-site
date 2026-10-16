@@ -9,7 +9,7 @@
 
 ## Sprint MVP — Upload privado + Modelos visuais do Estúdio TV (16/10/2026)
 
-**Estado:** entrega de código nas branches API e Site `feat/client-studio-upload-story-20261016`, com PRs definitivos coordenados. A base já contém [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) **mesclados na main**. Sem merge novo, deploy, alteração destrutiva de banco ou conclusão de homologação.
+**Estado:** PRs definitivos [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) **abertos, mescláveis e não draft**, integração API→Site coordenada. A base já contém [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) mesclados na main. Workflow Laravel da API #79 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38929304217)) terminou em **failure**, mas ambos os jobs consultados exibiram **zero etapas**: não é evidência de PHPUnit executado. Nenhum merge novo, deploy ou operação destrutiva de banco realizada.
 
 **Critérios — 15/18 implementados em código (83,3%), 3 gates pendentes:**
 - [x] Upload exclusivo `auth:client`, cliente obtido pelo guard, concessão explícita de agência e assinatura/plano vigente revalidados pelo serviço comum.
