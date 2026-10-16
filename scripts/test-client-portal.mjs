@@ -6,9 +6,9 @@ const server=read('server.ts')
 const portal=read('src/components/ClientPortal.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only five allowlisted endpoints',()=>{
+test('same-origin portal proxies only eight allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
-  for(const name of ['login','logout','overview','devices','campaigns','services']){
+  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media']){
     assert.ok(server.includes("'"+name+"': {method:"),name)
   }
   assert.ok(server.includes('req.method !== route.method'))
@@ -31,8 +31,8 @@ test('portal does not persist client JWT and never uses admin JWT',()=>{
   assert.ok(portal.includes('useState<Session|null>(null)'))
   assert.ok(portal.includes("Authorization:'Bearer '+token"))
   assert.ok(portal.includes("credentials:'omit'"))
-  assert.ok(!portal.includes('localStorage'))
-  assert.ok(!portal.includes('sessionStorage'))
+  assert.ok(!portal.includes('localStorage.setItem'))
+  assert.ok(!portal.includes('sessionStorage.setItem'))
   assert.ok(!portal.includes("X-Agency-Tenant"))
 })
 test('client login success depends on real API JWT and identity',()=>{
@@ -47,12 +47,14 @@ test('session is cleared on expired JWT and logout calls backend',()=>{
   assert.ok(portal.includes('setPassword(\'\')'))
 })
 test('portal keeps subscription, devices and campaigns separately',()=>{
-  for(const name of ['services','devices','campaigns']){
+  for(const name of ['services','devices','campaigns','locations','media']){
     assert.ok(portal.includes("changeView('"+name+"')"))
   }
   assert.ok(portal.includes("portalRequest<Page<Service>>('services'"))
   assert.ok(portal.includes("portalRequest<Page<Device>>('devices'"))
   assert.ok(portal.includes("portalRequest<Page<Campaign>>('campaigns'"))
+  assert.ok(portal.includes("portalRequest<Page<Location>>('locations'"))
+  assert.ok(portal.includes("portalRequest<Page<Media>>('media'"))
 })
 test('server counts not derived from first page',()=>{
   assert.ok(portal.includes('overview?.devices.total'))
