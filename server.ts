@@ -27,10 +27,10 @@ Sua comunicação interna precisa ser ágil e engajadora para conectar equipes r
 * **Quarta-feira:** Destaques de bem-estar ou "Dica do Especialista".
 * **Sexta-feira:** Fotos de happy hour e aniversariantes do final de semana.
 
-#### 3. ROI Estimado
-* **Redução de 75%** no envio de e-mails internos ignorados.
-* **Aumento de 40%** na absorção de comunicados institucionais.
-* **Engajamento:** Equipes alinhadas produzem até 21% mais.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Pronto para ver isso rodando em suas TVs? Fale agora mesmo com nossos especialistas para agendarmos uma demonstração real!*`,
 
@@ -47,10 +47,10 @@ Sua tela deve ser uma máquina de conversão e ponto de contato visual imediato 
 * Altere ofertas de acordo com o horário (ex: café da manhã vs. almoço em supermercados).
 * Use campanhas dinâmicas integradas a tabelas de preços ou atualize ofertas em menos de 10 segundos pelo celular.
 
-#### 3. ROI Estimado
-* **Aumento de até 33%** nas vendas de itens promovidos em tela.
-* **Diminuição de 45%** na percepção de tempo de espera em filas.
-* **Upgrade Visual:** Visual moderno e tecnológico para seu ponto de venda.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Quer converter mais clientes no PDV hoje? Fale agora mesmo com nosso time comercial!*`,
 
@@ -67,10 +67,10 @@ Mantenha seus alunos focados, motivados e informados sobre as novidades da acade
 * Incentive posts com a hashtag da sua academia no Instagram e mostre em tempo real na tela!
 * Promova produtos adicionais como suplementos, parcerias locais e venda de planos anuais diretamente na TV.
 
-#### 3. ROI Estimado
-* **Redução de 30%** na taxa de cancelamento (churn) devido a maior sensação de pertencimento.
-* **Aumento de 25%** na receita de vendas de produtos internos (suplementos, roupas).
-* **Comunicação Direta:** Redução de custos com cartazes e panfletos impressos.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Mude a experiência da sua academia agora. Fale com um especialista da Meu Comercial!*`,
 
@@ -87,10 +87,10 @@ Transforme a sala de espera em um ambiente acolhedor, educativo e esteticamente 
 * Intercale dicas de saúde com curiosidades leves para acalmar pacientes ansiosos.
 * Utilize a divisão de tela com integração opcional de senhas de atendimento (TV + Chamada de Senha).
 
-#### 3. ROI Estimado
-* **Redução de 60%** na ansiedade de espera dos pacientes.
-* **Aumento de 20%** no agendamento de exames e procedimentos adicionais recomendados na tela.
-* **Imagem Profissional:** Transmita credibilidade e tecnologia aos seus pacientes.
+#### 3. Resultados a monitorar (sem projeção de ROI)
+* Estabeleça a linha de base antes da instalação e compare indicadores da operação ao longo do tempo.
+* Analise somente resultados medidos por sua empresa. Nenhum percentual de vendas, retenção ou satisfação é garantido.
+* Relatórios de conexão dos Players não substituem medição de audiência nem comprovam impacto financeiro.
 
 *Torne sua clínica referência em inovação. Solicite contato de um consultor hoje!*`,
 
@@ -143,6 +143,68 @@ app.post("/api/commercial-leads", async (req, res) => {
   }
 });
 
+// Allowlisted, same-origin proxy for CLIENT credentials only. It never
+// forwards arbitrary paths, operator JWTs, cookies or query-controlled URLs.
+// All JWTs remain in memory in the React portal; this gateway does not log them.
+const portalRoutes = {
+  'login': {method: 'POST', backend: 'client/login', auth: false},
+  'logout': {method: 'POST', backend: 'client/logout', auth: true},
+  'overview': {method: 'GET', backend: 'client/indoor/overview', auth: true},
+  'devices': {method: 'GET', backend: 'client/indoor/devices', auth: true},
+  'campaigns': {method: 'GET', backend: 'client/indoor/campaigns', auth: true},
+  'services': {method: 'GET', backend: 'client/services', auth: true},
+  'locations': {method: 'GET', backend: 'client/indoor/locations', auth: true},
+  'media': {method: 'GET', backend: 'client/indoor/media', auth: true},
+} as const;
+
+app.all('/api/portal/:action', async (req, res) => {
+  const action = req.params.action as keyof typeof portalRoutes;
+  const route = portalRoutes[action];
+  if (!route || req.method !== route.method) {
+    return res.status(404).set('Cache-Control','no-store').json({message:'Recurso indisponível.'});
+  }
+  const configured = process.env.MEUCOMERCIAL_API_URL?.trim();
+  if (!configured) return res.status(503).set('Cache-Control','no-store')
+    .json({message:'Portal temporariamente indisponível.'});
+
+  try {
+    const base = new URL(configured.endsWith('/') ? configured : configured + '/');
+    if (base.protocol !== 'https:' &&
+      !(process.env.NODE_ENV !== 'production' && ['localhost','127.0.0.1'].includes(base.hostname))) {
+      throw new Error('invalid-upstream');
+    }
+    const bearer = req.get('authorization') ?? '';
+    if (route.auth && !/^Bearer [A-Za-z0-9._~-]+$/.test(bearer)) {
+      return res.status(401).set('Cache-Control','no-store').json({message:'Entre novamente no portal.'});
+    }
+    const endpoint = new URL(route.backend, base);
+    if (req.method === 'GET') {
+      const page = req.query.page;
+      const perPage = req.query.per_page;
+      if (typeof page === 'string') endpoint.searchParams.set('page', page.slice(0,5));
+      if (typeof perPage === 'string') endpoint.searchParams.set('per_page', perPage.slice(0,3));
+    }
+    const upstream = await fetch(endpoint, {
+      method: route.method,
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(route.auth ? {Authorization: bearer} : {}),
+      },
+      body: req.method === 'POST' ? JSON.stringify(action === 'login'
+        ? {email: req.body?.email, password: req.body?.password} : {}) : undefined,
+      signal: AbortSignal.timeout(12000),
+      redirect: 'error',
+    });
+    const payload = await upstream.json().catch(()=>({message:'Resposta inválida do serviço.'}));
+    return res.status(upstream.status).set('Cache-Control','private, no-store')
+      .set('Referrer-Policy','no-referrer').json(payload);
+  } catch {
+    return res.status(503).set('Cache-Control','no-store')
+      .json({message:'Não foi possível consultar o portal. Tente novamente.'});
+  }
+});
+
 // API: Strategic consultation
 app.post("/api/consult", async (req, res) => {
   const { segment, additionalInfo } = req.body;
@@ -154,7 +216,7 @@ app.post("/api/consult", async (req, res) => {
   const normalizedSegment = String(segment).toLowerCase().trim();
   const infoText = additionalInfo ? String(additionalInfo).trim() : "";
 
-  console.log(`Recebida consulta para o segmento: ${normalizedSegment}. Detalhes adicionais: ${infoText}`);
+  // Do not log free-text consultation details: they may contain personal data.
 
   const answer = FALLBACKS[normalizedSegment] || FALLBACKS.geral;
   await new Promise((resolve) => setTimeout(resolve, 800));

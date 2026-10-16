@@ -36,6 +36,7 @@ import { motion, AnimatePresence } from "motion/react";
 import SEO from "./components/SEO";
 import RadioGuide from "./components/RadioGuide";
 import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
+import ClientPortal from "./components/ClientPortal";
 
 // --- Types ---
 interface TVLayout {
@@ -321,6 +322,11 @@ export default function App() {
     });
   };
 
+  // Dedicated client JWT area, not the agency Admin or the lead flow.
+  if (window.location.pathname === '/portal' || window.location.pathname === '/portal/') {
+    return <ClientPortal />;
+  }
+
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white">
       <SEO />
@@ -348,6 +354,7 @@ export default function App() {
           <nav className="hidden lg:flex items-center gap-8">
             <a href="#recursos" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Recursos</a>
             <a href="#beneficios" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Por que nós</a>
+            <a href="/portal" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Área do cliente</a>
             <a href="#para-quem" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Para quem é</a>
             <a href="#radio-indoor" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Rádio Indoor</a>
             <a href="#simulador" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Demonstração</a>
@@ -405,6 +412,10 @@ export default function App() {
                   className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
                 >
                   Por que nós
+                </a>
+                <a href="/portal" onClick={() => setMobileMenuOpen(false)}
+                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
+                  Área do cliente
                 </a>
                 <a href="#para-quem" onClick={() => setMobileMenuOpen(false)}
                   className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">

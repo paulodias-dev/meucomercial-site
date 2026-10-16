@@ -39,6 +39,16 @@ Escopo: todo o repositório `meucomercial-site`. Site público de aquisição de
 - O Admin possui autenticação JWT independente da landing page. Nada de token de Master embutido no JS do site.
 - A home segmentada (`#para-quem`) deve preservar a navegação existente `#radio-indoor`, `#simulador` e `#planos` e evitar links quebrados.
 
+## Portal de cliente /portal — MVP (não é o Admin)
+
+- O portal React reside em `src/components/ClientPortal.tsx` e usa o login `auth:client`, **nunca JWT de `auth:api` ou token do Player**.
+- JWT fica exclusivamente em memória. Não usar `localStorage`, `sessionStorage`, URL ou cookie de frontend para guardar token; cada refresh exige novo login até arquitetura de sessão BFF ser homologada.
+- O proxy `/api/portal/:action` no `server.ts` deve ter **allowlist explícita de método e caminho**, backend HTTPS de ambiente, sem encaminhar `client_id` ou `X-Agency-Tenant` arbitrários e sem logar senha, corpo livre ou token.
+- A API Laravel é a autoridade do escopo: `auth:client` + cliente ativo + `where('client_id', auth('client')->id())`; anúncios somente onde `advertiser_client_id` é do cliente. Portal não tem poder de administrar agências ou contratar publicidade.
+- Visualização de locais, mídia e Players nunca recebe token, PIN, arquivo privado, URL S3 ou metadados sensíveis. Dados da biblioteca são somente metadados, sem downloads implícitos.
+- As cinco abas do MVP são **serviços, Players, locais, biblioteca e pedidos como anunciante**, com loading/erro/vazio e paginação real; a versão não implementa checkout ou publicações.
+- Testar `npm run test:portal`, backend `ClientIndoorOverviewTest`, rate limit e segregação multi-cliente, mais QA navegador HTTPS. Não declarar CI verde se jobs não executaram.
+
 ## Testes mínimos e entrega
 
 1. `npm ci`, `npm run lint`, `npm run test:radio`, `npm run test:journeys`, `npm run build`. Marcar comandos como pendentes se o runner não executou.
