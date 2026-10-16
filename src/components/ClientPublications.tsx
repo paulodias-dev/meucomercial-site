@@ -43,13 +43,13 @@ async function publicationRequest<T>(action:Action,token:string,opts:{
   return data as T
 }
 
-export default function ClientPublications({token}:{token:string}){
+export default function ClientPublications({token,initialSelection}:{token:string;initialSelection?:{id:number;kind:Medium}|null}){
   const [agencies,setAgencies]=useState<Agency[]>([])
   const [agencyId,setAgencyId]=useState('')
   const [playlists,setPlaylists]=useState<Page<Playlist>|null>(null)
   const [playlistPage,setPlaylistPage]=useState(1)
-  const [playlistId,setPlaylistId]=useState('')
-  const [medium,setMedium]=useState<Medium>('tv')
+  const [playlistId,setPlaylistId]=useState(initialSelection?String(initialSelection.id):'')
+  const [medium,setMedium]=useState<Medium>(initialSelection?.kind??'tv')
   const [destinations,setDestinations]=useState<Page<Destination>|null>(null)
   const [destPage,setDestPage]=useState(1)
   const [selected,setSelected]=useState<number[]>([])
