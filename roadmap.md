@@ -9,7 +9,7 @@
 
 ## Sprint MVP — Comandos próprios do assinante, PIN e sincronização (16/10/2026)
 
-**Estado:** implementação em branch de feature, PR definitivo não draft a revisar; nenhum deploy, CI, migração ou reset executado. Continuação direta do portal de leitura da sprint anterior. API + Site dependem um do outro.
+**Estado:** PRs definitivos [API #76](https://github.com/paulodias-dev/meucomercial-api/pull/76) e [Site #24](https://github.com/paulodias-dev/meucomercial-site/pull/24) abertos (não draft); nenhum merge, deploy, CI, migração ou reset executado. Continuação direta do portal de leitura da sprint anterior. API + Site dependem um do outro.
 
 **Critérios da entrega — 9/12 implementados em código:**
 - [x] Gerar PIN temporário de 6 dígitos somente para dispositivo próprio, ainda não pareado e com assinatura ativa/trialing.
