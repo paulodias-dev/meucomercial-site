@@ -1,5 +1,23 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
 
+## Sprint — Triagem e qualidade do Portal de Players (16/10/2026)
+
+**Objetivo demonstrável:** encerrar o conflito do PR Site #34 sem regressão do checklist #33 e transformar o resumo de TV/Rádio em uma porta de entrada para diagnóstico de cada Player, exportação local segura e validação automatizada de qualidade.
+
+- [x] Integrar os PRs Site [#33](https://github.com/paulodias-dev/meucomercial-site/pull/33) e [#34](https://github.com/paulodias-dev/meucomercial-site/pull/34) sem apagar funcionalidades concorrentes; #34 confirmado como mesclado na main após merge explícito da main na branch.
+- [x] Validar em tempo de execução contrato recebido da API (escopo, evidência, filtros, paginação, formatos, dias UTC), exibindo erro recuperável em caso de incompatibilidade.
+- [x] Abrir diagnóstico por dispositivo via endpoint autenticado existente, sob demanda, com possibilidade de fechar e sem disparar uma consulta por linha (sem N+1 de browser).
+- [x] Exportar CSV local e limitado à página visível, com cabeçalho UTF-8, coluna de data UTC, neutralização de fórmulas e campos autorizados sem token, client_id ou armazenamento.
+- [x] Criar testes Node funcionais para contrato, payload inválido, CSV injection e superfície de triagem; manter os testes de contrato anteriores no build.
+- [x] Adicionar workflow de GitHub Actions do Site com npm ci, typecheck, testes Node de rádio/jornadas/Portal e compilação Vite/Express, sem segredos ou acesso de escrita.
+- [ ] Obter execução verde no GitHub Actions: o workflow foi versionado, mas sucesso de runner/instalação/build depende de evidência de execução.
+- [ ] Homologar interação 320–1440 px, acessibilidade por teclado, JWT e integração com MySQL/API/Player reais, incluindo cenários de falha de rede e expiração de sessão.
+
+**Status de aceite:** seis subcritérios implementados em código, dois gates pendentes. Não altera o marco amplo de CI/homologação do Site antes de check verde e QA manual. **Indicador global de referência:** API 29/59 + Admin 25/57 + Site 13/34 = **67/150 = 44,7%** de macromarcos; não equivale a produção pronta.
+
+**Próxima sprint:** executar e corrigir os pipelines em runners disponíveis, estabilizar a cadeia JWT/API e validar um fluxo completo em TV/Rádio físico; em paralelo, avançar do histórico de mídia própria à reconciliação de campanhas comerciais sem tratar relatos de Player como audiência independente.
+
+
 ## Sprint integrada — Ativação orientada e recuperação operacional (16/10/2026)
 
 **Meta do bloco:** tornar utilizável e mensurável a jornada já implementada de ativação, pareamento, Estúdio, publicação própria e diagnóstico. Alterações coordenadas na API, Portal e Admin, em PRs definitivos contra main, sem deploy/merge automático.
