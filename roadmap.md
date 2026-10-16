@@ -7,6 +7,40 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint MVP — Jornada comercial, funil qualificado e confiança (16/10/2026)
+
+**PRs definitivos coordenados:** [Site #22](https://github.com/paulodias-dev/meucomercial-site/pull/22), [API #74](https://github.com/paulodias-dev/meucomercial-api/pull/74) e [Admin #44](https://github.com/paulodias-dev/meucomercial-admin/pull/44), base `main`, não draft, sem merge automático. Todos os três devem ser integrados na mesma release.
+
+
+**Objetivo do bloco:** ligar públicos distintos a leads reais e à qualificação na API/Admin, eliminar depoimentos/preços sem evidência e preservar contratos da plataforma. Repositórios integrados Site + API + Admin; `main` é produção e permanece intacta até revisão/merge dos PRs.
+
+**Critérios da sprint — 17/19 (89,5%) implementados em código; 2 gates de QA ainda pendentes:**
+- [x] Jornada de estabelecimento com TV/Rádio, licenciamento, instalação, programação, etapas e CTA específico.
+- [x] Jornada de agência com carteira autorizada, escopo, clientes/Players, contratos e CTA próprio.
+- [x] Jornada de anunciante com inventário, reserva, vigência, criativo, evidência e proposta de mídia separada da assinatura.
+- [x] Navegação `#para-quem` desktop/mobile e tablist acessível, teclas Arrow/Home/End e foco.
+- [x] CTA de cada público preenche o `kind` correto no formulário e preserva `source` de atribuição.
+- [x] Formulário segmentado: só estabelecimento envia estimativa de TVs e segmento; anúncio pede local/período/TV-Rádio; agência pede estrutura e carteira.
+- [x] Integração com endpoint existente `POST /api/commercial-leads` e confirmação apenas após `received: true` (regras existentes preservadas).
+- [x] Antispam/privacidade: consentimento LGPD, honeypot, throttle, UUID idempotente, validações de email/telefone, UTM; backend existente permanece fonte.
+- [x] Eliminar preços de planos/percentual de desconto/ROI simulados sem catálogo autorizado; substituir por pedido de proposta e briefing.
+- [x] Retirar cartões de depoimentos e métricas comerciais não fundamentados, mantendo comunicação de produto sem fabricar case real.
+- [x] API Super Admin adiciona `summary.total/statuses/kinds` via agregação SQL de toda a base, independente de filtros de página.
+- [x] Admin Metronic mostra funil total, etapas e três públicos, mantendo filtros, detalhes, PATCH de qualificação e acesso Master apenas.
+- [x] Admin limpa os resultados da pesquisa anterior ao alterar filtros e aborta requisições obsoletas.
+- [x] Contato rápido manual por ligação/WhatsApp na fila do Master; links formados apenas com telefone validado, sem mensagem ou dados do lead pré-enviados.
+- [x] Site: oito testes Node de contratos/jornadas/segurança comercial adicionados à cadeia `npm run build`, com **8 cenários de regras executados e aprovados nesta sessão**.
+- [x] API: dois testes PHPUnit novos (públicos/etapas, paginação e Master RBAC) no conjunto já existente; **definidos, não executados** por CI.
+- [x] Admin: 19 verificações estáticas executadas e aprovadas, integradas ao build; novo `AGENTS.md` do Site e guia `docs/MVP_COMMERCIAL_FUNNEL.md`.
+- [ ] CI verde de site (`npm ci/lint/build`), Admin (`tsc/Vite`), API (`composer/phpunit/MySQL8/Swagger`), com logs dos jobs, bloqueado por GitHub Actions **0 steps**.
+- [ ] Homologar fluxo em domínio HTTPS com proxy de API, navegação 320–1440px, formulários com acesso, CRM Admin, LGPD e perfis reais.
+
+**Marcos existentes encerrados somente no Site:** `AGENTS.md` normativo; `Proposta de valor e navegação por público`; `Captação e conversão bilateral integrada ao CRM/API`. A API e o Admin ganharam código, mas seus marcos maiores de produto **não** foram marcados concluídos sem atendimento integral.
+
+**Progresso após merge:** API **28/59 = 47,5%** (inalterado); Admin **25/57 = 43,9%** (inalterado); Site **13/34 = 38,2%** (antes 10/34). Total **66/150 = 44,0%** (antes 63/150 = 42,0%). Contagem rigorosa por tarefas do roadmap, não volume de código.
+
+**Próximo bloco para MVP:** homologação dos fluxos site→API→CRM e destravar CI; catálogo de planos e contratação reais sem duplicar recebíveis; operação de publicidade/reserva; instalação com Player Rádio/TV e S3 em dispositivos reais, com testes de prova de reprodução.
+
 ## Sprint 40% — Conteúdo Rádio Indoor, orientação de licenças e arquitetura (15/10/2026)
 
 **PRs definitivos da sprint:** [Site #21](https://github.com/paulodias-dev/meucomercial-site/pull/21) e [API #71](https://github.com/paulodias-dev/meucomercial-api/pull/71), ambos sobre `main`, sem draft ou merge automático.
@@ -86,7 +120,7 @@
 
 - [x] Arquitetura inicial e orientações de execução documentadas no `README.md`.
 - [x] Código atual usa React, TypeScript, Vite e servidor Express (ver `package.json` e `server.ts`).
-- [ ] Criar `AGENTS.md` para componentes, SEO, acessibilidade, responsividade, conteúdo e integrações sem dados fictícios.
+- [x] Criar `AGENTS.md` para componentes, SEO, acessibilidade, responsividade, conteúdo e integrações sem dados fictícios.
 - [ ] Auditar performance/SEO e a concentração de lógica em `src/App.tsx`; definir mapa de componentes e journeys de conversão.
 
 ## Fase 2: Infraestrutura e Back-end Core (API Laravel)
@@ -142,8 +176,8 @@
 
 **Objetivo:** Fazer do site comercial uma aquisição de duas pontas: estabelecimentos que contratam a solução Indoor e anunciantes que compram espaços de publicidade. **Situação:** Planejada · 0/3 marcos implementados.
 
-- [ ] **Proposta de valor e navegação por público.** Criar jornadas distintas e claras para Estabelecimentos (Rádio/TV, instalação, contrato recorrente, dispositivos) e Anunciantes (rede de pontos, segmentação, mídia disponível, campanhas, prova de exibição e proposta de veiculação). Manter página principal e identidade, com SEO/FAQ/CTAs próprios e sem prometer audiência ou cobertura não comprovadas.
-- [ ] **Captação e conversão bilateral integrada ao CRM/API.** Formulários/contexto de demonstração e contratação de estabelecimento distintos de solicitação de mídia por anunciante, com consentimento LGPD, antispam, UTM/origem, validações, deduplicação e encaminhamento comercial ao fluxo correto; exibir estados de envio e fallback, nunca simular lead salvo quando não estiver.
+- [x] **Proposta de valor e navegação por público.** Criar jornadas distintas e claras para Estabelecimentos (Rádio/TV, instalação, contrato recorrente, dispositivos) e Anunciantes (rede de pontos, segmentação, mídia disponível, campanhas, prova de exibição e proposta de veiculação). Manter página principal e identidade, com SEO/FAQ/CTAs próprios e sem prometer audiência ou cobertura não comprovadas.
+- [x] **Captação e conversão bilateral integrada ao CRM/API.** Formulários/contexto de demonstração e contratação de estabelecimento distintos de solicitação de mídia por anunciante, com consentimento LGPD, antispam, UTM/origem, validações, deduplicação e encaminhamento comercial ao fluxo correto; exibir estados de envio e fallback, nunca simular lead salvo quando não estiver.
 - [ ] **Catálogo seguro de mídia/solicitação de proposta.** Página comercial de formatos, regiões e oportunidades de anúncio alimentada por dados autorizados/curados do inventário e política de preços, com filtro/briefing e pedido de orçamento; não revelar taxas confidenciais, ocupação em tempo real ou dados identificáveis de estabelecimentos sem autorização. Evoluir para reserva/checkout apenas depois do backend de booking e das aprovações.
 
 **Aceite da frente:** caminhos comerciais separados, rastreamento válido, leads registrados no CRM/API com finalidade/papel, LGPD revisada, dados reais e segurança do inventário; testes de conversão/SEO/mobile.
