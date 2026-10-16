@@ -1,12 +1,12 @@
 import {useEffect,useState} from 'react'
 import {Check,ChevronDown,ChevronUp,CircleAlert,RefreshCcw} from 'lucide-react'
 
-type Step={key:string;title:string;done:boolean;view:'services'|'devices'|'media'|'studio'|'publications'}
-type Checklist={steps:Step[];evidence:string;devices_registered:number;devices_paired:number;active_playlists:number;active_self_publications:number}
+type Step={key:string;title:string;done:boolean;view:'services'|'devices'|'media'|'studio'|'publications';guidance?:string}
+type Checklist={steps:Step[];evidence:string;devices_registered:number;devices_paired:number;active_playlists:number;active_self_publications:number;recent_player_reports_7d?:number;last_player_reported_at?:string|null;next_action?:Pick<Step,'key'|'title'|'view'|'guidance'>|null}
 export default function ClientOnboarding({
-  token,onNavigate,
+  token,onNavigate,refreshKey,
 }:{
-  token:string;onNavigate:(view:Step['view'])=>void
+  token:string;onNavigate:(view:Step['view'])=>void;refreshKey?:string|number
 }){
   const [data,setData]=useState<Checklist|null>(null)
   const [error,setError]=useState('')
@@ -27,9 +27,9 @@ export default function ClientOnboarding({
       .catch(e=>{if(!abort.signal.aborted)setError(e instanceof Error?e.message:'Consulta indisponível.')})
       .finally(()=>{if(!abort.signal.aborted)setBusy(false)})
     return ()=>abort.abort()
-  },[token,reload])
+  },[token,reload,refreshKey])
   const done=data?.steps.filter(s=>s.done).length??0
-  const total=data?.steps.length??7
+  const total=data?.steps.length??8
   if(!busy&&!data&&error)return <div className='rounded-xl bg-white border border-black/10 p-4 mb-5 text-sm'>
     <span role='alert'>{error}</span>
     <button type='button' onClick={()=>setReload(n=>n+1)} className='underline text-blue-800 ml-2'>Tentar novamente</button>
