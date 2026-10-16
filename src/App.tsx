@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import SEO from "./components/SEO";
+import RadioGuide from "./components/RadioGuide";
 
 // --- Types ---
 interface Testimonial {
@@ -390,6 +391,7 @@ export default function App() {
           <nav className="hidden lg:flex items-center gap-8">
             <a href="#recursos" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Recursos</a>
             <a href="#beneficios" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Por que nós</a>
+            <a href="#radio-indoor" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Rádio Indoor</a>
             <a href="#simulador" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Demonstração</a>
             <a href="#consultor-estrategico" className="text-sm text-black/60 hover:text-blue-600 flex items-center gap-1 transition-colors duration-200 font-medium">
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
@@ -445,6 +447,10 @@ export default function App() {
                   className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
                 >
                   Por que nós
+                </a>
+                <a href="#radio-indoor" onClick={() => setMobileMenuOpen(false)}
+                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
+                  Rádio Indoor
                 </a>
                 <a 
                   href="#simulador" 
@@ -1172,7 +1178,8 @@ export default function App() {
 
         </div>
       </section>
-                    {/* --- STRATEGIC CONSULTANT --- */}
+                    <RadioGuide onContact={openLeadModal} />
+      {/* --- STRATEGIC CONSULTANT --- */}
       <section id="consultor-estrategico" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative bg-[#F5F5F7]">
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
         <div className="max-w-4xl mx-auto relative z-10">
