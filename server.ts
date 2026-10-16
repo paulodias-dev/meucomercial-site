@@ -152,6 +152,7 @@ const portalRoutes = {
   'overview': {method: 'GET', backend: 'client/indoor/overview', auth: true},
   'devices': {method: 'GET', backend: 'client/indoor/devices', auth: true},
   'campaigns': {method: 'GET', backend: 'client/indoor/campaigns', auth: true},
+  'services': {method: 'GET', backend: 'client/services', auth: true},
 } as const;
 
 app.all('/api/portal/:action', async (req, res) => {
