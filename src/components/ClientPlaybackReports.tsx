@@ -11,10 +11,12 @@ type Item={
   radio_hour_start:string|null;radio_slot_index:number|null;
   evidence:'authenticated_player_report_not_independent_audience'
 }
+type Daily={date:string;image:number;video:number;audio:number;total:number}
 type Response={
   data:Item[];
   summary:{device_id:number;days:number;kind:Kind;total:number;
-    by_type:{image:number;video:number;audio:number};evidence:string};
+    by_type:{image:number;video:number;audio:number};
+    by_day:Daily[];bucket_timezone:'UTC';evidence:string};
   pagination:{page:number;last_page:number;per_page:number;total:number}
 }
 const when=(value:string|null)=>value?new Date(value).toLocaleString('pt-BR'):'Sem data'
@@ -56,6 +58,8 @@ export default function ClientPlaybackReports({
       .finally(()=>{if(!abort.signal.aborted)setLoading(false)})
     return ()=>abort.abort()
   },[token,deviceId,days,kind,page,refresh])
+
+  const maxDaily = Math.max(1,...(result?.summary.by_day??[]).map(day=>day.total))
 
   const exportPage=()=>{
     if(!result?.data?.length)return
@@ -107,6 +111,35 @@ export default function ClientPlaybackReports({
         {' · '}Vídeos: {result.summary.by_type.video}
         {' · '}Rádio: {result.summary.by_type.audio}
       </p>
+      {result.summary.by_day?.length>0&&<section className='mt-4 rounded-xl bg-slate-50 border border-slate-200 p-3'
+        aria-label='Tendência diária de relatos do dispositivo'>
+        <h6 className='font-semibold text-xs mb-2'>Relatos por dia · UTC</h6>
+        <div className='flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-black/70 mb-3'>
+          <span><span className='inline-block w-2 h-2 rounded-sm bg-sky-600 mr-1'/>Imagens</span>
+          <span><span className='inline-block w-2 h-2 rounded-sm bg-indigo-500 mr-1'/>Vídeos</span>
+          <span><span className='inline-block w-2 h-2 rounded-sm bg-emerald-600 mr-1'/>Spots Rádio</span>
+        </div>
+        <div className='space-y-2 max-h-72 overflow-y-auto pr-1' role='list'>
+          {result.summary.by_day.map(day=><div key={day.date} role='listitem'
+            aria-label={day.date+': '+day.total+' relatos, '+day.image+' imagens, '+day.video+' vídeos, '+day.audio+' spots de rádio'}
+            className='flex gap-2 items-center text-xs'>
+            <span className='w-12 shrink-0 tabular-nums text-black/60'>
+              {day.date.slice(8,10)}/{day.date.slice(5,7)}
+            </span>
+            <div className='flex-1 h-3 rounded bg-slate-200 overflow-hidden flex' aria-hidden='true'>
+              <span className='bg-sky-600' style={{width:(day.image/maxDaily*100)+'%'}}/>
+              <span className='bg-indigo-500' style={{width:(day.video/maxDaily*100)+'%'}}/>
+              <span className='bg-emerald-600' style={{width:(day.audio/maxDaily*100)+'%'}}/>
+            </div>
+            <strong className='w-8 text-right tabular-nums'>{day.total}</strong>
+          </div>)}
+        </div>
+        <p className='mt-3 text-[11px] text-black/60'>
+          O gráfico considera todo o período filtrado, não apenas a página atual.
+          Datas UTC nas extremidades podem ser parciais. Zero indica ausência de relato recebido,
+          não confirma equipamento desligado.
+        </p>
+      </section>}
       {result.data.length===0?<p className='text-xs mt-3 text-black/60'>Nenhum relato registrado neste período.</p>
         :<div className='mt-3 space-y-2'>
           {result.data.map(e=><div key={e.event_uuid} className='rounded-lg border border-black/10 p-3 text-xs'>
