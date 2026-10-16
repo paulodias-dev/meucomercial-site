@@ -355,3 +355,14 @@ test('responsive client ledger pages reports and refuses to certify device claim
   assert.ok(!playbackReports.includes('localStorage'))
   assert.ok(!playbackReports.includes('device_token'))
 })
+
+test('daily UTC playback trend is client-scoped, mobile scrollable and independent of current CSV page',()=>{
+  assert.ok(playbackReports.includes("by_day:Daily[];bucket_timezone:'UTC'"))
+  assert.ok(playbackReports.includes("result.summary.by_day.map(day=>"))
+  assert.ok(playbackReports.includes("max-h-72 overflow-y-auto"))
+  assert.ok(playbackReports.includes("maxDaily = Math.max(1"))
+  assert.ok(playbackReports.includes("não apenas a página atual"))
+  assert.ok(playbackReports.includes("não confirma equipamento desligado"))
+  assert.ok(!playbackReports.includes("localStorage.setItem"))
+  assert.ok(!playbackReports.includes("req.query.client_id"))
+})
