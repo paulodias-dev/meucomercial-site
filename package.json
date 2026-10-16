@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "npm run test:radio && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "npm run test:radio && npm run test:journeys && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
-    "test:radio": "node --test scripts/test-radio-guide.mjs"
+    "test:radio": "node --test scripts/test-radio-guide.mjs",
+    "test:journeys": "node --test scripts/test-audience-journeys.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
