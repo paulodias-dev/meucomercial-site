@@ -230,7 +230,7 @@ export default function App() {
           email: formData.email.trim(),
           whatsapp: formData.whatsapp.trim(),
           screens_count: leadKind === "establishment" ? Number(formData.telas) : null,
-          segment: formData.segmento,
+          segment: leadKind === 'establishment' ? formData.segmento : null,
           message: formData.mensagem.trim() || null,
           source: modalSource,
           utm_source: params.get("utm_source")?.slice(0, 100) || null,
@@ -1656,9 +1656,9 @@ export default function App() {
                         <option value="16">Mais de 15 TVs</option>
                       </select>
                     </div>}
-                    <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Segmento Principal</label>
-                      <select
+                    {leadKind === 'establishment' && <div>
+                      <label htmlFor="establishment-segment" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Segmento do estabelecimento</label>
+                      <select id="establishment-segment"
                         value={formData.segmento}
                         onChange={(e) => setFormData({...formData, segmento: e.target.value})}
                         className="w-full bg-white border border-black/10 rounded-xl px-3 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 shadow-sm"
@@ -1669,7 +1669,7 @@ export default function App() {
                         <option value="clinica">🏥 Clínicas / Saúde</option>
                         <option value="geral">📺 Outro Segmento</option>
                       </select>
-                    </div>
+                    </div>}
                   </div>
 
                   <div>
