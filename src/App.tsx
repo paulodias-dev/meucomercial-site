@@ -35,6 +35,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import SEO from "./components/SEO";
 import RadioGuide from "./components/RadioGuide";
+import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
 
 // --- Types ---
 interface Testimonial {
@@ -206,6 +207,12 @@ export default function App() {
     } finally {
       setIsConsulting(false);
     }
+  };
+
+  const openAudienceContact = (kind: CommercialAudience, source: string) => {
+    setLeadKind(kind);
+    setFormData(prev => ({...prev, mensagem: ''}));
+    openLeadModal(source);
   };
 
   // Open lead modal with source context
@@ -391,6 +398,7 @@ export default function App() {
           <nav className="hidden lg:flex items-center gap-8">
             <a href="#recursos" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Recursos</a>
             <a href="#beneficios" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Por que nós</a>
+            <a href="#para-quem" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Para quem é</a>
             <a href="#radio-indoor" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Rádio Indoor</a>
             <a href="#simulador" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Demonstração</a>
             <a href="#consultor-estrategico" className="text-sm text-black/60 hover:text-blue-600 flex items-center gap-1 transition-colors duration-200 font-medium">
@@ -447,6 +455,10 @@ export default function App() {
                   className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
                 >
                   Por que nós
+                </a>
+                <a href="#para-quem" onClick={() => setMobileMenuOpen(false)}
+                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
+                  Para quem é
                 </a>
                 <a href="#radio-indoor" onClick={() => setMobileMenuOpen(false)}
                   className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
@@ -1178,7 +1190,8 @@ export default function App() {
 
         </div>
       </section>
-                    <RadioGuide onContact={openLeadModal} />
+                    <AudienceJourneys onContact={openAudienceContact} />
+      <RadioGuide onContact={openLeadModal} />
       {/* --- STRATEGIC CONSULTANT --- */}
       <section id="consultor-estrategico" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative bg-[#F5F5F7]">
         <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
@@ -1853,7 +1866,9 @@ export default function App() {
                     Demonstração • Meu Comercial
                   </span>
                   <h3 className="text-xl font-bold text-[#1D1D1F] tracking-tight">
-                    Falar com um Especialista
+                    {leadKind === 'advertiser' ? 'Solicitar proposta de publicidade' :
+                      leadKind === 'agency' ? 'Conhecer planos para agência' :
+                      'Agendar conversa sobre TV e Rádio'}
                   </h3>
                   <p className="text-xs text-black/60 mt-1">
                     Conte sobre sua empresa. Nossa equipe analisará a solicitação e entrará em contato.
@@ -1888,9 +1903,9 @@ export default function App() {
                   <div>
                     <label htmlFor="lead-kind" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Como deseja usar o Meu Comercial?</label>
                     <select id="lead-kind" value={leadKind} onChange={e => setLeadKind(e.target.value as typeof leadKind)} className="w-full rounded-xl border border-black/10 bg-white p-2.5 text-xs">
-                      <option value="establishment">Instalar TV ou Rádio Indoor no estabelecimento</option>
+                      <option value="establishment">Operar TV ou Rádio no meu estabelecimento</option>
                       <option value="agency">Gerenciar clientes como agência</option>
-                      <option value="advertiser">Anunciar na rede de estabelecimentos</option>
+                      <option value="advertiser">Comprar espaços de publicidade em TV/Rádio</option>
                     </select>
                   </div>
                   
@@ -1945,9 +1960,9 @@ export default function App() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Quantidade de TVs (estimativa)</label>
-                      <select
+                    {leadKind === 'establishment' && <div>
+                      <label htmlFor="establishment-tvs" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Quantidade de TVs (estimativa)</label>
+                      <select id="establishment-tvs"
                         value={formData.telas}
                         onChange={(e) => setFormData({...formData, telas: e.target.value})}
                         className="w-full bg-white border border-black/10 rounded-xl px-3 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 shadow-sm"
@@ -1958,7 +1973,7 @@ export default function App() {
                         <option value="6">6 a 15 Pontos de TV</option>
                         <option value="16">Mais de 15 TVs</option>
                       </select>
-                    </div>
+                    </div>}
                     <div>
                       <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Segmento Principal</label>
                       <select
@@ -1976,11 +1991,17 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Alguma observação adicional? (Opcional)</label>
-                    <textarea
+                    <label htmlFor="lead-details" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">
+                      {leadKind === 'advertiser' ? 'Locais, período e mídia desejados' : 'Detalhes de sua operação (opcional)'}
+                    </label>
+                    <textarea id="lead-details"
                       value={formData.mensagem}
                       onChange={(e) => setFormData({...formData, mensagem: e.target.value})}
-                      placeholder="Diga se já possui aparelhos de TV instalados ou quais os objetivos principais da comunicação..."
+                      placeholder={leadKind === 'advertiser'
+                        ? 'Informe cidades, período, formato TV/Rádio e público desejado.'
+                        : leadKind === 'agency'
+                        ? 'Informe tamanho da carteira, pontos de mídia e estrutura atual.'
+                        : 'Quais aparelhos você tem e quais conteúdos quer programar?'}
                       rows={2}
                       className="w-full bg-white border border-black/10 rounded-xl px-3.5 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 shadow-sm placeholder:text-black/30"
                     />
