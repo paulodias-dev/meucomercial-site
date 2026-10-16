@@ -9,6 +9,9 @@
 
 ## Sprint MVP — Jornada comercial, funil qualificado e confiança (16/10/2026)
 
+**PRs definitivos coordenados:** [Site #22](https://github.com/paulodias-dev/meucomercial-site/pull/22), [API #74](https://github.com/paulodias-dev/meucomercial-api/pull/74) e [Admin #44](https://github.com/paulodias-dev/meucomercial-admin/pull/44), base `main`, não draft, sem merge automático. Todos os três devem ser integrados na mesma release.
+
+
 **Objetivo do bloco:** ligar públicos distintos a leads reais e à qualificação na API/Admin, eliminar depoimentos/preços sem evidência e preservar contratos da plataforma. Repositórios integrados Site + API + Admin; `main` é produção e permanece intacta até revisão/merge dos PRs.
 
 **Critérios da sprint — 16/18 (88,9%) implementados em código; 2 gates de QA ainda pendentes:**
