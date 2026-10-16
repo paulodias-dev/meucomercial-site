@@ -7,6 +7,32 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint ampliada — Recuperação API #81 + relatos Rádio + QR offline (16/10/2026)
+
+**Estado:** implementação em branch baseada na `main` dos três repositórios; PRs desta sprint definitivos a revisar. Auditoria constatou que **API #81 foi mesclado apenas na branch intermediária do #80, e não na main**: modelo, rota, serviço e migration de TV não estavam na main, apesar do estado "merged". Este PR recoloca esses arquivos corretamente antes de estender a Rádio. **API #80, Site #29 e Admin #47 já constam como integrados na main.**
+
+**Critérios implementados: 15/18 = 83,3%; 3 gates de QA abertos.**
+- [x] Auditar e documentar a divergência entre PR API #81 merged e o conteúdo real da main.
+- [x] Reincorporar o módulo de eventos TV (modelo, API, serviço, migration, rotas, diagnósticos, testes).
+- [x] Adicionar migration segura e retrocompatível para hora/slot de Rádio, com chave única por dispositivo/hora/posição.
+- [x] Aceitar relatórios de áudio somente como spots institucionais próprios, não música licenciada nem publicidade paga.
+- [x] Revalidar Player, assinatura, cliente, manifesto, grade, direitos e cronograma de Rádio reconstruído no servidor.
+- [x] Verificar duração integral, hora/slot e horário de conclusão antes de registrar relato.
+- [x] Garantir idempotência de UUID e rejeitar segundo UUID do mesmo slot com 409.
+- [x] Instrumentar motor de Rádio somente após slot finalizado sem seek/interrupção.
+- [x] Reaproveitar fila offline própria sem alterar ledger/outbox de anúncios e faturamento.
+- [x] Incorporar gerador SVG de QR offline em arquivo MIT com licença preservada.
+- [x] Configurar URL HTTPS oficial /portal e usar PIN temporário no fragmento do QR, sem segredo do Player.
+- [x] Consumir fragmento uma vez no Portal, limpando URL e guardando PIN apenas na memória.
+- [x] Exigir seleção explícita de equipamento cadastrado para autorizar pareamento.
+- [x] Exibir relatos de Rádio separados dos relatórios de TV e de audiência independente.
+- [x] Adicionar testes PHP e Node; verificações estáticas Site 37/37 e Admin/Player 17/17; gerador QR SVG e filtros de áudio executados isoladamente; runbooks atualizados.
+- [ ] Executar PHP lint, PHPUnit/MySQL8, migrations incrementais, Swagger e testes de concorrência reais.
+- [ ] Executar Node Player, TS/Vite, QA HTTP/TLS/mobile QR e obter CI verde.
+- [ ] Homologar em Player TV/Rádio real, mídia S3, proteção de licença, mudança de grade, offline e ACK.
+
+**Progresso global de macromarcos aceitos:** API 29/59 + Admin 25/57 + Site 13/34 = **67/150 = 44,7%**. Não contabilizar essa sprint como Player físico homologado. **Próxima sprint:** CI executável e QA integrado, rotação/revogações e recuperação da fila offline; nunca usar `migrate:fresh` em produção.
+
 ## Sprint — Relatos idempotentes de TV própria e outbox offline (16/10/2026)
 
 **Estado de integração:** PRs definitivos [API #81](https://github.com/paulodias-dev/meucomercial-api/pull/81), [Admin #47](https://github.com/paulodias-dev/meucomercial-admin/pull/47) e [Site #29](https://github.com/paulodias-dev/meucomercial-site/pull/29) **abertos, não draft, mescláveis**. A **API #81 é empilhada sobre API #80 ainda aberta**, enquanto Site/Admin partem da `main`. **Site #28 e Admin #46 estão mesclados na main**, API #80 não. Implantar na ordem **API #80 → API #81 + migration → Admin/Player Web e Site**. Workflows [API #81](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38942821811) e [Admin #47](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38942829870) registram **failure sem etapas nos jobs consultados**, e não comprovam PHPUnit/Node executados; Site não expõe workflow PR. Sem alterações diretas à main ou banco de produção.
