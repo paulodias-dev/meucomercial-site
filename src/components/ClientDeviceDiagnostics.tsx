@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react'
 import {RefreshCcw} from 'lucide-react'
+import ClientPlaybackReports from './ClientPlaybackReports'
 
 type Log={id:number;status:string;playlist_id:number|null;manifest_version:number;protocol:number;finished_at:string|null;evidence:string}
 type Command={id:number;type:string;status:string;created_at:string|null;sent_at:string|null;acknowledged_at:string|null}
@@ -14,6 +15,7 @@ export default function ClientDeviceDiagnostics({token,deviceId}:{token:string;d
   const [busy,setBusy]=useState(true)
   const [error,setError]=useState('')
   const [reload,setReload]=useState(0)
+  const [reportsOpen,setReportsOpen]=useState(false)
   useEffect(()=>{
     const abort=new AbortController()
     const url=new URL('/api/portal/device-diagnostics',window.location.origin)
@@ -66,6 +68,11 @@ export default function ClientDeviceDiagnostics({token,deviceId}:{token:string;d
           </p>)}
         </div>}
       <p className='text-xs text-black/60 mt-2'>Esses registros são relatos autenticados do próprio Player, não uma certificação independente de reprodução ou audiência.</p>
+      <button type='button' className='mt-3 min-h-11 w-full sm:w-auto px-4 rounded-xl border border-blue-200 bg-white text-xs font-semibold text-blue-800'
+        onClick={()=>setReportsOpen(open=>!open)}>
+        {reportsOpen?'Fechar histórico detalhado':'Consultar histórico de até 30 dias'}
+      </button>
+      {reportsOpen&&<ClientPlaybackReports token={token} deviceId={deviceId}/>}
       <h5 className='font-semibold text-xs mt-4 mb-2'>Últimos comandos</h5>
       {data.commands.length===0?<p className='text-xs text-black/60'>Nenhum comando registrado.</p>
         :<div className='space-y-2'>
