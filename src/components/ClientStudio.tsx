@@ -356,7 +356,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
             </button>}
           {studioScene===item.id&&item.id&&selectedId&&status==='draft'&&
             <ClientStoryEditor key={item.id} token={token} playlistId={selectedId}
-              itemId={item.id} previewUrl={previewFor(item)} orientation={orientation}
+              itemId={item.id} previewUrl={previewFor(item)} mediaIsVideo={isVideo(item)} orientation={orientation}
               onSaved={()=>{void open(selectedId)}}/>}
           {previewFor(item)&&kind==='tv'&&
             <div className={'mt-3 rounded-xl bg-gray-100 overflow-hidden mx-auto '+(orientation==='portrait'?'max-w-32':'max-w-sm')}>
