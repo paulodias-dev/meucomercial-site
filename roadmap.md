@@ -7,6 +7,38 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint MVP — Portal de autoatendimento Indoor do estabelecimento (16/10/2026)
+
+**Entrega full-stack coordenada:** novo portal responsivo `/portal` no site, API exclusiva `auth:client`, gateway Express same-origin, login/logout, **cinco áreas** (serviços existentes, dispositivos, locais, biblioteca de mídia, anúncios do próprio anunciante) e indicadores operacionais agregados de toda a base. Nenhuma alteração na interface do Admin, no Player nativo nem na cobrança.
+
+**Escopo de implementação — 16/18 critérios escritos em código (88,9%); aceites operacionais seguem pendentes:**
+- [x] Login JWT do cliente ativo com autenticação diferente de agência/`auth:api`; throttling 8/min no login.
+- [x] Gateway same-origin com allowlist de 8 rotas, método estrito, upstream HTTPS em produção, timeout 12s e redirects bloqueados.
+- [x] Sessão JWT apenas em memória; nenhum localStorage, cookie de agência, token em query string ou log; logout remoto.
+- [x] Consulta agregada de dispositivos com totais SQL de online/offline/bloqueio/sincronização/sem pareamento, sem sumarizar só 20/100 itens.
+- [x] Lista paginada de Players filtrada exclusivamente por `client_id` do JWT, sem token, PIN, serial, metadata nem arquivos privados.
+- [x] Lista paginada de locais pertencentes ao cadastro de cliente, com dados resumidos.
+- [x] Lista paginada de metadados de mídia próprios, sem URL privada, caminho de arquivo, metadados de licença ou S3.
+- [x] Pedidos de campanha filtrados pelo cliente **anunciante**, sem mostrar o anunciante de outra empresa nem detalhes confidenciais de anfitrião/reserva.
+- [x] Reuso do endpoint `/api/client/services` existente para planos/assinaturas; **não cria** assinaturas ou recebíveis.
+- [x] Site desktop/mobile com link `/portal`, login acessível e cinco abas paginadas; loading, erro, vazio, retry e logout.
+- [x] Proteção de cliente inativo no `EnsureActiveClient`; `X-Agency-Tenant`/client_id arbitrários não ampliam escopo.
+- [x] Cache-Control `private, no-store` na API e proxy; nenhuma credencial em query string.
+- [x] API com atributos L5 Swagger para cinco endpoints novos e documentação de autorização/privacidade.
+- [x] PHPUnit: sete cenários de JWT, cliente estrangeiro, 103 Players, local/mídia privados, campanhas isoladas e filtros, adicionados ao repositório.
+- [x] Site: 12 testes Node do portal/proxy executados no contexto da sessão e integrados ao `npm run build`; verificação estática do controlador/rotas PHP sem divergência de chaves estruturais.
+- [x] Corrigir consultor do Site removendo quatro grupos de alegações de ROI sem evidência e evitando logar os textos livres do visitante.
+- [ ] CI completo executado com PHPUnit, MySQL8, Swagger, TS/Vite, testes de proxy HTTP, e logs de runner — GitHub Actions segue falhando antes de qualquer step.
+- [ ] Homologação em domínio HTTPS, navegador mobile/desktop e contas reais de clientes diferentes; ainda não foi feita.
+
+**Marco técnico da API que recebe implementação nesta sprint:** `Projetar e validar contrato de API específico para cliente assinante: somente seus locais, campanhas, dispositivos e mídia; testes de autorização entre clientes.` Todas as superfícies de leitura e testes foram escritas; o **aceite de validação real** continua bloqueado por CI. Registrar no roadmap como concluído **em código** e com pendência de QA, não como homologado em produção.
+
+**Contagem prevista após integrar os PRs:** API **29/59 = 49,2%** (antes 28/59); Admin **25/57 = 43,9%** (sem alteração); Site **13/34 = 38,2%** (sem marcar uma página como conclusão de um marco comercial maior). **Total 67/150 = 44,7%** (antes 66/150=44,0%). A contagem representa apenas marcos de engenharia implementados e não significa que o MVP esteja 44,7% homologado.
+
+**Riscos e limites:** JWT em memória exige login após refresh, escolha deliberada até BFF robusto. O portal é leitura/consulta, não permite publicar, pagar ou parear; sessões de agência e Player permanecem isoladas. Todos os claims `online` são conexão, **não prova de audiência ou veiculação**. Seguir `docs/CLIENT_INDOOR_PORTAL_MVP.md`.
+
+**Próxima sprint:** CI/MySQL8/Composer desbloqueado e testes E2E de sessão/proxy; operação real de pareamento e publicação do cliente com RBAC/auditoria; QA do Player Rádio/TV, S3 e relatórios de inserção.
+
 ## Sprint MVP — Jornada comercial, funil qualificado e confiança (16/10/2026)
 
 **PRs definitivos coordenados:** [Site #22](https://github.com/paulodias-dev/meucomercial-site/pull/22), [API #74](https://github.com/paulodias-dev/meucomercial-api/pull/74) e [Admin #44](https://github.com/paulodias-dev/meucomercial-admin/pull/44), base `main`, não draft, sem merge automático. Todos os três devem ser integrados na mesma release.
