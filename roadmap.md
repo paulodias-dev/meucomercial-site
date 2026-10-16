@@ -7,6 +7,28 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint MVP — Comandos próprios do assinante, PIN e sincronização (16/10/2026)
+
+**Estado:** implementação em branch de feature, PR definitivo não draft a revisar; nenhum deploy, CI, migração ou reset executado. Continuação direta do portal de leitura da sprint anterior. API + Site dependem um do outro.
+
+**Critérios da entrega — 9/12 implementados em código:**
+- [x] Gerar PIN temporário de 6 dígitos somente para dispositivo próprio, ainda não pareado e com assinatura ativa/trialing.
+- [x] Reutilizar PIN ainda válido, expiração existente de 10 minutos e limitação de taxa por rota.
+- [x] Proibir rotação de token de Player já pareado pelo assinante; manutenção/reconexão especial fica na agência.
+- [x] Solicitar sincronização de Player próprio pareado, ativo e com assinatura elegível, sem liberar programação não autorizada.
+- [x] Serializar por lock transacional e reutilizar comando pendente, sem duplicar fila nem inflar versão em cliques repetidos.
+- [x] Registrar a origem `client_portal` e `client_id` no comando, sem forjar identidade de usuário operador.
+- [x] Restringir gateway a duas ações de POST com IDs numéricos; rejeitar rotas, caminhos, IDs de agência/cliente arbitrários.
+- [x] Exibir ações condicionadas ao estado real do dispositivo e da assinatura em UI responsiva, mensagens acessíveis, PIN apenas em memória e proteção contra resposta de sessão antiga.
+- [x] Adicionar sete testes Feature PHPUnit de autenticação, acesso cruzado, PIN, bloqueio, assinatura e idempotência; ampliar guardas Node no Site.
+- [ ] Executar PHPUnit/MySQL 8, Swagger e build Vite/TypeScript + testes HTTP reais em ambiente apropriado.
+- [ ] Validar uso em dispositivos Rádio/TV reais (rede/lease/pareamento) e navegadores mobile; comandos pendentes **não** comprovam ACK de reprodução.
+- [ ] Completar jornada de publicação própria guiada (prévia/destinos/grade) e QR/primeira programação; restrito à agência até sua autorização integral.
+
+**Cobertura de macromarcos:** API **29/59**, Admin **25/57**, Site **13/34** = **67/150 (44,7%)**. Esta sprint encerra subcritérios operacionais, mas **não** encerra o macromarco de autoatendimento/publicação/Player (QR, programação e homologação pendentes). Sem inflação artificial da porcentagem. A referência abaixo foi sincronizada com os PRs #75/#23 já mesclados na main.
+
+**Próxima sprint:** publicação própria guiada pelo cliente, usando regras existentes de catálogo, programação, inventário, autorização e revisão; conectar confirmação de comando/pareamento em Player real e executar QA integrado sem operações destrutivas.
+
 ## Sprint MVP — Portal de autoatendimento Indoor do estabelecimento (16/10/2026)
 
 **PRs definitivos da sprint:** [API #75](https://github.com/paulodias-dev/meucomercial-api/pull/75) e [Site #23](https://github.com/paulodias-dev/meucomercial-site/pull/23). Dependência recíproca do contrato (API + gateway/site), ambos não draft, base `main`, sem merge automático.
@@ -105,10 +127,12 @@
 
 | Repositório | Marcos com evidência | Total monitorado | Cobertura verificada |
 |---|---:|---:|---:|
-| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 25 | 59 | 42,4% |
-| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 24 | 57 | 42,1% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 9 | 34 | 26,5% |
-| **Plataforma completa** | **58** | **150** | **38,7%** |
+| [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 29 | 59 | 49,2% |
+| [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 25 | 57 | 43,9% |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 13 | 34 | 38,2% |
+| **Plataforma completa** | **67** | **150** | **44,7%** |
+
+> **Atualização do painel:** 16/10/2026, baseline mesclado 67/150. As séries históricas abaixo são mantidas para rastreabilidade e não representam o estado atual.
 
 **Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
