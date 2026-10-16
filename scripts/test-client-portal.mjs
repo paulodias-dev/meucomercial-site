@@ -11,9 +11,9 @@ const onboarding=read('src/components/ClientOnboarding.tsx')
 const targets=read('src/components/ClientPublicationTargets.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only twenty-five allowlisted endpoints',()=>{
+test('same-origin portal proxies only twenty-six allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
-  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device',
+  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device',
     'publication-options','publication-destinations','publication-history',
     'publication-preview','publication-create','publication-withdraw',
     'studio-catalog','studio-list','studio-create','studio-get','studio-update',
@@ -258,4 +258,25 @@ test('scene editor is shown only for persisted own TV draft items',()=>{
   assert.ok(studio.includes("import ClientStoryEditor from './ClientStoryEditor'"))
   assert.ok(studio.includes("kind==='tv'&&item.id&&selectedId&&status==='draft'"))
   assert.ok(studio.includes('itemId={item.id}'))
+})
+
+test('Player-initiated pairing uses fixed owner-scoped gateway and temporary PIN',()=>{
+  assert.ok(server.includes("'claim-device': {method: 'POST'"))
+  assert.ok(server.includes("action === 'claim-device'"))
+  assert.ok(server.includes("? {pin: req.body?.pin}"))
+  assert.ok(server.includes("'/claim-pairing'"))
+  assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
+  assert.ok(portal.includes("portalRequest<{data:{device_id:number;paired:boolean;status:string}}>("))
+  assert.ok(portal.includes("'claim-device',token,{method:'POST'"))
+  assert.ok(portal.includes("pattern='[0-9]{6}'"))
+  assert.ok(portal.includes("replace(/[^0-9]/g,'')"))
+  assert.ok(portal.includes('Conectar este Player'))
+  assert.ok(!portal.includes('setItem(\'device_token\''))
+})
+test('per-device operations present authenticated sync evidence but not audience proof',()=>{
+  assert.ok(targets.includes('sync_acknowledged:boolean'))
+  assert.ok(targets.includes('sync_acknowledged_at:string|null'))
+  assert.ok(targets.includes('Manifesto confirmado pelo Player (protocolo v2)'))
+  assert.ok(targets.includes('não equivale a recebimento, exibição ou audiência comprovada'))
+  assert.ok(targets.includes('playback_confirmed:false'))
 })
