@@ -207,7 +207,7 @@ export default function ClientPortal(){
 
   const changeView=(next:View)=>{
     setPublishFromStudio(null)
-    setView(next);setPage(1);setPairingPin(null);setDeviceActionMessage('')
+    setView(next);setPage(1);setPairingPin(null);setPlayerPinByDevice({});setDiagnosticsId(null);setDeviceActionMessage('')
   }
   const list=view==='publications'||view==='studio'?null:view==='devices'?devices:view==='campaigns'?campaigns:
     view==='services'?services:view==='locations'?locations:media
