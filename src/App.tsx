@@ -38,15 +38,6 @@ import RadioGuide from "./components/RadioGuide";
 import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
 
 // --- Types ---
-interface Testimonial {
-  name: string;
-  role: string;
-  company: string;
-  content: string;
-  avatar: string;
-  color: string;
-}
-
 interface TVLayout {
   id: string;
   name: string;
@@ -70,7 +61,7 @@ export default function App() {
 
   // Plan/Price Calculator state
   const [screensCount, setScreensCount] = useState<number>(5);
-  const [billingCycle, setBillingCycle] = useState<"mensal" | "anual">("anual");
+
 
   // Strategic consultant state
   const [selectedSegment, setSelectedSegment] = useState<string>("escritorio");
@@ -135,20 +126,6 @@ export default function App() {
     const interval = setInterval(updateSimulatedClock, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  // Calculate pricing
-  const calculatePricePerScreen = (qty: number) => {
-    if (qty === 1) return 59;
-    if (qty <= 3) return 49;
-    if (qty <= 10) return 42;
-    if (qty <= 25) return 38;
-    return 35; // volume discount
-  };
-
-  const basePricePerScreen = calculatePricePerScreen(screensCount);
-  const discountMultiplier = billingCycle === "anual" ? 0.8 : 1.0; // 20% discount
-  const finalPricePerScreen = Math.round(basePricePerScreen * discountMultiplier);
-  const totalMonthlyPrice = finalPricePerScreen * screensCount;
 
   // TV template layouts available in simulator
   const layouts: TVLayout[] = [
@@ -343,33 +320,6 @@ export default function App() {
       );
     });
   };
-
-  const testimonials: Testimonial[] = [
-    {
-      name: "Marcela Silveira",
-      role: "Diretora de RH",
-      company: "Inova Tech Logística",
-      content: "Substituímos o mural de cortiça tradicional e os e-mails gerais pelas TVs da Meu Comercial. O alinhamento das equipes foi imediato. Agora todos sabem quem bateu meta, as notícias do dia e os aniversariantes de forma interativa. Reduziu o ruído em 80%!",
-      avatar: "MS",
-      color: "from-blue-500 to-indigo-600"
-    },
-    {
-      name: "Rodrigo Mendonça",
-      role: "Gerente de Operações",
-      company: "Supermercados Sul Alimentos",
-      content: "Gerenciamos 14 telas espalhadas em 3 filiais direto do meu celular. Conseguimos trocar ofertas e destacar promoções do dia em menos de 10 segundos. O retorno em vendas de produtos promocionais aumentou 34% no primeiro mês.",
-      avatar: "RM",
-      color: "from-teal-400 to-emerald-600"
-    },
-    {
-      name: "Amanda Costa",
-      role: "CEO & Sócia Fundadora",
-      company: "Rede FitLife Academias",
-      content: "As telas da Meu Comercial na área de musculação mudaram o astral dos alunos. O conteúdo de treino intercalado com previsão do tempo e posts do Instagram gera uma retenção fantástica. Sem contar a venda de planos anuais divulgados na TV.",
-      avatar: "AC",
-      color: "from-purple-500 to-pink-600"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white">
@@ -1337,339 +1287,71 @@ export default function App() {
         </div>
       </section>
 
-      {/* --- PRICING & SLIDER CALCULATOR --- */}
-      <section id="planos" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 bg-white relative border-t border-black/5">
-        <div className="max-w-7xl mx-auto">
-          
-          {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-blue-600 font-semibold">Orçamento Descomplicado</span>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-[#1D1D1F] tracking-tight">
-              Planos Flexíveis e Justos para o Tamanho da sua Empresa
+      {/* --- QUALIFIED COMMERCIAL BRIEF — NOT A PRICE QUOTE --- */}
+      <section id="planos" className="py-20 sm:py-24 bg-white border-t border-black/5 px-4 sm:px-6 lg:px-8 scroll-mt-20">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="lg:col-span-5">
+            <span className="text-xs text-blue-700 font-bold tracking-widest uppercase">Proposta por operação</span>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold mt-3 tracking-tight">
+              Entenda o investimento sem preços de tabela inventados
             </h2>
-            <p className="text-black/60 text-sm sm:text-base leading-relaxed">
-              Assine apenas o software para usar as TVs que você já possui ou fale com nosso time para incluir hardware na mesma solução. Sem taxas ocultas, sem contratos engessados e com implantação simples.
+            <p className="text-sm text-black/65 leading-7 mt-5">
+              O valor final depende do perfil, contrato, quantidade de aparelhos,
+              licença das mídias, instalação e serviços contratados. A venda de
+              publicidade é independente da assinatura do estabelecimento.
             </p>
-
-            {/* Toggle Billing Cycle */}
-            <div className="inline-flex bg-[#F5F5F7] p-1 rounded-xl border border-black/5 self-center mt-4">
-              <button
-                onClick={() => setBillingCycle("mensal")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 ${
-                  billingCycle === "mensal"
-                    ? "bg-white text-black shadow-sm"
-                    : "text-black/50 hover:text-black"
-                }`}
-              >
-                Mensal
-              </button>
-              <button
-                onClick={() => setBillingCycle("anual")}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
-                  billingCycle === "anual"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-black/50 hover:text-black"
-                }`}
-              >
-                Anual
-                <span className="bg-emerald-550 bg-emerald-50 text-emerald-600 border border-emerald-100 font-extrabold text-[9px] px-1.5 py-0.5 rounded uppercase">
-                  -20% OFF
-                </span>
-              </button>
-            </div>
+            <ul className="space-y-3 text-sm text-black/65 mt-7">
+              {[
+                'Software e dispositivos: escopo definido em proposta.',
+                'Equipamento e instalação: verificamos compatibilidade e necessidade.',
+                'Músicas e criativos: direitos de uso podem exigir contratos adicionais.',
+                'Publicidade: local, período, cota e valor sujeitos a inventário autorizado.',
+              ].map(item=><li key={item} className="flex gap-2 items-start">
+                <ShieldCheck size={18} className="text-blue-700 shrink-0 mt-0.5" aria-hidden />{item}
+              </li>)}
+            </ul>
           </div>
-
-          {/* Interactive Calculator Slider Card */}
-          <div className="bg-[#F5F5F7] rounded-3xl p-6 sm:p-10 border border-black/5 max-w-4xl mx-auto shadow-sm mb-16">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-              
-              {/* Left Side: Slider Controls */}
-              <div className="lg:col-span-7 flex flex-col gap-6">
-                <div>
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 mb-2">
-                    <span className="text-sm font-semibold text-[#1D1D1F]">Quantas TVs sua empresa precisa?</span>
-                    <span className="text-2xl font-extrabold text-blue-600 font-display">{screensCount} {screensCount === 1 ? "TV" : "TVs"}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="50"
-                    value={screensCount}
-                    onChange={(e) => setScreensCount(Number(e.target.value))}
-                    className="w-full h-2 bg-black/10 rounded-lg appearance-none cursor-pointer accent-blue-600 focus:outline-none"
-                  />
-                  <div className="grid grid-cols-4 gap-2 text-[9px] sm:text-[10px] text-black/40 font-mono mt-2">
-                    <span>1 TV (Iniciante)</span>
-                    <span>10 TVs</span>
-                    <span>25 TVs</span>
-                    <span>50+ TVs (Corporativo)</span>
-                  </div>
-                </div>
-
-                {/* Benefits checklist dynamically updating based on screen size */}
-                <div className="pt-4 border-t border-black/5 flex flex-col gap-3">
-                  <span className="text-xs text-black/50 uppercase tracking-widest font-mono">Destaques inclusos no seu volume:</span>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                      Mídias e downloads ilimitados
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                      Painel Web Admin Multi-usuários
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                      Widgets de Clima e RSS Inclusos
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                      <Check className="w-4 h-4 text-emerald-500 shrink-0" />
-                      {screensCount >= 5 ? "Suporte Prioritário por WhatsApp" : "Suporte por Chat / E-mail"}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Recommended hardware tip based on screen amount */}
-                <div className="p-3.5 rounded-xl bg-white border border-black/5 flex items-center gap-3 text-xs text-black/60">
-                  <Monitor className="w-5 h-5 text-blue-600 shrink-0 animate-pulse" />
-                  <div>
-                    <strong className="text-[#1D1D1F] block font-sans font-semibold">Hardware recomendado para {screensCount} {screensCount === 1 ? "tela" : "telas"}:</strong>
-                    {screensCount <= 3 ? "Recomendamos usar Chromecast de 3ª Geração, Xiaomi TV Stick ou TV Smart com Android integrado. Configuração em 2 minutos." : ""}
-                    {screensCount > 3 && screensCount <= 10 ? "Recomendamos TV Box Android Homologadas (ex: Aquário, Tanix, MX9) para máxima estabilidade e funcionamento contínuo 24/7." : ""}
-                    {screensCount > 10 ? "Para grandes redes de telas corporativas, oferecemos assistência técnica de homologação e Mini PCs corporativos dedicados." : ""}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Side: Total Summary */}
-              <div className="lg:col-span-5 bg-white border border-black/5 rounded-2xl p-6 text-center flex flex-col justify-between shadow-sm relative">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl pointer-events-none" />
-                
-                <div>
-                  <span className="text-[10px] uppercase font-mono tracking-widest text-black/40 block mb-1">Valor por Tela</span>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-sm text-black/60 font-semibold font-sans">R$</span>
-                    <span className="text-4xl font-extrabold text-[#1D1D1F] font-display">{finalPricePerScreen}</span>
-                    <span className="text-xs text-black/40">/mês por tela</span>
-                  </div>
-                  {billingCycle === "anual" && (
-                    <span className="inline-block mt-1 text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-2.5 py-0.5 rounded-full font-bold">
-                      Com economia do plano anual
-                    </span>
-                  )}
-                </div>
-
-                <div className="my-6 py-4 border-y border-black/5">
-                  <span className="text-[10px] uppercase font-mono tracking-widest text-black/40 block mb-1">Total Estimado</span>
-                  <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-xs text-black/60 font-semibold font-sans">R$</span>
-                    <span className="text-4xl sm:text-5xl font-extrabold text-blue-600 font-display">{totalMonthlyPrice}</span>
-                    <span className="text-xs text-black/40">/mês</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => openLeadModal(`Calculadora - Qtd: ${screensCount} Telas`)}
-                  className="w-full py-3.5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  Quero Calcular Meu Retorno
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-                <span className="text-[9px] text-black/40 block mt-2 font-mono">
-                  *Valores acima para a licença do software. TV, player e kit completo podem ser incluídos sob consulta.
-                </span>
-              </div>
-
+          <div className="lg:col-span-7 p-5 sm:p-8 rounded-3xl bg-[#F5F7FA] border border-black/10">
+            <h3 className="font-bold text-xl">Prepare seu pedido comercial</h3>
+            <p className="text-sm text-black/60 mt-2">
+              Escolha sua atuação para direcionarmos a solicitação à equipe correta.
+              O formulário não gera cobrança, reserva nem ativação automática.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+              {([
+                ['establishment','Estabelecimento'],
+                ['agency','Agência'],
+                ['advertiser','Anunciante'],
+              ] as const).map(([kind,label])=><button type="button" key={kind}
+                onClick={()=>setLeadKind(kind)} aria-pressed={leadKind===kind}
+                className={`rounded-xl p-4 border text-sm font-semibold text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 ${leadKind===kind?'border-blue-700 bg-blue-50':'border-black/10 bg-white'}`}>
+                {label}
+              </button>)}
             </div>
-          </div>
-
-          {/* Pricing Grid Alternative */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            
-            {/* Plan 1 */}
-            <div className="bg-white border border-black/5 rounded-3xl p-6 flex flex-col justify-between hover:border-black/10 shadow-sm transition-colors duration-200">
-              <div>
-                <span className="text-xs text-black/40 font-mono block uppercase mb-1 font-semibold">START</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] mb-2">Bronze (Até 2 telas)</h3>
-                <p className="text-xs text-black/60 leading-relaxed mb-6">
-                  Perfeito para escritórios pequenos, recepções de clínicas ou comércios locais de um único ponto.
-                </p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-xs text-black/50 font-semibold">R$</span>
-                  <span className="text-3xl font-extrabold text-[#1D1D1F] font-display">
-                    {billingCycle === "anual" ? "39" : "49"}
-                  </span>
-                  <span className="text-xs text-black/40">/mês por tela</span>
-                </div>
-                <ul className="flex flex-col gap-3 border-t border-black/5 pt-6">
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    1 Usuário Admin
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Layout de tela dividida básico
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Biblioteca de mídias de 5GB
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Widgets de clima básicos
-                  </li>
-                </ul>
-              </div>
-              <button 
-                onClick={() => openLeadModal("Plano Bronze")}
-                className="w-full mt-8 py-3 rounded-xl bg-black/5 hover:bg-black/10 text-black border border-black/5 text-xs font-bold transition-all duration-200 cursor-pointer"
-              >
-                Assinar Plano Bronze
-              </button>
-            </div>
-
-            {/* Plan 2 - Featured */}
-            <div className="bg-white border-2 border-blue-600 rounded-3xl p-6 flex flex-col justify-between shadow-md relative scale-[1.03] z-10">
-              <div className="absolute top-0 right-6 -translate-y-1/2 bg-blue-600 text-white font-extrabold text-[9px] uppercase tracking-wider px-3 py-1 rounded-full shadow">
-                Mais Vendido
-              </div>
-              <div>
-                <span className="text-xs text-blue-600 font-mono block uppercase mb-1 font-bold">POPULAR</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] mb-2">Prata (3 a 10 telas)</h3>
-                <p className="text-xs text-black/60 leading-relaxed mb-6">
-                  Ideal para redes de lojas em crescimento, franquias de academia e empresas de médio porte.
-                </p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-xs text-black/50 font-semibold">R$</span>
-                  <span className="text-3xl font-extrabold text-[#1D1D1F] font-display">
-                    {billingCycle === "anual" ? "33" : "42"}
-                  </span>
-                  <span className="text-xs text-black/40">/mês por tela</span>
-                </div>
-                <ul className="flex flex-col gap-3 border-t border-black/5 pt-6">
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Até 5 Usuários Administradores
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Multi-zone avançado (Zonas ilimitadas)
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Biblioteca de mídias de 25GB
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Integração de feed RSS e mídias sociais
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Suporte VIP via WhatsApp 7 dias
-                  </li>
-                </ul>
-              </div>
-              <button
-                onClick={() => openLeadModal("Plano Prata")}
-                className="w-full mt-8 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all duration-200 cursor-pointer"
-              >
-                Assinar Plano Prata
-              </button>
-            </div>
-
-            {/* Plan 3 */}
-            <div className="bg-white border border-black/5 rounded-3xl p-6 flex flex-col justify-between hover:border-black/10 shadow-sm transition-colors duration-200">
-              <div>
-                <span className="text-xs text-black/40 font-mono block uppercase mb-1 font-semibold">ENTERPRISE</span>
-                <h3 className="text-lg font-bold text-[#1D1D1F] mb-2">Ouro (10+ telas)</h3>
-                <p className="text-xs text-black/60 leading-relaxed mb-6">
-                  Projetado para corporações de grande porte, indústrias, redes de hipermercados e grandes órgãos públicos.
-                </p>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-xs text-black/50 font-semibold">R$</span>
-                  <span className="text-3xl font-extrabold text-[#1D1D1F] font-display">
-                    {billingCycle === "anual" ? "28" : "35"}
-                  </span>
-                  <span className="text-xs text-black/40">/mês por tela</span>
-                </div>
-                <ul className="flex flex-col gap-3 border-t border-black/5 pt-6">
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Usuários Administradores Ilimitados
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Biblioteca de mídias de 100GB
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Painel Administrativo personalizado (White-label)
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    Gerenciador de Senhas Eletrônicas integrado
-                  </li>
-                  <li className="flex items-center gap-2 text-xs text-black/70 font-medium">
-                    <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    SLA de atendimento de 4 horas
-                  </li>
-                </ul>
-              </div>
-              <button
-                onClick={() => openLeadModal("Plano Ouro")}
-                className="w-full mt-8 py-3 rounded-xl bg-black/5 hover:bg-black/10 text-black border border-black/5 text-xs font-bold transition-all duration-200 cursor-pointer"
-              >
-                Falar com Executivo Ouro
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* --- PROVA SOCIAL / DEPOIMENTOS --- */}
-      <section className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative bg-[#F5F5F7] border-t border-black/5">
-        <div className="max-w-7xl mx-auto">
-          
-          {/* Section Header */}
-          <div className="text-center max-w-3xl mx-auto mb-16 flex flex-col gap-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-blue-600 font-semibold">Garantia de Satisfação</span>
-            <h2 className="font-display font-bold text-3xl sm:text-4xl text-[#1D1D1F] tracking-tight">
-              O que dizem os nossos parceiros comerciais
-            </h2>
-            <p className="text-black/60 text-sm sm:text-base leading-relaxed">
-              Confira os depoimentos reais de empresas que aboliram de vez o e-mail tradicional e o cartaz impresso para adotar a agilidade visual da nossa TV Corporativa.
+            {leadKind==='establishment' && <div className="mt-6">
+              <label htmlFor="quote-screens" className="flex gap-3 justify-between items-center text-sm font-semibold">
+                Quantidade estimada de pontos de TV
+                <strong className="text-blue-700">{screensCount}</strong>
+              </label>
+              <input id="quote-screens" type="range" min={1} max={50} value={screensCount}
+                onChange={event=>setScreensCount(Number(event.target.value))}
+                className="w-full mt-3 accent-blue-700" />
+            </div>}
+            {leadKind==='agency' && <p className="text-xs text-black/65 mt-6">
+              Na proposta, informe sua carteira, número de locais, tipos de Player e permissões necessárias.
+            </p>}
+            {leadKind==='advertiser' && <p className="text-xs text-black/65 mt-6">
+              Para avaliar inventário, precisamos de cidades, período, formato TV/Rádio, criativos e objetivo da campanha.
+            </p>}
+            <button type="button"
+              onClick={()=>openAudienceContact(leadKind,'Proposta segmentada - '+leadKind)}
+              className="mt-7 rounded-full bg-blue-700 text-white min-h-11 px-6 py-3 font-bold text-sm w-full inline-flex items-center justify-center gap-2 hover:bg-blue-800">
+              Solicitar proposta personalizada <ArrowRight size={18} aria-hidden/>
+            </button>
+            <p className="text-xs text-black/50 mt-3">
+              Sem simulação de desconto ou preço não confirmado no catálogo.
             </p>
           </div>
-
-          {/* Testimonial Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((test, index) => (
-              <div 
-                key={index}
-                className="bg-white border border-black/5 rounded-2xl p-6 sm:p-8 flex flex-col justify-between shadow-sm relative overflow-hidden"
-              >
-                {/* Quotation mark decoration */}
-                <span className="absolute top-4 right-6 text-6xl text-black/5 font-serif select-none pointer-events-none">“</span>
-                
-                <p className="text-black/70 text-sm leading-relaxed mb-6 italic relative z-10 font-medium">
-                  "{test.content}"
-                </p>
-
-                <div className="flex items-center gap-3 border-t border-black/5 pt-4">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-tr ${test.color} flex items-center justify-center font-bold text-xs text-white`}>
-                    {test.avatar}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-[#1D1D1F] block">{test.name}</h4>
-                    <span className="text-[10px] text-black/50 block">{test.role} • {test.company}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
         </div>
       </section>
 
@@ -1686,10 +1368,10 @@ export default function App() {
             <div className="max-w-3xl mx-auto flex flex-col gap-6 relative z-10">
               <span className="text-xs font-mono uppercase tracking-widest text-blue-600 font-bold">Seja Digital Hoje Mesmo</span>
               <h2 className="font-display font-bold text-3xl sm:text-5xl text-[#1D1D1F] tracking-tight leading-tight">
-                Uma única campanha bem exibida já pode pagar o investimento
+                Planeje sua operação de TV, Rádio ou publicidade com mais clareza
               </h2>
               <p className="text-black/60 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-medium">
-                Seja para reduzir falhas na comunicação interna ou aumentar vendas no ponto de venda, o retorno costuma aparecer rápido quando cada tela passa a trabalhar com estratégia. Escolha o formato ideal para a sua operação e descubra quanto sua empresa pode ganhar com uma gestão profissional de telas.
+                Escolha o público e descreva seus pontos de mídia, necessidades e objetivos. Nossa equipe poderá avaliar escopo, licenças, condições e investimento, sem prometer um retorno financeiro que ainda não foi medido.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center mt-4">
@@ -1698,7 +1380,7 @@ export default function App() {
                   className="w-full sm:w-auto px-8 py-4 rounded-2xl font-bold text-sm text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                 >
                   <PhoneCall className="w-4 h-4 text-white" />
-                  Quero Calcular Meu Retorno
+                  Solicitar proposta personalizada
                 </button>
                 <a
                   href="#recursos"
