@@ -833,3 +833,19 @@
 - [API Laravel](https://github.com/paulodias-dev/meucomercial-api) · [Painel Metronic](https://github.com/paulodias-dev/meucomercial-admin) · [Site público](https://github.com/paulodias-dev/meucomercial-site)
 - Roadmap da simplificação legada (histórico): `docs/roadmap-simplificacao-agencia-indoor.md` nos repositórios em que está presente.
 - Documento de regras para agentes/IA: `AGENTS.md` (**planejado**, ainda não identificado na auditoria do código-base).
+
+## Sprint seguinte — Visão consolidada dos relatos de todos os Players (16/10/2026)
+
+**Escopo:** API + Portal. Consolidação SQL read-only de TV/Rádio por estabelecimento autenticado, com segmentação temporal e por tipo e sem derivar audiência, receita ou veiculações comerciais de relatos próprios.
+
+- [x] API: contrato `GET /api/client/indoor/playback-summary` com filtros 1/7/30, TV/Rádio/todos e paginação limitada.
+- [x] API: totais reais por cliente, dispositivos com relatos, totais por formato e série diária UTC incluindo dias sem registro.
+- [x] API: agrupamento SQL por dispositivo com left join, exibindo inclusive aparelhos sem relato sem multiplicar consultas (sem N+1).
+- [x] API: testes Feature escritos para concorrência lógica de escopos, cliente externo, filtragem, 15 Players/12 por página e proteção de segredos.
+- [x] Portal: gateway Express com allowlist fixa e validação de período, tipo e página; sem ID de cliente informado pelo navegador.
+- [x] Portal: painel responsivo na área dos Players com filtros, série diária, totalizadores, paginação e estados de carga/erro/vazio.
+- [x] Portal: guardas de contrato contra vazamento e confusão de relatos com audiência independente.
+- [ ] Executar PHPUnit/MySQL8, TypeScript/Vite/Node e E2E com JWT no ambiente provisionado; revisar consultas com EXPLAIN e índices existentes.
+- [ ] Homologar TV/Rádio real, discrepâncias de fuso, armazenamento offline e telemetria em aparelhos físicos.
+
+**Macromarcos aceitos de referência:** API 29/59, Admin 25/57, Site 13/34 = **67/150 (44,7%)**. A entrega adiciona código, não altera automaticamente o percentual de homologação. **Ordem de merge:** API → Site. Não executar merge automático, limpeza de banco nem deploy.
