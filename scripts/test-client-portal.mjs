@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
+import {csvCell,buildPlaybackOverviewCsv,isPlaybackOverviewResponse} from '../src/lib/playbackOverview.mjs'
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const server=read('server.ts')
 const portal=read('src/components/ClientPortal.tsx')
@@ -405,4 +406,54 @@ test('owner-wide playback component uses server aggregates and explicit daily ev
   assert.ok(!playbackOverview.includes('device_token'))
   assert.ok(!playbackOverview.includes('localStorage'))
   assert.ok(!playbackOverview.includes('sessionStorage'))
+})
+
+
+test('player summary runtime guard rejects malformed or confidential contract shapes',()=>{
+  const row={device_id:11,name:'Tela loja',device_type:'tv_app',reports_total:2,
+    last_reported_at:'2026-10-16T19:00:00Z',by_type:{image:1,video:1,audio:0}}
+  const fixture={
+    data:[row],summary:{days:7,kind:'all',bucket_timezone:'UTC',
+      devices_total:20,devices_with_reports:1,reports_total:2,
+      by_type:{image:1,video:1,audio:0},
+      by_day:[{date:'2026-10-16',total:2}],
+      evidence:'authenticated_player_report_not_independent_audience'},
+    pagination:{page:1,last_page:2,per_page:12,total:20}
+  }
+  assert.equal(isPlaybackOverviewResponse(fixture),true)
+  assert.equal(isPlaybackOverviewResponse({...fixture,data:[{...row,device_id:'11'}]}),false)
+  assert.equal(isPlaybackOverviewResponse({...fixture,summary:{...fixture.summary,evidence:'independent_audience_verified'}}),false)
+  assert.equal(isPlaybackOverviewResponse({...fixture,summary:{...fixture.summary,by_day:null}}),false)
+  assert.equal(isPlaybackOverviewResponse({...fixture,pagination:{...fixture.pagination,page:0}}),false)
+  assert.equal(isPlaybackOverviewResponse({...fixture,data:Array(13).fill(row)}),false)
+  assert.equal(isPlaybackOverviewResponse({...fixture,data:[{...row,by_type:{image:-1,video:1,audio:0}}]}),false)
+})
+
+test('CSV export includes only visible fields and neutralizes hostile names',()=>{
+  const row={device_id:11,name:' =HYPERLINK("https://test.invalid";"click")',
+    device_type:'tv_app',reports_total:3,
+    by_type:{image:2,video:1,audio:0},last_reported_at:null,
+    device_token:'NEVER_IN_CSV',client_id:555,storage_path:'private/secret'}
+  const csv=buildPlaybackOverviewCsv([row])
+  assert.ok(csv.startsWith('\uFEFF"Dispositivo";'))
+  assert.ok(csv.includes("\"' =HYPERLINK(\"\"https://test.invalid\"\";\"\"click\"\")\""))
+  assert.ok(csv.includes('"tv_app";"3";"2";"1";"0";""'))
+  assert.equal(csv.trim().split('\r\n').length,2)
+  for (const secret of ['NEVER_IN_CSV','private/secret','client_id','device_token']) {
+    assert.ok(!csv.includes(secret),secret)
+  }
+  assert.equal(csvCell('@cmd'),"\"'@cmd\"")
+  assert.equal(csvCell('  +SUM(1;2)'),"\"'  +SUM(1;2)\"")
+  assert.equal(csvCell('Tela\nfalsa'),'"Tela falsa"')
+})
+
+test('network overview exposes authenticated drilldown only on explicit request',()=>{
+  assert.ok(playbackOverview.includes("import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'"))
+  assert.ok(playbackOverview.includes('isPlaybackOverviewResponse(payload)'))
+  assert.ok(playbackOverview.includes("selectedDeviceId!==null&&data.data.some"))
+  assert.ok(playbackOverview.includes('<ClientDeviceDiagnostics key={selectedDeviceId}'))
+  assert.ok(playbackOverview.includes('buildPlaybackOverviewCsv(data.data)'))
+  assert.ok(playbackOverview.includes('CSV desta página'))
+  assert.ok(playbackOverview.includes('setSelectedDeviceId(null)'))
+  assert.ok(!playbackOverview.includes('localStorage.setItem'))
 })
