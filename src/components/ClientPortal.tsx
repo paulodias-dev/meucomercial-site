@@ -323,6 +323,24 @@ export default function ClientPortal(){
               <p className='mt-2 text-xs text-black/60'>
                 {d.needs_sync?'Aguardando sincronização de programação.':'Nenhuma sincronização pendente sinalizada.'}
               </p>
+              {d.subscription_status&&<p className='mt-2 text-xs text-black/60'>Assinatura: {labels[d.subscription_status]??d.subscription_status}</p>}
+              {(['active','trialing'].includes(d.subscription_status??''))&&d.status!=='blocked'&&
+                <div className='mt-4 pt-4 border-t border-black/10'>
+                  {d.status==='pending_pairing'
+                    ? <button type='button' disabled={deviceActionBusy!==null||loading}
+                        onClick={()=>void doDeviceAction('pair-device',d)}
+                        className='min-h-11 px-4 py-2.5 bg-blue-700 text-white rounded-xl text-xs font-bold disabled:opacity-50'>
+                        {deviceActionBusy===d.id?'Gerando PIN…':'Gerar PIN de pareamento'}</button>
+                    : <button type='button' disabled={deviceActionBusy!==null||loading}
+                        onClick={()=>void doDeviceAction('sync-device',d)}
+                        className='min-h-11 px-4 py-2.5 border border-blue-700 text-blue-800 rounded-xl text-xs font-bold disabled:opacity-50'>
+                        {deviceActionBusy===d.id?'Solicitando…':'Solicitar sincronização'}</button>}
+                </div>}
+              {pairingPin?.deviceId===d.id&&<div className='mt-4 rounded-xl bg-blue-50 border border-blue-200 p-4' role='status'>
+                <p className='text-xs font-semibold text-blue-900'>Código temporário — informe somente no seu Player</p>
+                <code className='block mt-2 text-2xl font-bold tracking-widest text-blue-950 select-all'>{pairingPin.pin}</code>
+                <p className='text-xs text-blue-800 mt-2'>Válido até {date(pairingPin.expiresAt)}. Não compartilhe fora da instalação.</p>
+              </div>}
             </article>):view==='campaigns'?(campaigns?.data??[]).map(c=><article key={c.id}
               className='rounded-xl border border-black/10 p-4 sm:p-5'>
               <h3 className='font-bold text-sm'>{c.title}</h3>
