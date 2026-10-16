@@ -9,7 +9,7 @@
 
 ## Sprint — Relatos idempotentes de TV própria e outbox offline (16/10/2026)
 
-**Estado de integração:** entrega de código na branch `feat/own-playback-outbox-20261016` (API empilhada sobre **API #80 ainda aberta**; Site/Admin a partir da `main`). **Site #28 e Admin #46 estão mesclados na main**, API #80 não; dependências para deploy: **API #80 → API desta sprint + migration → Admin/Player Web e Site**. Sem alterações diretas à main ou banco de produção.
+**Estado de integração:** PRs definitivos [API #81](https://github.com/paulodias-dev/meucomercial-api/pull/81), [Admin #47](https://github.com/paulodias-dev/meucomercial-admin/pull/47) e [Site #29](https://github.com/paulodias-dev/meucomercial-site/pull/29) **abertos, não draft, mescláveis**. A **API #81 é empilhada sobre API #80 ainda aberta**, enquanto Site/Admin partem da `main`. **Site #28 e Admin #46 estão mesclados na main**, API #80 não. Implantar na ordem **API #80 → API #81 + migration → Admin/Player Web e Site**. Workflows [API #81](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38942821811) e [Admin #47](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38942829870) registram **failure sem etapas nos jobs consultados**, e não comprovam PHPUnit/Node executados; Site não expõe workflow PR. Sem alterações diretas à main ou banco de produção.
 
 **Critérios de sprint: 17/20 implementados em código (85%), três gates de aceitação pendentes.**
 - [x] Migration aditiva `indoor_own_playback_events`: UUID único, cliente, dispositivo, grade, playlist, item, versão e data, índices por escopo.
