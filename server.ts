@@ -170,6 +170,8 @@ const portalRoutes = {
   'studio-update': {method: 'PUT', backend: 'client/indoor/studio/playlists/', auth: true},
   'studio-activate': {method: 'POST', backend: 'client/indoor/studio/playlists/', auth: true},
   'studio-duplicate': {method: 'POST', backend: 'client/indoor/studio/playlists/', auth: true},
+  'onboarding': {method: 'GET', backend: 'client/indoor/onboarding', auth: true},
+  'publication-targets': {method: 'GET', backend: 'client/indoor/publications/', auth: true},
 } as const;
 
 app.all('/api/portal/:action', async (req, res) => {
@@ -210,6 +212,14 @@ app.all('/api/portal/:action', async (req, res) => {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Playlist inválida.'});
     }
+    const publicationTargets = action === 'publication-targets';
+    const targetRawId = req.query.publication_id;
+    const targetId = typeof targetRawId === 'string' && /^[1-9][0-9]*$/.test(targetRawId)
+      ? Number(targetRawId) : targetRawId;
+    if (publicationTargets && (!Number.isSafeInteger(targetId) || targetId <= 0)) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Publicação inválida.'});
+    }
     const publicationWithdraw = action === 'publication-withdraw';
     const publicationId = req.body?.publication_id;
     if (publicationWithdraw && (!Number.isSafeInteger(publicationId) || publicationId <= 0)) {
@@ -220,6 +230,8 @@ app.all('/api/portal/:action', async (req, res) => {
       ? 'client/indoor/devices/' + normalizedDeviceId + (action === 'pair-device' ? '/pairing-pin' : '/sync')
       : publicationWithdraw
         ? 'client/indoor/publications/' + publicationId + '/withdraw'
+        : publicationTargets
+          ? 'client/indoor/publications/' + targetId + '/targets'
         : studioEntity
           ? 'client/indoor/studio/playlists/' + studioPlaylistId
             + (action === 'studio-activate' ? '/activate' : action === 'studio-duplicate' ? '/duplicate' : '')
