@@ -302,3 +302,14 @@ test('support view displays historical command and sync ACK separately from audi
   assert.ok(deviceDiagnostics.includes('Não são auditoria independente de reprodução ou audiência'))
   assert.ok(deviceDiagnostics.includes("role='alert'"))
 })
+
+test('own-TV completion telemetry is client-scoped and not mislabeled as certified audience',()=>{
+  assert.ok(deviceDiagnostics.includes('own_playback_reported_24h:number'))
+  assert.ok(deviceDiagnostics.includes('own_playback_events:OwnEvent[]'))
+  assert.ok(deviceDiagnostics.includes('playlist_item_id'))
+  assert.ok(deviceDiagnostics.includes('event_uuid'))
+  assert.ok(deviceDiagnostics.includes('relatos autenticados do próprio Player'))
+  assert.ok(deviceDiagnostics.includes('não uma certificação independente'))
+  assert.ok(!deviceDiagnostics.includes('device_token'))
+  assert.ok(!deviceDiagnostics.includes('ip_address'))
+})

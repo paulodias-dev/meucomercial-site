@@ -3,10 +3,11 @@ import {RefreshCcw} from 'lucide-react'
 
 type Log={id:number;status:string;playlist_id:number|null;manifest_version:number;protocol:number;finished_at:string|null;evidence:string}
 type Command={id:number;type:string;status:string;created_at:string|null;sent_at:string|null;acknowledged_at:string|null}
+type OwnEvent={event_uuid:string;playlist_id:number;playlist_item_id:number;manifest_version:number;occurred_at:string|null;content_type:string;evidence:string}
 type Diagnostics={device_id:number;name:string;status:string;needs_sync:boolean;
   current_manifest_version:number;paired:boolean;last_seen_at:string|null;last_sync_at:string|null;
   heartbeat:{status:string;reported_at:string|null;app_version:string|null;storage_free_mb:number|null}|null;
-  sync_logs:Log[];commands:Command[];playback_confirmed:false;evidence:string}
+  sync_logs:Log[];commands:Command[];own_playback_reported_24h:number;own_playback_events:OwnEvent[];playback_confirmed:false;evidence:string}
 const when=(value:string|null)=>value?new Date(value).toLocaleString('pt-BR'):'Sem registro'
 export default function ClientDeviceDiagnostics({token,deviceId}:{token:string;deviceId:number}){
   const [data,setData]=useState<Diagnostics|null>(null)
@@ -57,6 +58,14 @@ export default function ClientDeviceDiagnostics({token,deviceId}:{token:string;d
             <p className='text-black/60 mt-1'>{l.protocol===2?'Confirmação autenticada v2':'Protocolo legado'}</p>
           </div>)}
         </div>}
+      <h5 className='font-semibold text-xs mt-4 mb-2'>Relatos de exibição de conteúdo próprio (24h): {data.own_playback_reported_24h??0}</h5>
+      {!data.own_playback_events?.length?<p className='text-xs text-black/60'>Sem relatos do Player.</p>
+        :<div className='space-y-2'>
+          {data.own_playback_events.map(e=><p key={e.event_uuid} className='text-xs rounded-xl bg-white border border-black/10 p-3'>
+            {e.content_type==='video'?'Vídeo':'Imagem'} · item #{e.playlist_item_id} · manifesto v{e.manifest_version} · {when(e.occurred_at)}
+          </p>)}
+        </div>}
+      <p className='text-xs text-black/60 mt-2'>Esses registros são relatos autenticados do próprio Player, não uma certificação independente de reprodução ou audiência.</p>
       <h5 className='font-semibold text-xs mt-4 mb-2'>Últimos comandos</h5>
       {data.commands.length===0?<p className='text-xs text-black/60'>Nenhum comando registrado.</p>
         :<div className='space-y-2'>

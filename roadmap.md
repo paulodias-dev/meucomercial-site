@@ -7,9 +7,39 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint — Relatos idempotentes de TV própria e outbox offline (16/10/2026)
+
+**Estado de integração:** PRs definitivos [API #81](https://github.com/paulodias-dev/meucomercial-api/pull/81), [Admin #47](https://github.com/paulodias-dev/meucomercial-admin/pull/47) e [Site #29](https://github.com/paulodias-dev/meucomercial-site/pull/29) **abertos, não draft, mescláveis**. A **API #81 é empilhada sobre API #80 ainda aberta**, enquanto Site/Admin partem da `main`. **Site #28 e Admin #46 estão mesclados na main**, API #80 não. Implantar na ordem **API #80 → API #81 + migration → Admin/Player Web e Site**. Workflows [API #81](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38942821811) e [Admin #47](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38942829870) registram **failure sem etapas nos jobs consultados**, e não comprovam PHPUnit/Node executados; Site não expõe workflow PR. Sem alterações diretas à main ou banco de produção.
+
+**Critérios de sprint: 17/20 implementados em código (85%), três gates de aceitação pendentes.**
+- [x] Migration aditiva `indoor_own_playback_events`: UUID único, cliente, dispositivo, grade, playlist, item, versão e data, índices por escopo.
+- [x] Modelo dedicado independente dos eventos comerciais e das metas de publicidade.
+- [x] Novo endpoint autenticado por bearer de Player `/api/v1/player/own-playback/batch` (até 100, throttle).
+- [x] Escopo `client_id/device_id` derivado do dispositivo autenticado, jamais do corpo; tokens revalidados após lock.
+- [x] Idempotência por UUID com comparação de campos: mesma execução `replayed`, UUID reaproveitado para conteúdo/duração/Player diferente rejeitado.
+- [x] Aceitação parcial HTTP 207 e rejeições individuais, sem perder os demais eventos válidos.
+- [x] Janela de 48 horas para reconciliação offline e validação de duração do item.
+- [x] Validação da assinatura/plano, cliente, bloqueio e pareamento no momento do aceite.
+- [x] Validação de grade do próprio dispositivo no instante declarado, playlist TV, item/mídia `ready` e vínculo correto.
+- [x] Rejeição se manifesto, versão Story ou fingerprint de publicação não forem a revisão válida atual.
+- [x] `PlayerEngine` gera relato somente após mídia TV imagem/vídeo concluída com lease válido, nunca no fetch/erro/interrupção.
+- [x] Rechecagem da geração do Player após persistência assíncrona para impedir ACK obsoleto.
+- [x] `PlaybackOutbox` reutilizada com fila isolada própria, preservando chave IndexedDB comercial legada; até 1.200 eventos, UUID estável.
+- [x] Envio em lote e retentativas offline: `accepted/replayed` removidos, `rejected` retidos para auditoria.
+- [x] Diagnóstico `auth:client` mostra contagem 24h e até 12 relatos do próprio aparelho, sem IP/token/payload confidencial.
+- [x] Portal React adiciona histórico responsivo distinguindo relato autenticado de certificação independente de audiência.
+- [x] Testes Laravel e Node escritos; guardas estáticas Site **35/35**, Admin **14/14** e testes funcionais isolados da outbox/normalização executados e aprovados; runbooks nos três repos.
+- [ ] Executar testes PHPUnit/MySQL8 com schema migrado, API docs/OpenAPI e validação E2E completa.
+- [ ] Executar suite Node Player, builds TypeScript/Vite do Admin e Site e suites navegador HTTPS, com CI verde.
+- [ ] Homologar TV real, reconexões, mudanças de grade/assinatura, Player/kiosk e resultados de auditoria; expandir para conteúdo Rádio em outra sprint.
+
+**Progresso macro não inflado:** API **29/59**, Admin **25/57**, Site **13/34**, total **67/150 = 44,7%** dos macromarcos integralmente aceitos. O trabalho avança dentro de Player/telemetria, mas **não encerra** o marco de homologação/produção. Estes eventos representam relatos enviados pelo próprio Player, não audiência independente nem faturamento publicitário.
+
+**Próximo bloco:** destravar CI, executar QA real e reconciliar histórico offline em mudanças de manifesto; ampliar instrumentação própria de Rádio e suporte a QR no provisionamento, mantendo compatibilidade e direitos autorais.
+
 ## Sprint ampliada — Player V2 seguro, instalação guiada e ACK operacional (16/10/2026)
 
-**Estado:** PRs definitivos [API #80](https://github.com/paulodias-dev/meucomercial-api/pull/80), [Site #28](https://github.com/paulodias-dev/meucomercial-site/pull/28), [Admin #46](https://github.com/paulodias-dev/meucomercial-admin/pull/46) **abertos, não draft, mescláveis e dependentes de integração API → Player/Admin e Site**; sem alteração direta da main ou deploy. Sprint anterior [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) mesclada na main. Workflows dispararam, mas [API](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38940189392) e [Admin](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38940205369) concluíram em **failure com zero etapas expostas nos jobs consultados**; PHP/Node completos NÃO foram comprovadamente executados. Site sem workflow PR visível.
+**Estado:** PRs definitivos [API #80](https://github.com/paulodias-dev/meucomercial-api/pull/80), [Site #28](https://github.com/paulodias-dev/meucomercial-site/pull/28), [Admin #46](https://github.com/paulodias-dev/meucomercial-admin/pull/46) **API #80 ainda aberta e bloqueando a integração; Site #28 e Admin #46 já mesclados na main**; sem alteração direta da main ou deploy. Sprint anterior [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) mesclada na main. Workflows dispararam, mas [API](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38940189392) e [Admin](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38940205369) concluíram em **failure com zero etapas expostas nos jobs consultados**; PHP/Node completos NÃO foram comprovadamente executados. Site sem workflow PR visível.
 
 **Critérios desta sprint: 17/20 implementados em código = 85,0%; 3 gates de QA/homologação abertos:**
 - [x] Protocolo **Player Pairing V2** com sessão temporária e PIN numérico, segredo separado gerado por `random_bytes(32)` e somente hash SHA-256 armazenado.
