@@ -341,7 +341,7 @@ export default function ClientPortal(){
             Anúncios contratados
           </button>
         </div>
-      <ClientOnboarding token={session.token} onNavigate={changeView}/>
+      <ClientOnboarding token={session.token} onNavigate={changeView} refreshKey={view+'-'+refresh}/>
       {view==='studio'
         ? <ClientStudio key={session.client.id} token={session.token} onPublish={selection=>{
             setPublishFromStudio(selection);setView('publications')

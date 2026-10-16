@@ -368,6 +368,20 @@ test('daily UTC playback trend is client-scoped, mobile scrollable and independe
   assert.ok(!playbackReports.includes("req.query.client_id"))
 })
 
+test('onboarding prioritizes the next verified action, not a simulated completion',()=>{
+  assert.ok(onboarding.includes('next_action?:Pick<Step'))
+  assert.ok(onboarding.includes('onNavigate(nextAction.view)'))
+  assert.ok(onboarding.includes('nextAction.guidance'))
+  assert.ok(onboarding.includes("role='status' aria-live='polite'"))
+  assert.ok(onboarding.includes('recent_player_reports_7d'))
+  assert.ok(onboarding.includes('last_player_reported_at'))
+  assert.ok(onboarding.includes('não auditoria independente de audiência'))
+  assert.ok(onboarding.includes('refreshKey'))
+  assert.ok(portal.includes("refreshKey={view+'-'+refresh}"))
+  assert.ok(!onboarding.includes('localStorage'))
+  assert.ok(!onboarding.includes('sessionStorage'))
+})
+
 test('network-level playback reports use fixed owner-only proxy with constrained filters',()=>{
   assert.ok(server.includes("'playback-overview': {method: 'GET', backend: 'client/indoor/playback-summary', auth: true}"))
   assert.ok(server.includes("action === 'playback-overview'"))
