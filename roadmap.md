@@ -9,6 +9,9 @@
 
 ## Sprint MVP — Portal de autoatendimento Indoor do estabelecimento (16/10/2026)
 
+**PRs definitivos da sprint:** [API #75](https://github.com/paulodias-dev/meucomercial-api/pull/75) e [Site #23](https://github.com/paulodias-dev/meucomercial-site/pull/23). Dependência recíproca do contrato (API + gateway/site), ambos não draft, base `main`, sem merge automático.
+
+
 **Entrega full-stack coordenada:** novo portal responsivo `/portal` no site, API exclusiva `auth:client`, gateway Express same-origin, login/logout, **cinco áreas** (serviços existentes, dispositivos, locais, biblioteca de mídia, anúncios do próprio anunciante) e indicadores operacionais agregados de toda a base. Nenhuma alteração na interface do Admin, no Player nativo nem na cobrança.
 
 **Escopo de implementação — 16/18 critérios escritos em código (88,9%); aceites operacionais seguem pendentes:**
