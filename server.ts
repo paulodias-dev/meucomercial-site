@@ -163,6 +163,15 @@ const portalRoutes = {
   'publication-preview': {method: 'POST', backend: 'client/indoor/publications/preview', auth: true},
   'publication-create': {method: 'POST', backend: 'client/indoor/publications', auth: true},
   'publication-withdraw': {method: 'POST', backend: 'client/indoor/publications/', auth: true},
+  'studio-catalog': {method: 'GET', backend: 'client/indoor/studio/catalog', auth: true},
+  'studio-list': {method: 'GET', backend: 'client/indoor/studio/playlists', auth: true},
+  'studio-create': {method: 'POST', backend: 'client/indoor/studio/playlists', auth: true},
+  'studio-get': {method: 'GET', backend: 'client/indoor/studio/playlists/', auth: true},
+  'studio-update': {method: 'PUT', backend: 'client/indoor/studio/playlists/', auth: true},
+  'studio-activate': {method: 'POST', backend: 'client/indoor/studio/playlists/', auth: true},
+  'studio-duplicate': {method: 'POST', backend: 'client/indoor/studio/playlists/', auth: true},
+  'onboarding': {method: 'GET', backend: 'client/indoor/onboarding', auth: true},
+  'publication-targets': {method: 'GET', backend: 'client/indoor/publications/', auth: true},
 } as const;
 
 app.all('/api/portal/:action', async (req, res) => {
@@ -189,9 +198,27 @@ app.all('/api/portal/:action', async (req, res) => {
     // Caller-controlled URLs, client IDs and agency contexts never reach the API.
     const deviceAction = action === 'pair-device' || action === 'sync-device';
     const rawId = req.body?.device_id;
-    if (deviceAction && (!Number.isSafeInteger(rawId) || rawId <= 0)) {
+    const normalizedDeviceId = typeof rawId === 'string' && /^[1-9][0-9]*$/.test(rawId)
+      ? Number(rawId) : rawId;
+    if (deviceAction && (!Number.isSafeInteger(normalizedDeviceId) || normalizedDeviceId <= 0)) {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Dispositivo inválido.'});
+    }
+    const studioEntity = ['studio-get','studio-update','studio-activate','studio-duplicate'].includes(action);
+    const studioRawId = req.method === 'GET' ? req.query.playlist_id : req.body?.playlist_id;
+    const studioPlaylistId = typeof studioRawId === 'string' && /^[1-9][0-9]*$/.test(studioRawId)
+      ? Number(studioRawId) : studioRawId;
+    if (studioEntity && (!Number.isSafeInteger(studioPlaylistId) || studioPlaylistId <= 0)) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Playlist inválida.'});
+    }
+    const publicationTargets = action === 'publication-targets';
+    const targetRawId = req.query.publication_id;
+    const targetId = typeof targetRawId === 'string' && /^[1-9][0-9]*$/.test(targetRawId)
+      ? Number(targetRawId) : targetRawId;
+    if (publicationTargets && (!Number.isSafeInteger(targetId) || targetId <= 0)) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Publicação inválida.'});
     }
     const publicationWithdraw = action === 'publication-withdraw';
     const publicationId = req.body?.publication_id;
@@ -200,21 +227,36 @@ app.all('/api/portal/:action', async (req, res) => {
         .json({message:'Publicação inválida.'});
     }
     const endpoint = new URL(deviceAction
-      ? 'client/indoor/devices/' + rawId + (action === 'pair-device' ? '/pairing-pin' : '/sync')
+      ? 'client/indoor/devices/' + normalizedDeviceId + (action === 'pair-device' ? '/pairing-pin' : '/sync')
       : publicationWithdraw
         ? 'client/indoor/publications/' + publicationId + '/withdraw'
-        : route.backend, base);
+        : publicationTargets
+          ? 'client/indoor/publications/' + targetId + '/targets'
+        : studioEntity
+          ? 'client/indoor/studio/playlists/' + studioPlaylistId
+            + (action === 'studio-activate' ? '/activate' : action === 'studio-duplicate' ? '/duplicate' : '')
+          : route.backend, base);
     if (req.method === 'GET') {
       const page = req.query.page;
       const perPage = req.query.per_page;
       if (typeof page === 'string') endpoint.searchParams.set('page', page.slice(0,5));
       if (typeof perPage === 'string') endpoint.searchParams.set('per_page', perPage.slice(0,3));
       // The only additional query option on this gateway is a medium enum.
+      if ((action === 'studio-catalog' || action === 'studio-list') &&
+        ['tv','radio'].includes(String(req.query.kind))) {
+        endpoint.searchParams.set('kind', String(req.query.kind));
+      }
       if (action === 'publication-destinations' &&
         ['tv','radio'].includes(String(req.query.medium))) {
         endpoint.searchParams.set('medium', String(req.query.medium));
       }
     }
+    const studioBody = ['studio-create','studio-update'].includes(action)
+      ? {name: req.body?.name, kind: req.body?.kind,
+          orientation: req.body?.orientation, items: req.body?.items,
+          expected_revision: req.body?.expected_revision}
+      : action === 'studio-activate'
+        ? {expected_revision: req.body?.expected_revision} : {};
     const upstream = await fetch(endpoint, {
       method: route.method,
       headers: {
@@ -222,7 +264,7 @@ app.all('/api/portal/:action', async (req, res) => {
         Accept: 'application/json',
         ...(route.auth ? {Authorization: bearer} : {}),
       },
-      body: req.method === 'POST' ? JSON.stringify(action === 'login'
+      body: (req.method === 'POST' || req.method === 'PUT') ? JSON.stringify(action === 'login'
         ? {email: req.body?.email, password: req.body?.password}
         : action === 'publication-create' || action === 'publication-preview'
           ? {
@@ -234,7 +276,7 @@ app.all('/api/portal/:action', async (req, res) => {
               ends_on: req.body?.ends_on,
               timezone: req.body?.timezone,
               idempotency_key: req.body?.idempotency_key,
-            } : {}) : undefined,
+            } : studioBody) : undefined,
       signal: AbortSignal.timeout(12000),
       redirect: 'error',
     });

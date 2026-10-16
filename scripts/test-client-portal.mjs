@@ -5,13 +5,18 @@ const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const server=read('server.ts')
 const portal=read('src/components/ClientPortal.tsx')
 const publishing=read('src/components/ClientPublications.tsx')
+const studio=read('src/components/ClientStudio.tsx')
+const onboarding=read('src/components/ClientOnboarding.tsx')
+const targets=read('src/components/ClientPublicationTargets.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only sixteen allowlisted endpoints',()=>{
+test('same-origin portal proxies only twenty-five allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
   for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device',
     'publication-options','publication-destinations','publication-history',
-    'publication-preview','publication-create','publication-withdraw']){
+    'publication-preview','publication-create','publication-withdraw',
+    'studio-catalog','studio-list','studio-create','studio-get','studio-update',
+    'studio-activate','studio-duplicate','onboarding','publication-targets']){
     assert.ok(server.includes("'"+name+"': {method:"),name)
   }
   assert.ok(server.includes('req.method !== route.method'))
@@ -91,7 +96,7 @@ test('no ROI percentages or free-text logs remain in strategic consultant',()=>{
 test('device action proxy limits both methods and numeric ID, without trusting tenant inputs',()=>{
   assert.ok(server.includes("'pair-device': {method: 'POST'"))
   assert.ok(server.includes("'sync-device': {method: 'POST'"))
-  assert.ok(server.includes('Number.isSafeInteger(rawId)'))
+  assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
   assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : '/sync'"))
   assert.ok(!server.includes('req.body?.client_id'))
   assert.ok(!server.includes('req.body?.agency_id'))
@@ -129,7 +134,7 @@ test('publishing BFF proxies only fixed backend routes and never trusts tenant i
 })
 test('publishing is an authenticated area not an admin/agency panel',()=>{
   assert.ok(portal.includes("import ClientPublications from './ClientPublications'"))
-  assert.ok(portal.includes("view==='publications' ? <ClientPublications"))
+  assert.ok(portal.includes("? <ClientPublications key="))
   assert.ok(portal.includes("changeView('publications')"))
   assert.ok(publishing.includes('Authorization:\'Bearer \'+token'))
   assert.ok(publishing.includes("credentials:'omit'"))
@@ -154,4 +159,64 @@ test('selection is bounded, account/format constrained and readable on mobile',(
   assert.ok(publishing.includes('role=\'alert\''))
   assert.ok(publishing.includes("publication-withdraw',token,{method:'POST'"))
   assert.ok(publishing.includes("A interrupção ocorrerá após sincronização"))
+})
+
+test('all Simple Studio BFF operations are fixed and neither JWT nor paths can be overridden',()=>{
+  for(const name of ['studio-catalog','studio-list','studio-create','studio-get',
+    'studio-update','studio-activate','studio-duplicate','onboarding','publication-targets']){
+    assert.ok(server.includes("'"+name+"': {method:"),name)
+  }
+  assert.ok(server.includes('Number.isSafeInteger(studioPlaylistId)'))
+  assert.ok(server.includes('Number.isSafeInteger(targetId)'))
+  assert.ok(server.includes("expected_revision: req.body?.expected_revision"))
+  assert.ok(!server.includes('req.query.client_id'))
+  assert.ok(!server.includes('req.body?.client_id'))
+  assert.ok(server.includes("['tv','radio'].includes(String(req.query.kind))"))
+})
+test('device actions normalize numeric text IDs from the existing portal UI',()=>{
+  assert.ok(portal.includes('body:{device_id:String(device.id)}'))
+  assert.ok(server.includes("typeof rawId === 'string'"))
+  assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
+  assert.ok(server.includes("'client/indoor/devices/' + normalizedDeviceId"))
+})
+test('the portal navigation persists across Studio and Publications views',()=>{
+  assert.ok(portal.includes("import ClientStudio from './ClientStudio'"))
+  assert.ok(portal.includes("import ClientOnboarding from './ClientOnboarding'"))
+  assert.ok(portal.includes("view==='studio'"))
+  assert.ok(portal.includes("onNavigate={changeView}"))
+  assert.ok(portal.includes("onPublish={selection=>"))
+  assert.ok(portal.includes("initialSelection={publishFromStudio}"))
+  const positionNav=portal.indexOf("aria-label='Consulta do portal'")
+  const positionView=portal.indexOf("view==='studio'\n")
+  assert.ok(positionNav>=0&&positionNav<positionView)
+})
+test('Studio saves drafts before activation and never reuses the Admin JWT',()=>{
+  assert.ok(studio.includes('expected_revision:revision'))
+  assert.ok(studio.includes("status!=='draft'"))
+  assert.ok(studio.includes("studio-activate',token"))
+  assert.ok(studio.includes("studio-duplicate',token"))
+  assert.ok(studio.includes("studio-create',token"))
+  assert.ok(studio.includes("editing?'studio-update':'studio-create'"))
+  assert.ok(studio.includes('previous.length')===false)
+  assert.ok(studio.includes('items.length>=30'))
+  assert.ok(!studio.includes('localStorage.setItem'))
+  assert.ok(!studio.includes('X-Agency-Tenant'))
+  assert.ok(studio.includes('credentials:\'omit\''))
+})
+test('Radio Studio segregates licensed songs from own spots and pages the catalog',()=>{
+  assert.ok(studio.includes("'commercial_spot'"))
+  assert.ok(studio.includes("setRadioSource('music')"))
+  assert.ok(studio.includes("source:kind==='radio'?radioSource:undefined"))
+  assert.ok(studio.includes("Músicas licenciadas"))
+  assert.ok(studio.includes("Spots próprios"))
+  assert.ok(studio.includes('setCatalogPage'))
+})
+test('onboarding and publication monitoring never equate operational state to playback',()=>{
+  assert.ok(onboarding.includes("configuration")===false)
+  assert.ok(onboarding.includes('onNavigate(step.view)'))
+  assert.ok(onboarding.includes("role='progressbar'"))
+  assert.ok(targets.includes('playback_confirmed:false'))
+  assert.ok(targets.includes('não equivale a recebimento, exibição ou audiência comprovada'))
+  assert.ok(publishing.includes('ClientPublicationTargets'))
+  assert.ok(!targets.includes('device_token'))
 })

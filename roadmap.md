@@ -7,6 +7,34 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint MVP ampliada — Estúdio Simples + ativação assistida + diagnóstico de Players (16/10/2026)
+
+**Estado:** PRs definitivos [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) abertos, não draft, mescláveis e dependentes de integração conjunta; sem merge, migração, reset ou deploy. **API #77, Site #25 e Admin #45 já foram mesclados na main**. O workflow Laravel da API disparado no PR #78 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38924801603)) concluiu como **failure em jobs sem etapas exibidas**; motivo ainda não confirmado, CI não é verde.
+
+**Critérios de sprint, 15/18 implementados em código (83,3%); três homologações pendentes:**
+- [x] Consultar catálogo TV pronto exclusivamente do cliente com paginação SQL, sem revelar armazenamento e com prévia local assinada curta.
+- [x] Consultar músicas globais licenciadas e spots de Rádio privados com filtros por origem, paginação SQL e sem entregar S3 permanente.
+- [x] Listar e abrir somente playlists do próprio cliente, devolvendo revisão SHA-256 e itens seguros, sem acesso lateral entre tenants.
+- [x] Criar rascunho TV/Rádio de até 30 itens, formatos tipados, duração validada e propriedade/licença obrigatórias.
+- [x] Editar rascunho sob lock e revisão otimista obrigatória; rejeitar sobrescrita concorrente e edição de playlist já ativa.
+- [x] Ativar somente após `IndoorPublicationSafety` validar todo o conteúdo; transação desfaz ativação quando houver erro.
+- [x] Duplicar playlist própria em rascunho isolado sem sobrescrever mídia aprovada nem transferir direitos de terceiros.
+- [x] Revalidar vínculo da agência `can_self_publish` e plano ativo para leitura e escrita no Estúdio; não aceitar `client_id` do navegador.
+- [x] Gateway Express com sete novas ações de Estúdio tipadas, IDs verificados e payload filtrado; corrigir `device_id` recebido como texto decimal.
+- [x] Editor React responsivo: Rádio/TV, catálogo, adicionar/remover, ordenar, ajustar duração, rascunho, abrir, duplicar e ativar.
+- [x] Prévia visual para JPG/PNG/MP4 locais por URL assinada, sem simular rádio ou fornecer objeto S3 privado; sem promessa de edição Canva completa.
+- [x] Restaurar navegação persistente em todas as abas do portal e entregar playlist ativada diretamente à publicação já existente.
+- [x] Checklist de primeiros passos por estado real de plano, grant, Player, pareamento, mídia, playlist e publicação.
+- [x] Detalhamento paginado de destinos e sinais de sincronização por lote do cliente, sempre marcado como evidência operacional, não reprodução confirmada.
+- [x] Testes PHPUnit de regressão escritos para posse, plano, licença, revisão, ativação, diagnóstico e isolamento; **25/25 verificações estáticas de contrato do Site passaram**. Documentos de arquitetura/QA adicionados.
+- [ ] Executar PHPUnit com MySQL 8, gerar/verificar Swagger e validar testes de migração e permissões reais.
+- [ ] Executar `npm ci`, lint, `npm run build` (Vite/TypeScript/BFF), testar HTTPS/E2E e responsividade em navegador real.
+- [ ] Homologar Player físico Rádio/TV, codecs, links de mídia, sincronização, lease, ACK e trilha legítima de reprodução/audiência.
+
+**Cobertura global por macromarcos ainda não encerrados:** API **29/59**, Admin **25/57**, Site **13/34**, total **67/150 = 44,7%**. Este marco ampliou consideravelmente a implementação de composição editorial e operação, mas a fase completa do Estúdio do plano macro inclui upload, Story Builder editável, cotas avançadas, QR confiável e Player real; não é honesto contabilizá-la como concluída antes disso.
+
+**Próxima sprint:** upload seguro de imagens/vídeos, catálogo de templates e Story Builder simplificado para assinante; pareamento QR verificável e formalização de ACK de reprodução com relatórios, priorizando execução de CI e homologação. **Não usar `migrate:fresh` em produção.**
+
 ## Sprint MVP integrada — Autopublicação controlada do estabelecimento (16/10/2026)
 
 **PRs definitivos da sprint:** [API #77](https://github.com/paulodias-dev/meucomercial-api/pull/77), [Site #25](https://github.com/paulodias-dev/meucomercial-site/pull/25) e [Admin #45](https://github.com/paulodias-dev/meucomercial-admin/pull/45). Abertos, não draft, contra `main`; integração coordenada necessária. Testes físicos e deploy não realizados.
