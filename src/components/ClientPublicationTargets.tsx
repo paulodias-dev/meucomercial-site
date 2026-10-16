@@ -3,7 +3,8 @@ import {RefreshCcw,X} from 'lucide-react'
 
 type Target={device_id:number;name:string;connected_recently:boolean;needs_sync:boolean;
   last_seen_at:string|null;last_sync_at:string|null;requested_manifest_version:number;
-  current_manifest_version:number;operational_state:string;playback_confirmed:false}
+  current_manifest_version:number;operational_state:string;playback_confirmed:false;
+  sync_acknowledged:boolean;sync_acknowledged_at:string|null;sync_evidence:string}
 type Response={data:Target[];summary:{targets:number;sync_pending_flagged:number;
   publication_status:string;playback_confirmed:false};pagination:{page:number;last_page:number;total:number};
   evidence:string}
@@ -66,6 +67,14 @@ export default function ClientPublicationTargets({
             ?'Sincronização pendente':item.operational_state==='device_unavailable'
               ?'Dispositivo indisponível':'Sem pendência de sincronização sinalizada'}</p>
           <p className='text-xs text-black/60 mt-1'>{item.connected_recently?'Conectado recentemente':'Sem conexão recente'}</p>
+          <p className={'mt-2 text-xs font-semibold '+(item.sync_acknowledged?'text-blue-800':'text-black/60')}>
+            {item.sync_acknowledged
+              ? 'Manifesto confirmado pelo Player (protocolo v2)'
+              : 'Sem confirmação v2 desta versão de manifesto'}
+          </p>
+          {item.sync_acknowledged_at&&<p className='text-xs text-black/60 mt-1'>
+            ACK registrado: {when(item.sync_acknowledged_at)}
+          </p>}
           <p className='text-xs text-black/60 mt-1'>Última comunicação: {when(item.last_seen_at)}</p>
           <p className='text-xs text-black/60 mt-1'>Última sincronização: {when(item.last_sync_at)}</p>
           <p className='text-xs text-black/60 mt-1'>Manifesto solicitado: v{item.requested_manifest_version}</p>

@@ -9,11 +9,12 @@ const studio=read('src/components/ClientStudio.tsx')
 const story=read('src/components/ClientStoryEditor.tsx')
 const onboarding=read('src/components/ClientOnboarding.tsx')
 const targets=read('src/components/ClientPublicationTargets.tsx')
+const deviceDiagnostics=read('src/components/ClientDeviceDiagnostics.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only twenty-five allowlisted endpoints',()=>{
+test('same-origin portal proxies only twenty-seven allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
-  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device',
+  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device','device-diagnostics',
     'publication-options','publication-destinations','publication-history',
     'publication-preview','publication-create','publication-withdraw',
     'studio-catalog','studio-list','studio-create','studio-get','studio-update',
@@ -98,7 +99,7 @@ test('device action proxy limits both methods and numeric ID, without trusting t
   assert.ok(server.includes("'pair-device': {method: 'POST'"))
   assert.ok(server.includes("'sync-device': {method: 'POST'"))
   assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
-  assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : '/sync'"))
+  assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : action === 'device-diagnostics' ? '/diagnostics' : '/sync'"))
   assert.ok(!server.includes('req.body?.client_id'))
   assert.ok(!server.includes('req.body?.agency_id'))
   assert.ok(portal.includes("body:{device_id:String(device.id)}"))
@@ -258,4 +259,46 @@ test('scene editor is shown only for persisted own TV draft items',()=>{
   assert.ok(studio.includes("import ClientStoryEditor from './ClientStoryEditor'"))
   assert.ok(studio.includes("kind==='tv'&&item.id&&selectedId&&status==='draft'"))
   assert.ok(studio.includes('itemId={item.id}'))
+})
+
+test('Player-initiated pairing uses fixed owner-scoped gateway and temporary PIN',()=>{
+  assert.ok(server.includes("'claim-device': {method: 'POST'"))
+  assert.ok(server.includes("action === 'claim-device'"))
+  assert.ok(server.includes("? {pin: req.body?.pin}"))
+  assert.ok(server.includes("'/claim-pairing'"))
+  assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
+  assert.ok(portal.includes("portalRequest<{data:{device_id:number;paired:boolean;status:string}}>("))
+  assert.ok(portal.includes("'claim-device',token,{method:'POST'"))
+  assert.ok(portal.includes("pattern='[0-9]{6}'"))
+  assert.ok(portal.includes("replace(/[^0-9]/g,'')"))
+  assert.ok(portal.includes('Conectar este Player'))
+  assert.ok(!portal.includes('setItem(\'device_token\''))
+})
+test('per-device operations present authenticated sync evidence but not audience proof',()=>{
+  assert.ok(targets.includes('sync_acknowledged:boolean'))
+  assert.ok(targets.includes('sync_acknowledged_at:string|null'))
+  assert.ok(targets.includes('Manifesto confirmado pelo Player (protocolo v2)'))
+  assert.ok(targets.includes('não equivale a recebimento, exibição ou audiência comprovada'))
+  assert.ok(targets.includes('playback_confirmed:false'))
+})
+
+test('owner-only diagnostic view uses a numeric device identifier and never forwards secrets',()=>{
+  assert.ok(server.includes("'device-diagnostics': {method: 'GET'"))
+  assert.ok(server.includes("action === 'device-diagnostics' ? req.query.device_id"))
+  assert.ok(server.includes("'/diagnostics'"))
+  assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
+  assert.ok(portal.includes("import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'"))
+  assert.ok(portal.includes("diagnosticsId===d.id&&session"))
+  assert.ok(deviceDiagnostics.includes("fetch(url,{"))
+  assert.ok(deviceDiagnostics.includes("Authorization:'Bearer '+token"))
+  assert.ok(!deviceDiagnostics.includes('device_token'))
+  assert.ok(!deviceDiagnostics.includes('localStorage'))
+  assert.ok(!deviceDiagnostics.includes('ip_address'))
+})
+test('support view displays historical command and sync ACK separately from audience',()=>{
+  assert.ok(deviceDiagnostics.includes('sync_logs:Log[];commands:Command[]'))
+  assert.ok(deviceDiagnostics.includes('manifest_version'))
+  assert.ok(deviceDiagnostics.includes('não') || deviceDiagnostics.includes('Não'))
+  assert.ok(deviceDiagnostics.includes('Não são auditoria independente de reprodução ou audiência'))
+  assert.ok(deviceDiagnostics.includes("role='alert'"))
 })

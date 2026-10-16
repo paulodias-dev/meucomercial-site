@@ -195,6 +195,8 @@ const portalRoutes = {
   'media': {method: 'GET', backend: 'client/indoor/media', auth: true},
   'pair-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
   'sync-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
+  'claim-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
+  'device-diagnostics': {method: 'GET', backend: 'client/indoor/devices/', auth: true},
   'publication-options': {method: 'GET', backend: 'client/indoor/publications/options', auth: true},
   'publication-destinations': {method: 'GET', backend: 'client/indoor/publications/destinations', auth: true},
   'publication-history': {method: 'GET', backend: 'client/indoor/publications', auth: true},
@@ -236,8 +238,8 @@ app.all('/api/portal/:action', async (req, res) => {
     }
     // Only a numeric device ID may extend either allowlisted route.
     // Caller-controlled URLs, client IDs and agency contexts never reach the API.
-    const deviceAction = action === 'pair-device' || action === 'sync-device';
-    const rawId = req.body?.device_id;
+    const deviceAction = action === 'pair-device' || action === 'sync-device' || action === 'claim-device' || action === 'device-diagnostics';
+    const rawId = action === 'device-diagnostics' ? req.query.device_id : req.body?.device_id;
     const normalizedDeviceId = typeof rawId === 'string' && /^[1-9][0-9]*$/.test(rawId)
       ? Number(rawId) : rawId;
     if (deviceAction && (!Number.isSafeInteger(normalizedDeviceId) || normalizedDeviceId <= 0)) {
@@ -279,7 +281,7 @@ app.all('/api/portal/:action', async (req, res) => {
         .json({message:'Publicação inválida.'});
     }
     const endpoint = new URL(deviceAction
-      ? 'client/indoor/devices/' + normalizedDeviceId + (action === 'pair-device' ? '/pairing-pin' : '/sync')
+      ? 'client/indoor/devices/' + normalizedDeviceId + (action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : action === 'device-diagnostics' ? '/diagnostics' : '/sync')
       : publicationWithdraw
         ? 'client/indoor/publications/' + publicationId + '/withdraw'
         : publicationTargets
@@ -322,6 +324,8 @@ app.all('/api/portal/:action', async (req, res) => {
       },
       body: (req.method === 'POST' || req.method === 'PUT') ? JSON.stringify(action === 'login'
         ? {email: req.body?.email, password: req.body?.password}
+        : action === 'claim-device'
+          ? {pin: req.body?.pin}
         : action === 'publication-create' || action === 'publication-preview'
           ? {
               agency_tenant_id: req.body?.agency_tenant_id,

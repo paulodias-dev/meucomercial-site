@@ -7,9 +7,39 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint ampliada — Player V2 seguro, instalação guiada e ACK operacional (16/10/2026)
+
+**Estado:** PRs definitivos [API #80](https://github.com/paulodias-dev/meucomercial-api/pull/80), [Site #28](https://github.com/paulodias-dev/meucomercial-site/pull/28), [Admin #46](https://github.com/paulodias-dev/meucomercial-admin/pull/46) **abertos, não draft, mescláveis e dependentes de integração API → Player/Admin e Site**; sem alteração direta da main ou deploy. Sprint anterior [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) mesclada na main. Workflows dispararam, mas [API](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38940189392) e [Admin](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38940205369) concluíram em **failure com zero etapas expostas nos jobs consultados**; PHP/Node completos NÃO foram comprovadamente executados. Site sem workflow PR visível.
+
+**Critérios desta sprint: 17/20 implementados em código = 85,0%; 3 gates de QA/homologação abertos:**
+- [x] Protocolo **Player Pairing V2** com sessão temporária e PIN numérico, segredo separado gerado por `random_bytes(32)` e somente hash SHA-256 armazenado.
+- [x] Consulta v2 autenticada por capability no cabeçalho; PIN sozinho não resgata credencial e a URL não contém token.
+- [x] Consumo atômico da credencial **uma única vez** (status `claimed`) com lock, expiração e checagem da sessão vinculada ao dispositivo.
+- [x] Isolamento entre o pareamento legado e sessões v2 em ambos o polling antigo e o serviço antigo de criação de dispositivos.
+- [x] Serviço único `IndoorDeviceService::claimV2Session` para autorizar sessão sobre dispositivo **existente** (não duplica dispositivos), lock transacional e ausência de rotação involuntária de token.
+- [x] Controles de cliente/assinatura/plano, status, bloqueio e tentativa de reutilização; acesso cross-client negado e respostas sem token para operadores/assinantes.
+- [x] Endpoint `auth:client` de autorização pelo estabelecimento com PIN temporário e throttle.
+- [x] Endpoint administrativo de autorização condicionado a `indoor_devices.pair`, vínculo `AudioAssetAccess::agency` e contexto explícito `X-Agency-Tenant`.
+- [x] Player Web atualizado para iniciar e consultar pareamento v2 com capability somente em memória, preservando fluxo offline de Player pós-pareamento.
+- [x] Portal React: autorização do PIN mostrado no aparelho pelo assinante, feedback de erro, validação numérica e separação do fluxo legado.
+- [x] Admin Metronic: vincular PIN v2 à tela já cadastrada, modal de confirmação e distinção visual de ação legada; sem alterar indevidamente assinatura.
+- [x] Gateway Express allowlist para `claim-device` e `device-diagnostics`, com ID decimal seguro, corpo mínimo, bearer cliente em memória e TLS.
+- [x] API de diagnóstico do Player estritamente vinculada ao cliente: heartbeat mais recente, manifesto, comandos e logs sem IP/token/payload bruto.
+- [x] Comparação SQL paginada do manifesto solicitado com ACK autenticado de protocolo 2 e playlist correspondente, sem confundir ACK com reprodução.
+- [x] Portal mostra por publicação/Player a confirmação v2 quando existente, explicitando ausência de prova independente de audiência.
+- [x] Testes Feature PHPUnit escritos: sessão, segurança, expiração, cross-tenant, RBAC, operação Admin, diagnósticos e correlação ACK; novos testes Node Player Web sobre capability.
+- [x] Guardas estáticas da interface **Site 34/34** e **Admin 14/14** verificadas; runbooks nos três repos e critérios de implantação documentados.
+- [ ] Executar PHPUnit/MySQL 8, geração do Swagger, migrações e testes de concorrência com logs verificáveis.
+- [ ] Executar Node Player completo, Admin TypeScript/Vite, Site Vite/Express e E2E HTTPS + mobile, com aprovação no CI.
+- [ ] Homologar instalação real em TV/Rádio, sessão expirada, conexão/revogações, manifestos, codecs e evidência real de reprodução; confirmar política de descontinuação do legado.
+
+**Macromarcos globais ainda não homologados:** API **29/59**, Admin **25/57**, Site **13/34**, total **67/150 = 44,7%**. Esta sprint avança múltiplos critérios dentro dos marcos maiores de Player/Operação, mas não declara o Player físico ou a prova de audiência terminados antes dos gates. O percentual mede **macromarcos aceitos**, não volume de linhas.
+
+**Próxima sprint:** QA end-to-end e desbloqueio do GitHub Actions; QR offline para instalação móvel e autenticação do vínculo, política de remoção da sessão legada e evidência idempotente de mídia própria reproduzida com outbox/Player; validar escalabilidade e migração segura antes da produção.
+
 ## Sprint MVP — Upload privado + Modelos visuais do Estúdio TV (16/10/2026)
 
-**Estado:** PRs definitivos [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) **abertos, mescláveis e não draft**, integração API→Site coordenada. A base já contém [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) mesclados na main. Workflow Laravel da API #79 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38929304217)) terminou em **failure**, mas ambos os jobs consultados exibiram **zero etapas**: não é evidência de PHPUnit executado. Nenhum merge novo, deploy ou operação destrutiva de banco realizada.
+**Estado:** PRs definitivos [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) **mesclados na main**; falta evidência de homologação física/CI. A base já contém [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) mesclados na main. Workflow Laravel da API #79 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38929304217)) terminou em **failure**, mas ambos os jobs consultados exibiram **zero etapas**: não é evidência de PHPUnit executado. Nenhum merge novo, deploy ou operação destrutiva de banco realizada.
 
 **Critérios — 15/18 implementados em código (83,3%), 3 gates pendentes:**
 - [x] Upload exclusivo `auth:client`, cliente obtido pelo guard, concessão explícita de agência e assinatura/plano vigente revalidados pelo serviço comum.
@@ -65,7 +95,7 @@
 
 ## Sprint MVP integrada — Autopublicação controlada do estabelecimento (16/10/2026)
 
-**PRs definitivos da sprint:** [API #77](https://github.com/paulodias-dev/meucomercial-api/pull/77), [Site #25](https://github.com/paulodias-dev/meucomercial-site/pull/25) e [Admin #45](https://github.com/paulodias-dev/meucomercial-admin/pull/45). Abertos, não draft, contra `main`; integração coordenada necessária. Testes físicos e deploy não realizados.
+**PRs definitivos da sprint:** [API #77](https://github.com/paulodias-dev/meucomercial-api/pull/77), [Site #25](https://github.com/paulodias-dev/meucomercial-site/pull/25) e [Admin #45](https://github.com/paulodias-dev/meucomercial-admin/pull/45). Mesclados na main; homologação de Player físico/CI ainda pendente. Testes físicos e deploy não realizados.
 
 **Critérios técnicos — 11/14 implementados em código (78,6%); três gates continuam pendentes:**
 - [x] Consultar exclusivamente playlists ativas do cliente, com paginação e mídia sem links privados.
