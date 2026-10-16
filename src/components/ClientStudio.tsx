@@ -4,7 +4,7 @@ import ClientStoryEditor from './ClientStoryEditor'
 
 type Kind='tv'|'radio'
 type SourceType='media'|'music'|'commercial_spot'
-type Item={id?:number;source_type:SourceType;source_id:number;duration_seconds:number;preview_url?:string|null;story_layout?:unknown}
+type Item={id?:number;source_type:SourceType;source_id:number;duration_seconds:number;preview_url?:string|null;story_layout?:unknown;media_type?:string|null}
 type Source=Item&{name:string;kind:string;artist?:string|null;preview_url?:string|null}
 type Summary={id:number;name:string;kind:Kind;orientation:string;status:string;items_count:number}
 type Draft=Summary&{items:(Item&{position:number;preview_url?:string|null})[];revision:string}
@@ -207,7 +207,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
     return source?.name||({media:'Imagem/vídeo',music:'Música',commercial_spot:'Spot'}[item.source_type]+' #'+item.source_id)
   }
   const previewFor=(item:Item)=>item.preview_url??catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.preview_url
-  const isVideo=(item:Item)=>catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.kind==='video'
+  const isVideo=(item:Item)=>item.media_type==='video'||catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.kind==='video'
 
   return <section aria-label='Estúdio Simples' className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-4'>
     <div className='bg-white rounded-2xl border border-black/10 p-4 sm:p-6 min-w-0'>
