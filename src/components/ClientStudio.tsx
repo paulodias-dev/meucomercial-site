@@ -1,9 +1,10 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
-import {ArrowDown,ArrowUp,CheckCircle2,Copy,Film,Headphones,Plus,Save,ShieldCheck,Trash2} from 'lucide-react'
+import {ArrowDown,ArrowUp,CheckCircle2,Copy,Film,Headphones,Plus,Save,ShieldCheck,Trash2,Upload,Layers} from 'lucide-react'
+import ClientStoryEditor from './ClientStoryEditor'
 
 type Kind='tv'|'radio'
 type SourceType='media'|'music'|'commercial_spot'
-type Item={source_type:SourceType;source_id:number;duration_seconds:number}
+type Item={id?:number;source_type:SourceType;source_id:number;duration_seconds:number;preview_url?:string|null;story_layout?:unknown}
 type Source=Item&{name:string;kind:string;artist?:string|null;preview_url?:string|null}
 type Summary={id:number;name:string;kind:Kind;orientation:string;status:string;items_count:number}
 type Draft=Summary&{items:(Item&{position:number;preview_url?:string|null})[];revision:string}
@@ -48,6 +49,10 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
   const [kind,setKind]=useState<Kind>('tv')
   const [orientation,setOrientation]=useState<'landscape'|'portrait'>('landscape')
   const [radioSource,setRadioSource]=useState<'music'|'commercial_spot'>('music')
+  const [studioScene,setStudioScene]=useState<number|null>(null)
+  const [uploadFile,setUploadFile]=useState<File|null>(null)
+  const [uploadTitle,setUploadTitle]=useState('')
+  const [uploadBusy,setUploadBusy]=useState(false)
   const [name,setName]=useState('')
   const [selectedId,setSelectedId]=useState<number|null>(null)
   const [revision,setRevision]=useState<string|null>(null)
@@ -82,7 +87,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
 
   const reset=(nextKind:Kind=kind)=>{
     setSelectedId(null);setRevision(null);setStatus('draft');setName('')
-    setOrientation('landscape');setItems([]);setError('');setMessage('')
+    setOrientation('landscape');setItems([]);setStudioScene(null);setError('');setMessage('')
     setKind(nextKind)
   }
   const switchKind=(next:Kind)=>{
@@ -98,9 +103,8 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
       setKind(draft.kind);setSelectedId(draft.id);setRevision(draft.revision)
       setName(draft.name);setOrientation(draft.orientation==='portrait'?'portrait':'landscape')
       setStatus(draft.status)
-      setItems(draft.items.map(x=>({
-        source_type:x.source_type,source_id:x.source_id,duration_seconds:x.duration_seconds,
-      })))
+      setItems(draft.items.map(x=>({...x})))
+      setStudioScene(null)
     }catch(e){if(active.current===token)setError(e instanceof Error?e.message:'Não foi possível abrir a playlist.')}
     finally{if(active.current===token)setBusy(false)}
   }
@@ -134,6 +138,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
       if(active.current!==token)return
       setSelectedId(result.data.id);setRevision(result.data.revision)
       setStatus(result.data.status)
+      setItems(result.data.items.map(x=>({...x})));setStudioScene(null)
       setMessage(editing?'Rascunho atualizado.':'Rascunho criado. Você pode continuar editando.')
       reloadAll()
     }catch(e){if(active.current===token)setError(e instanceof Error?e.message:'Não foi possível salvar.')}
@@ -164,20 +169,44 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
       if(active.current!==token)return
       setSelectedId(result.data.id);setRevision(result.data.revision)
       setName(result.data.name);setStatus('draft')
-      setItems(result.data.items.map(x=>({
-        source_type:x.source_type,source_id:x.source_id,duration_seconds:x.duration_seconds,
-      })))
+      setItems(result.data.items.map(x=>({...x})));setStudioScene(null)
       setMessage('Cópia criada como rascunho. A playlist original permanece intacta.')
       reloadAll()
     }catch(e){if(active.current===token)setError(e instanceof Error?e.message:'Duplicação recusada.')}
     finally{if(active.current===token)setBusy(false)}
+  }
+  const upload=async()=>{
+    const file=uploadFile
+    if(!file||uploadBusy)return
+    if(!['image/jpeg','image/png','video/mp4'].includes(file.type)||file.size===0||file.size>24*1024*1024){
+      setError('Selecione JPG, PNG ou MP4 com até 24 MB (imagens até 12 MB).');return
+    }
+    const title=uploadTitle.trim()
+    if(!title||title.length>150){setError('Informe um título de até 150 caracteres.');return}
+    setUploadBusy(true);setError('');setMessage('')
+    try{
+      const response=await fetch('/api/portal/studio-upload',{
+        method:'POST',headers:{
+          Authorization:'Bearer '+token,Accept:'application/json',
+          'Content-Type':file.type,'X-Studio-Name':encodeURIComponent(title),
+        },
+        body:file,credentials:'omit',cache:'no-store',
+      })
+      const data=await response.json().catch(()=>({}))
+      if(!response.ok)throw new Error(data.message||'Não foi possível enviar a mídia.')
+      if(active.current!==token)return
+      setUploadFile(null);setUploadTitle('');setCatalogPage(1)
+      setMessage('Arquivo verificado e salvo na biblioteca privada. Você já pode adicioná-lo à sequência.')
+      reloadAll()
+    }catch(e){setError(e instanceof Error?e.message:'Falha no upload.')}
+    finally{setUploadBusy(false)}
   }
   const totalSeconds=items.reduce((sum,x)=>sum+x.duration_seconds,0)
   const labelFor=(item:Item)=>{
     const source=catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)
     return source?.name||({media:'Imagem/vídeo',music:'Música',commercial_spot:'Spot'}[item.source_type]+' #'+item.source_id)
   }
-  const previewFor=(item:Item)=>catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.preview_url
+  const previewFor=(item:Item)=>item.preview_url??catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.preview_url
   const isVideo=(item:Item)=>catalog?.data.find(c=>c.source_type===item.source_type&&c.source_id===item.source_id)?.kind==='video'
 
   return <section aria-label='Estúdio Simples' className='grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] gap-4'>
@@ -219,6 +248,23 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
           onClick={()=>setListPage(x=>x+1)}>Próxima</button>
       </div>
 
+      {kind==='tv'&&<div className='rounded-xl border border-blue-100 bg-blue-50/50 p-4 mt-6'>
+        <h3 className='font-bold text-sm flex items-center gap-2'><Upload size={16}/>Enviar minha mídia</h3>
+        <p className='text-xs text-black/60 mt-2'>JPG/PNG até 12 MB ou MP4 H.264/AAC até 24 MB e 10 minutos. O servidor valida o arquivo e a cota do plano antes de disponibilizar.</p>
+        <div className='grid gap-2 mt-3'>
+          <input aria-label='Arquivo de imagem ou vídeo' type='file' accept='image/png,image/jpeg,video/mp4'
+            onChange={e=>{const file=e.target.files?.[0]??null;setUploadFile(file);
+              setUploadTitle(file?.name.replace(/\.[^.]+$/,'').slice(0,150)??'')}}
+            className='text-sm w-full' disabled={uploadBusy}/>
+          <input type='text' aria-label='Nome da mídia' placeholder='Nome que aparecerá na biblioteca'
+            value={uploadTitle} maxLength={150} onChange={e=>setUploadTitle(e.target.value)}
+            className={control+' w-full bg-white'} disabled={uploadBusy}/>
+          <button type='button' onClick={()=>void upload()} disabled={!uploadFile||!uploadTitle.trim()||uploadBusy}
+            className={btn+' bg-blue-700 text-white border-blue-700 flex items-center gap-2 justify-center'}>
+            <Upload size={16}/>{uploadBusy?'Enviando e verificando…':'Enviar para biblioteca'}
+          </button>
+        </div>
+      </div>}
       <h3 className='font-bold text-sm mt-7'>Biblioteca autorizada</h3>
       <p className='text-xs text-black/60 mt-1'>{kind==='tv'?'Imagens e vídeos prontos para TV.':'Músicas com licença e spots exclusivos do estabelecimento.'} Nenhum arquivo é copiado ao criar a playlist.</p>
       {kind==='radio'&&<div className='flex flex-wrap gap-2 mt-3' role='group' aria-label='Fontes de rádio'>
@@ -303,6 +349,15 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
               onChange={e=>changeDuration(index,e.target.value)}
               className={control+' w-24'}/>
           </div>
+          {kind==='tv'&&item.id&&selectedId&&status==='draft'&&
+            <button type='button' className={btn+' border-blue-100 text-blue-800 mt-3 flex items-center gap-2'}
+              onClick={()=>setStudioScene(old=>old===item.id?null:item.id!)}>
+              <Layers size={15}/> {studioScene===item.id?'Fechar editor visual':'Adicionar texto e modelo visual'}
+            </button>}
+          {studioScene===item.id&&item.id&&selectedId&&status==='draft'&&
+            <ClientStoryEditor key={item.id} token={token} playlistId={selectedId}
+              itemId={item.id} previewUrl={previewFor(item)} orientation={orientation}
+              onSaved={()=>{void open(selectedId)}}/>}
           {previewFor(item)&&kind==='tv'&&
             <div className={'mt-3 rounded-xl bg-gray-100 overflow-hidden mx-auto '+(orientation==='portrait'?'max-w-32':'max-w-sm')}>
               {isVideo(item)
