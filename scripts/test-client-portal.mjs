@@ -98,7 +98,7 @@ test('device action proxy limits both methods and numeric ID, without trusting t
   assert.ok(server.includes("'pair-device': {method: 'POST'"))
   assert.ok(server.includes("'sync-device': {method: 'POST'"))
   assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
-  assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : '/sync'"))
+  assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : '/sync'"))
   assert.ok(!server.includes('req.body?.client_id'))
   assert.ok(!server.includes('req.body?.agency_id'))
   assert.ok(portal.includes("body:{device_id:String(device.id)}"))
