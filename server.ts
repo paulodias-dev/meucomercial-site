@@ -285,7 +285,7 @@ app.all('/api/portal/:action', async (req, res) => {
     const publicationTargets = action === 'publication-targets';
     const targetRawId = req.query.publication_id;
     const targetId = typeof targetRawId === 'string' && /^[1-9][0-9]*$/.test(targetRawId)
-      ? Number(targetRawId) : targetRawId;
+      ? Number(targetRawId) : null;
     if (publicationTargets && (!Number.isSafeInteger(targetId) || targetId <= 0)) {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Publicação inválida.'});
