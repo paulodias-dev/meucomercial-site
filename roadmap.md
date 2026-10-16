@@ -9,7 +9,7 @@
 
 ## Sprint ampliada — Player V2 seguro, instalação guiada e ACK operacional (16/10/2026)
 
-**Estado:** código criado em branches feature dos **três** repositórios (API, Site e Admin/Player Web); PRs definitivos desta sprint abertos para revisão coordenada; sem alteração direta da main nem deploy. A sprint anterior [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) já foi **mesclada na main**.
+**Estado:** PRs definitivos [API #80](https://github.com/paulodias-dev/meucomercial-api/pull/80), [Site #28](https://github.com/paulodias-dev/meucomercial-site/pull/28), [Admin #46](https://github.com/paulodias-dev/meucomercial-admin/pull/46) **abertos, não draft, mescláveis e dependentes de integração API → Player/Admin e Site**; sem alteração direta da main ou deploy. Sprint anterior [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) mesclada na main. Workflows dispararam, mas [API](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38940189392) e [Admin](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38940205369) concluíram em **failure com zero etapas expostas nos jobs consultados**; PHP/Node completos NÃO foram comprovadamente executados. Site sem workflow PR visível.
 
 **Critérios desta sprint: 17/20 implementados em código = 85,0%; 3 gates de QA/homologação abertos:**
 - [x] Protocolo **Player Pairing V2** com sessão temporária e PIN numérico, segredo separado gerado por `random_bytes(32)` e somente hash SHA-256 armazenado.
