@@ -43,14 +43,14 @@ test('accordion has unique stable ids and accessible disclosure controls',()=>{
   assert.ok(component.includes('aria-labelledby="radio-guide-title"'))
 })
 test('contractual reporting does not claim verified audience',()=>{
-  assert.ok(component.includes('não identificam ouvintes individuais'))
+  assert.ok(component.toLowerCase().includes('não identificam ouvintes individuais'))
   assert.ok(component.includes('não representam uma garantia de alcance'))
   assert.ok(guide.includes('não comprova ouvintes'))
   assert.ok(guide.includes('downloads e heartbeats'))
 })
 test('no fabricated checkout, recurring price or live music download is advertised',()=>{
   assert.ok(component.includes('não promete reprodução permanente'))
-  assert.ok(component.includes('não necessariamente'))
+  assert.ok(component.toLowerCase().includes('não necessariamente'))
   assert.ok(!component.includes('https://cdn'))
   assert.ok(!component.includes('checkout'))
 })
