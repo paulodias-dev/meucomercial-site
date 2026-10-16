@@ -16,7 +16,7 @@ test('FAQ has 8 distinct topics of licensing, online status and technical report
 test('radio guides explicitly distinguish software from music rights',()=>{
   assert.ok(component.includes('não concede automaticamente direitos'))
   assert.ok(component.includes('não uma medição independente de audiência'))
-  assert.ok(guide.includes('não equivale à aquisição automática de direitos autorais'))
+  assert.ok(guide.includes('não** equivale à aquisição automática de direitos autorais'))
 })
 test('illustrative schedule is not presented as playable audio',()=>{
   assert.ok(component.includes('Esta é uma simulação textual'))
