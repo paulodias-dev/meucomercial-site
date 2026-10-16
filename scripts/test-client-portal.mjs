@@ -299,6 +299,6 @@ test('support view displays historical command and sync ACK separately from audi
   assert.ok(deviceDiagnostics.includes('sync_logs:Log[];commands:Command[]'))
   assert.ok(deviceDiagnostics.includes('manifest_version'))
   assert.ok(deviceDiagnostics.includes('não') || deviceDiagnostics.includes('Não'))
-  assert.ok(deviceDiagnostics.includes('não são auditoria independente de reprodução ou audiência'))
+  assert.ok(deviceDiagnostics.includes('Não são auditoria independente de reprodução ou audiência'))
   assert.ok(deviceDiagnostics.includes("role='alert'"))
 })
