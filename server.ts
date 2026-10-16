@@ -197,6 +197,7 @@ const portalRoutes = {
   'sync-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
   'claim-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
   'device-diagnostics': {method: 'GET', backend: 'client/indoor/devices/', auth: true},
+  'device-reports': {method: 'GET', backend: 'client/indoor/devices/', auth: true},
   'publication-options': {method: 'GET', backend: 'client/indoor/publications/options', auth: true},
   'publication-destinations': {method: 'GET', backend: 'client/indoor/publications/destinations', auth: true},
   'publication-history': {method: 'GET', backend: 'client/indoor/publications', auth: true},
@@ -238,13 +239,20 @@ app.all('/api/portal/:action', async (req, res) => {
     }
     // Only a numeric device ID may extend either allowlisted route.
     // Caller-controlled URLs, client IDs and agency contexts never reach the API.
-    const deviceAction = action === 'pair-device' || action === 'sync-device' || action === 'claim-device' || action === 'device-diagnostics';
-    const rawId = action === 'device-diagnostics' ? req.query.device_id : req.body?.device_id;
+    const deviceAction = action === 'pair-device' || action === 'sync-device' || action === 'claim-device' || action === 'device-diagnostics' || action === 'device-reports';
+    const rawId = (action === 'device-diagnostics' || action === 'device-reports') ? req.query.device_id : req.body?.device_id;
     const normalizedDeviceId = typeof rawId === 'string' && /^[1-9][0-9]*$/.test(rawId)
       ? Number(rawId) : rawId;
     if (deviceAction && (!Number.isSafeInteger(normalizedDeviceId) || normalizedDeviceId <= 0)) {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Dispositivo inválido.'});
+    }
+    if (action === 'device-reports' && (
+      !['1','7','30'].includes(String(req.query.days ?? '7')) ||
+      !['all','tv','radio'].includes(String(req.query.kind ?? 'all')) ||
+      (req.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(String(req.query.page))))) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Filtro de relatório inválido.'});
     }
     const studioEntity = ['studio-get','studio-update','studio-activate','studio-duplicate'].includes(action);
     const studioRawId = req.method === 'GET' ? req.query.playlist_id : req.body?.playlist_id;
@@ -281,7 +289,7 @@ app.all('/api/portal/:action', async (req, res) => {
         .json({message:'Publicação inválida.'});
     }
     const endpoint = new URL(deviceAction
-      ? 'client/indoor/devices/' + normalizedDeviceId + (action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : action === 'device-diagnostics' ? '/diagnostics' : '/sync')
+      ? 'client/indoor/devices/' + normalizedDeviceId + (action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : action === 'device-diagnostics' ? '/diagnostics' : action === 'device-reports' ? '/playback-reports' : '/sync')
       : publicationWithdraw
         ? 'client/indoor/publications/' + publicationId + '/withdraw'
         : publicationTargets
@@ -301,6 +309,10 @@ app.all('/api/portal/:action', async (req, res) => {
       if ((action === 'studio-catalog' || action === 'studio-list') &&
         ['tv','radio'].includes(String(req.query.kind))) {
         endpoint.searchParams.set('kind', String(req.query.kind));
+      }
+      if (action === 'device-reports') {
+        endpoint.searchParams.set('days', String(req.query.days ?? '7'));
+        endpoint.searchParams.set('kind', String(req.query.kind ?? 'all'));
       }
       if (action === 'publication-destinations' &&
         ['tv','radio'].includes(String(req.query.medium))) {

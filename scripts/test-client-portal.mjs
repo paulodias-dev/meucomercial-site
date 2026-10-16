@@ -10,11 +10,12 @@ const story=read('src/components/ClientStoryEditor.tsx')
 const onboarding=read('src/components/ClientOnboarding.tsx')
 const targets=read('src/components/ClientPublicationTargets.tsx')
 const deviceDiagnostics=read('src/components/ClientDeviceDiagnostics.tsx')
+const playbackReports=read('src/components/ClientPlaybackReports.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only twenty-seven allowlisted endpoints',()=>{
+test('same-origin portal proxies only twenty-eight allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
-  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device','device-diagnostics',
+  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device','device-diagnostics','device-reports',
     'publication-options','publication-destinations','publication-history',
     'publication-preview','publication-create','publication-withdraw',
     'studio-catalog','studio-list','studio-create','studio-get','studio-update',
@@ -99,7 +100,7 @@ test('device action proxy limits both methods and numeric ID, without trusting t
   assert.ok(server.includes("'pair-device': {method: 'POST'"))
   assert.ok(server.includes("'sync-device': {method: 'POST'"))
   assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
-  assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : action === 'device-diagnostics' ? '/diagnostics' : '/sync'"))
+  assert.ok(server.includes("action === 'pair-device' ? '/pairing-pin' : action === 'claim-device' ? '/claim-pairing' : action === 'device-diagnostics' ? '/diagnostics' : action === 'device-reports' ? '/playback-reports' : '/sync'"))
   assert.ok(!server.includes('req.body?.client_id'))
   assert.ok(!server.includes('req.body?.agency_id'))
   assert.ok(portal.includes("body:{device_id:String(device.id)}"))
@@ -284,7 +285,7 @@ test('per-device operations present authenticated sync evidence but not audience
 
 test('owner-only diagnostic view uses a numeric device identifier and never forwards secrets',()=>{
   assert.ok(server.includes("'device-diagnostics': {method: 'GET'"))
-  assert.ok(server.includes("action === 'device-diagnostics' ? req.query.device_id"))
+  assert.ok(server.includes("(action === 'device-diagnostics' || action === 'device-reports') ? req.query.device_id"))
   assert.ok(server.includes("'/diagnostics'"))
   assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
   assert.ok(portal.includes("import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'"))
@@ -327,4 +328,30 @@ test('radio audit identifies owned institutional spots without claiming independ
   assert.ok(deviceDiagnostics.includes('Spot institucional de Rádio'))
   assert.ok(deviceDiagnostics.includes('relatos autenticados do próprio Player'))
   assert.ok(!deviceDiagnostics.includes('playback_confirmed:true'))
+})
+
+test('owner-only playback reports use fixed BFF path and bounded filters',()=>{
+  assert.ok(server.includes("'device-reports': {method: 'GET'"))
+  assert.ok(server.includes("action === 'device-reports' ? '/playback-reports'"))
+  assert.ok(server.includes("['1','7','30'].includes"))
+  assert.ok(server.includes("['all','tv','radio'].includes"))
+  assert.ok(server.includes("endpoint.searchParams.set('days'"))
+  assert.ok(server.includes("endpoint.searchParams.set('kind'"))
+  assert.ok(server.includes('Number.isSafeInteger(normalizedDeviceId)'))
+  assert.ok(!server.includes('req.query.client_id'))
+})
+test('responsive client ledger pages reports and refuses to certify device claims as audience',()=>{
+  assert.ok(deviceDiagnostics.includes("import ClientPlaybackReports from './ClientPlaybackReports'"))
+  assert.ok(deviceDiagnostics.includes('reportsOpen&&<ClientPlaybackReports'))
+  assert.ok(playbackReports.includes("fetch(url,{method:'GET'"))
+  assert.ok(playbackReports.includes("Authorization:'Bearer '+token"))
+  assert.ok(playbackReports.includes("url.searchParams.set('device_id'"))
+  assert.ok(playbackReports.includes('setDays(Number(e.target.value) as Days);setPage(1)'))
+  assert.ok(playbackReports.includes('setKind(e.target.value as Kind);setPage(1)'))
+  assert.ok(playbackReports.includes("onClick={()=>setPage(n=>n+1)}"))
+  assert.ok(playbackReports.includes('CSV desta página'))
+  assert.ok(playbackReports.includes("const safe=/^[\\s]*[=+\\-@\\t\\r]/"))
+  assert.ok(playbackReports.includes('não') || playbackReports.includes('Não'))
+  assert.ok(!playbackReports.includes('localStorage'))
+  assert.ok(!playbackReports.includes('device_token'))
 })

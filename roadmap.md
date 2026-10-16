@@ -7,9 +7,38 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint — Reconciliação offline e histórico TV/Rádio por estabelecimento (16/10/2026)
+
+**Integração:** PRs definitivos [API #83](https://github.com/paulodias-dev/meucomercial-api/pull/83), [Site #31](https://github.com/paulodias-dev/meucomercial-site/pull/31) e [Admin #49](https://github.com/paulodias-dev/meucomercial-admin/pull/49) **abertos, não draft, mescláveis, contra `main`**. Os anteriores API #82, Admin #48 e Site #30 estão mesclados na `main`. Integrar **API #83 → Site #31**, e Admin/Player #49 após QA. Workflows [API #83](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38969498152) e [Admin #49](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38969515777) terminaram em **failure, com zero etapas disponibilizadas nos jobs consultados**: PHPUnit/MySQL e TS/Vite **não comprovadamente executados**. Site #31 sem workflow PR visível. **Nenhum reset, merge ou deploy automático.**
+
+**Critérios da sprint: 16/19 implementados em código (84,2%); 3 gates de QA/homologação pendentes.**
+- [x] Confirmar integração real dos PRs anteriores (API #82, Admin #48 e Site #30) na main.
+- [x] API read-only `auth:client` para histórico de reprodução declarado pelo Player de **um único dispositivo próprio**.
+- [x] Restringir cliente por JWT/guard, dispositivo por `client_id` e negar acessos cross-client com 404.
+- [x] Validar enum de períodos 1/7/30 dias, filtro TV/Rádio/todos e número de página limitado.
+- [x] Paginação em 20 registros, ordenação determinística e sumarização por imagem/vídeo/áudio somente no mesmo escopo.
+- [x] Resposta sem token do aparelho, JWT, IP, S3, URLs privadas ou payload bruto; explicitar nível de evidência como relato do dispositivo.
+- [x] Documentar rota Laravel com L5 Swagger/OpenAPI, sem migrations nem permissões globais novas.
+- [x] Escrever testes PHPUnit Feature de owner/foreign/inativo, filtros, totais, paginação e exclusão de credenciais.
+- [x] Gateway Express allowlist de `device-reports` GET com ID decimal seguro e filtros estritamente permitidos.
+- [x] Tela React mobile-first de relatórios, aberta sob demanda no diagnóstico, com período e mídia filtráveis.
+- [x] Exportação CSV somente da página visível, codificação UTF-8 e tratamento de CSV formula injection, sem segredos.
+- [x] Classificação de evidência local vencida (>47h) na outbox IndexedDB do Player, sem perda de registros ou reenvio inválido.
+- [x] Contadores separados para filas comerciais e conteúdo próprio, status pendente, retry, rejeitado e expirado.
+- [x] Botão no Player Web para exportar localmente JSON sanitizado de auditoria, apenas após clique e sem apagar o original.
+- [x] Corrigir compatibilidade TV/Rádio no lote: campos opcionais ausentes omitidos do payload TV.
+- [x] Testes e guardas novos: **39/39 estáticos Site**, **15/15 estáticos Admin** e **5/5 funcionais isolados da outbox**, runbooks atualizados nos três repos.
+- [ ] Executar PHP lint, PHPUnit/MySQL 8, Swagger final e testes de integridade/performance dos relatórios.
+- [ ] Executar todas as suites Node Player, build TypeScript/Vite Site/Admin, testes de navegador, CI verde e revisão responsiva.
+- [ ] Homologar Player de TV/Rádio em equipamento físico, reconexão offline, limites de armazenamento, expiração/rejeição e cadeia de evidências.
+
+**Progresso global por macromarcos integralmente aceitos:** API **29/59**, Admin **25/57**, Site **13/34** = **67/150 (44,7%)**, conservador até QA; o progresso da sprint em código não equivale a disponibilização do MVP em produção.
+
+**Próxima sprint:** destravar runners do GitHub Actions para evidência executada de testes; operação assistida de filas saturadas com política explícita de retenção, testes no Player real e reforço de histórico/reconciliação sem ampliar a janela de aceitação do servidor.
+
 ## Sprint ampliada — Recuperação API #81 + relatos Rádio + QR offline (16/10/2026)
 
-**Estado:** PRs definitivos [API #82](https://github.com/paulodias-dev/meucomercial-api/pull/82), [Admin #48](https://github.com/paulodias-dev/meucomercial-admin/pull/48) e [Site #30](https://github.com/paulodias-dev/meucomercial-site/pull/30) **abertos, não draft, mescláveis**, todos com base em `main`. Ordem de implantação: **API e migrations → Admin/Player Web → Site**. Workflows [API #82](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38954488233) e [Admin #48](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38954494410) falharam com **zero etapas visíveis nos jobs consultados**, portanto sem comprovação de PHPUnit/MySQL, Node ou build Vite; Site sem workflow PR visível. Auditoria constatou que **API #81 foi mesclado apenas na branch intermediária do #80, e não na main**: modelo, rota, serviço e migration de TV não estavam na main, apesar do estado "merged". Este PR recoloca esses arquivos corretamente antes de estender a Rádio. **API #80, Site #29 e Admin #47 já constam como integrados na main.**
+**Estado:** PRs definitivos [API #82](https://github.com/paulodias-dev/meucomercial-api/pull/82), [Admin #48](https://github.com/paulodias-dev/meucomercial-admin/pull/48) e [Site #30](https://github.com/paulodias-dev/meucomercial-site/pull/30) **mesclados em `main`**, sem comprovação de CI/Player físico. Ordem de implantação: **API e migrations → Admin/Player Web → Site**. Workflows [API #82](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38954488233) e [Admin #48](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38954494410) falharam com **zero etapas visíveis nos jobs consultados**, portanto sem comprovação de PHPUnit/MySQL, Node ou build Vite; Site sem workflow PR visível. Auditoria constatou que **API #81 foi mesclado apenas na branch intermediária do #80, e não na main**: modelo, rota, serviço e migration de TV não estavam na main, apesar do estado "merged". Este PR recoloca esses arquivos corretamente antes de estender a Rádio. **API #80, Site #29 e Admin #47 já constam como integrados na main.**
 
 **Critérios implementados: 15/18 = 83,3%; 3 gates de QA abertos.**
 - [x] Auditar e documentar a divergência entre PR API #81 merged e o conteúdo real da main.
