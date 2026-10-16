@@ -4,15 +4,19 @@ import {readFileSync} from 'node:fs'
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const server=read('server.ts')
 const portal=read('src/components/ClientPortal.tsx')
+const publishing=read('src/components/ClientPublications.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only ten allowlisted endpoints',()=>{
+test('same-origin portal proxies only sixteen allowlisted endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
-  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device']){
+  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device',
+    'publication-options','publication-destinations','publication-history',
+    'publication-preview','publication-create','publication-withdraw']){
     assert.ok(server.includes("'"+name+"': {method:"),name)
   }
   assert.ok(server.includes('req.method !== route.method'))
-  assert.ok(server.includes('new URL(route.backend, base)'))
+  assert.ok(server.includes('const endpoint = new URL(deviceAction'))
+  assert.ok(server.includes(': route.backend, base)'))
   assert.ok(!server.includes('new URL(req.params.action, base)'))
 })
 test('portal gateway never forwards arbitrary client_id or cross-tenant filters',()=>{
@@ -108,4 +112,46 @@ test('client controls require a valid service and do not falsely claim completed
   assert.ok(portal.includes('A execução depende da próxima comunicação do Player'))
   assert.ok(portal.includes("d.status==='pending_pairing'"))
   assert.ok(portal.includes("role='status' aria-live='polite'"))
+})
+
+test('publishing BFF proxies only fixed backend routes and never trusts tenant identifiers from query',()=>{
+  for(const action of ['publication-options','publication-destinations','publication-history',
+    'publication-preview','publication-create','publication-withdraw']){
+    assert.ok(server.includes("'"+action+"': {method:"),action)
+  }
+  assert.ok(server.includes('Number.isSafeInteger(publicationId)'))
+  assert.ok(server.includes("req.query.medium"))
+  assert.ok(server.includes("action === 'publication-destinations'"))
+  assert.ok(server.includes("agency_tenant_id: req.body?.agency_tenant_id"))
+  assert.ok(!server.includes('endpoint.searchParams.set(\'client_id\''))
+  assert.ok(!server.includes('req.body?.client_id'))
+  assert.ok(!server.includes("new URL(req.body"))
+})
+test('publishing is an authenticated area not an admin/agency panel',()=>{
+  assert.ok(portal.includes("import ClientPublications from './ClientPublications'"))
+  assert.ok(portal.includes("view==='publications' ? <ClientPublications"))
+  assert.ok(portal.includes("changeView('publications')"))
+  assert.ok(publishing.includes('Authorization:\'Bearer \'+token'))
+  assert.ok(publishing.includes("credentials:'omit'"))
+  assert.ok(publishing.includes("cache:'no-store'"))
+  assert.ok(!publishing.includes('localStorage.setItem'))
+  assert.ok(!publishing.includes('sessionStorage.setItem'))
+})
+test('publication validates first; an unchanged UUID survives network retry',()=>{
+  assert.ok(publishing.includes("action:Action"))
+  assert.ok(publishing.includes("publication-preview',token,{method:'POST'"))
+  assert.ok(publishing.includes("publication-create',token,{method:'POST'"))
+  assert.ok(publishing.includes('preview?.signature!==signature'))
+  assert.ok(publishing.includes('pendingRequest.current?.signature!==signature'))
+  assert.ok(publishing.includes('crypto.randomUUID()'))
+  assert.ok(publishing.includes("setPreview(null)"))
+})
+test('selection is bounded, account/format constrained and readable on mobile',()=>{
+  assert.ok(publishing.includes("previous.length<100"))
+  assert.ok(publishing.includes("chosenPlaylist?.kind===medium"))
+  assert.ok(publishing.includes("!device.available"))
+  assert.ok(publishing.includes("grid grid-cols-1 sm:grid-cols-2"))
+  assert.ok(publishing.includes('role=\'alert\''))
+  assert.ok(publishing.includes("publication-withdraw',token,{method:'POST'"))
+  assert.ok(publishing.includes("A interrupção ocorrerá após sincronização"))
 })

@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState, type FormEvent} from 'react'
+import ClientPublications from './ClientPublications'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Session = {token:string; client:{id:number;name?:string;email?:string}}
@@ -27,7 +28,7 @@ type Service = {
 }
 type Location = {id:number;name:string;kind:string;city:string|null;state:string|null;is_active:boolean}
 type Media = {id:number;name:string;type:string;status:string;duration_seconds:number|null}
-type View = 'devices'|'campaigns'|'services'|'locations'|'media'
+type View = 'devices'|'campaigns'|'services'|'locations'|'media'|'publications'
 type PortalResponse<T>={data:T}
 
 async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device',
@@ -112,7 +113,7 @@ export default function ClientPortal(){
     finally{setBusy(false)}
   }
   useEffect(()=>{
-    if(!session)return
+    if(!session||view==='publications')return
     const abort=new AbortController()
     setLoading(true);setError('')
     // Responses from an old page/role must not appear while switching scope.
@@ -177,7 +178,7 @@ export default function ClientPortal(){
   const changeView=(next:View)=>{
     setView(next);setPage(1);setPairingPin(null);setDeviceActionMessage('')
   }
-  const list=view==='devices'?devices:view==='campaigns'?campaigns:
+  const list=view==='publications'?null:view==='devices'?devices:view==='campaigns'?campaigns:
     view==='services'?services:view==='locations'?locations:media
   const cards=[
     ['Total de Players',overview?.devices.total??0,Monitor],
@@ -261,7 +262,7 @@ export default function ClientPortal(){
         {' · '}{overview.campaigns.total} pedidos comerciais
         {' · '}Sincronização e conexão não comprovam reprodução ou audiência.
       </div>}
-      <div className='bg-white border border-black/10 rounded-2xl overflow-hidden'>
+      {view==='publications' ? <ClientPublications key={session.client.id} token={session.token}/> : <div className='bg-white border border-black/10 rounded-2xl overflow-hidden'>
         <div className='flex flex-wrap gap-2 p-4 sm:p-5 border-b border-black/10' role='group' aria-label='Consulta do portal'>
           <button type='button' aria-pressed={view==='devices'} onClick={()=>changeView('devices')}
             className={'px-4 py-3 rounded-xl text-sm font-bold '+
@@ -282,6 +283,11 @@ export default function ClientPortal(){
             className={'px-4 py-3 rounded-xl text-sm font-bold '+
               (view==='media'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
             Biblioteca de mídia
+          </button>
+          <button type='button' aria-pressed={view==='publications'} onClick={()=>changeView('publications')}
+            className={'px-4 py-3 rounded-xl text-sm font-bold '+
+              (view==='publications'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
+            Publicar conteúdo
           </button>
           <button type='button' aria-pressed={view==='campaigns'} onClick={()=>changeView('campaigns')}
             className={'px-4 py-3 rounded-xl text-sm font-bold '+
@@ -380,7 +386,7 @@ export default function ClientPortal(){
             </div>
           </div>}
         </div>
-      </div>
+      </div>}
     </div>}
   </main>
 }
