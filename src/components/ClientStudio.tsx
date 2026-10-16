@@ -13,12 +13,13 @@ const control='rounded-xl border border-black/15 px-3 min-h-11 text-sm'
 const btn='rounded-xl px-4 min-h-11 text-sm font-semibold border disabled:opacity-40 disabled:cursor-not-allowed'
 
 async function request<T>(action:StudioAction,token:string,options:{
-  page?:number;kind?:Kind;playlistId?:number;method?:'POST'|'PUT';body?:Record<string,unknown>;
+  page?:number;kind?:Kind;source?:'music'|'commercial_spot';playlistId?:number;method?:'POST'|'PUT';body?:Record<string,unknown>;
   signal?:AbortSignal
 }={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
   if(options.kind)url.searchParams.set('kind',options.kind)
+  if(options.source)url.searchParams.set('source',options.source)
   if(options.playlistId&&options.method!=='POST'&&options.method!=='PUT')
     url.searchParams.set('playlist_id',String(options.playlistId))
   const body=options.playlistId&&options.method
@@ -46,6 +47,7 @@ async function request<T>(action:StudioAction,token:string,options:{
 export default function ClientStudio({token,onPublish}:{token:string;onPublish:(item:{id:number;kind:Kind})=>void}){
   const [kind,setKind]=useState<Kind>('tv')
   const [orientation,setOrientation]=useState<'landscape'|'portrait'>('landscape')
+  const [radioSource,setRadioSource]=useState<'music'|'commercial_spot'>('music')
   const [name,setName]=useState('')
   const [selectedId,setSelectedId]=useState<number|null>(null)
   const [revision,setRevision]=useState<string|null>(null)
@@ -68,7 +70,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
     const abort=new AbortController()
     setLoading(true)
     Promise.all([
-      request<Page<Source>>('studio-catalog',token,{page:catalogPage,kind,signal:abort.signal}),
+      request<Page<Source>>('studio-catalog',token,{page:catalogPage,kind,source:kind==='radio'?radioSource:undefined,signal:abort.signal}),
       request<Page<Summary>>('studio-list',token,{page:listPage,kind,signal:abort.signal}),
     ]).then(([sources,list])=>{
       if(abort.signal.aborted||active.current!==token)return
@@ -76,7 +78,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
     }).catch(e=>{if(!abort.signal.aborted)setError(e instanceof Error?e.message:'Falha ao consultar catálogo.')})
       .finally(()=>{if(!abort.signal.aborted)setLoading(false)})
     return ()=>abort.abort()
-  },[token,kind,catalogPage,listPage,reload])
+  },[token,kind,radioSource,catalogPage,listPage,reload])
 
   const reset=(nextKind:Kind=kind)=>{
     setSelectedId(null);setRevision(null);setStatus('draft');setName('')
@@ -84,7 +86,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
     setKind(nextKind)
   }
   const switchKind=(next:Kind)=>{
-    reset(next);setListPage(1);setCatalogPage(1)
+    reset(next);setListPage(1);setCatalogPage(1);setRadioSource('music')
   }
   const open=async(id:number)=>{
     if(busy)return
@@ -218,10 +220,18 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
 
       <h3 className='font-bold text-sm mt-7'>Biblioteca autorizada</h3>
       <p className='text-xs text-black/60 mt-1'>{kind==='tv'?'Imagens e vídeos prontos para TV.':'Músicas com licença e spots exclusivos do estabelecimento.'} Nenhum arquivo é copiado ao criar a playlist.</p>
+      {kind==='radio'&&<div className='flex flex-wrap gap-2 mt-3' role='group' aria-label='Fontes de rádio'>
+        <button type='button' aria-pressed={radioSource==='music'}
+          onClick={()=>{setRadioSource('music');setCatalogPage(1)}}
+          className={btn+(radioSource==='music'?' bg-blue-50 border-blue-500':'')}>Músicas licenciadas</button>
+        <button type='button' aria-pressed={radioSource==='commercial_spot'}
+          onClick={()=>{setRadioSource('commercial_spot');setCatalogPage(1)}}
+          className={btn+(radioSource==='commercial_spot'?' bg-blue-50 border-blue-500':'')}>Spots próprios</button>
+      </div>}
       <div className='grid gap-2 mt-3'>
         {(catalog?.data??[]).map(source=><div key={source.source_type+'-'+source.source_id}
           className='rounded-xl border border-black/10 p-3 flex gap-3 items-center min-w-0'>
-          {source.preview_url&&kind==='tv'
+          {source.preview_url&&kind==='tv'&&source.kind==='image'
             ?<img src={source.preview_url} alt='' loading='lazy' className='w-16 h-14 object-cover rounded-lg bg-gray-100'/>
             :<div className='w-12 h-12 shrink-0 rounded-xl flex items-center justify-center bg-blue-50 text-blue-700'>
               {kind==='tv'?<Film size={21}/>:<Headphones size={21}/>}</div>}
