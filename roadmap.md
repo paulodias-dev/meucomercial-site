@@ -7,6 +7,20 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint — Operação assistida e tendências auditáveis de TV/Rádio (16/10/2026)
+
+**Integração requerida:** API #84 fornece summary.by_day e bucket_timezone em UTC. Portal renderiza séries por dia para filtros 1/7/30 e TV/Rádio, sem consultar toda a paginação; Player/Metronic executa a recuperação de filas em PR próprio.
+
+- [x] Tipos TypeScript do contrato diário da API associados ao dispositivo autenticado.
+- [x] Gráfico compacto responsivo com imagens/vídeos/áudio e escala por máximo do período.
+- [x] Legendas acessíveis e datas UTC legíveis, separação explícita entre gráfico completo e CSV da página.
+- [x] Visibilidade de zero relatos sem inferir ausência de reprodução ou desligamento.
+- [x] Guardas de contrato e responsividade adicionadas à suíte Node local.
+- [ ] Build TypeScript/Vite, E2E com JWT e análise mobile em navegadores físicos.
+- [ ] Homologação fim a fim com API #84 e Player real.
+
+**Macromarcos globais conservadores:** 67/150 (44,7%). Sem CI/Actions, resets ou merge automático.
+
 ## Sprint — Reconciliação offline e histórico TV/Rádio por estabelecimento (16/10/2026)
 
 **Integração:** PRs definitivos [API #83](https://github.com/paulodias-dev/meucomercial-api/pull/83), [Site #31](https://github.com/paulodias-dev/meucomercial-site/pull/31) e [Admin #49](https://github.com/paulodias-dev/meucomercial-admin/pull/49) **abertos, não draft, mescláveis, contra `main`**. Os anteriores API #82, Admin #48 e Site #30 estão mesclados na `main`. Integrar **API #83 → Site #31**, e Admin/Player #49 após QA. Workflows [API #83](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38969498152) e [Admin #49](https://github.com/paulodias-dev/meucomercial-admin/actions/runs/38969515777) terminaram em **failure, com zero etapas disponibilizadas nos jobs consultados**: PHPUnit/MySQL e TS/Vite **não comprovadamente executados**. Site #31 sem workflow PR visível. **Nenhum reset, merge ou deploy automático.**
