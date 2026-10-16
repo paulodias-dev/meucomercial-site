@@ -25,10 +25,12 @@ type Service = {
   id:number;status:string;expires_at:string|null
   plan:{name:string;description:string|null;interval:string|null}|null
 }
-type View = 'devices'|'campaigns'|'services'
+type Location = {id:number;name:string;kind:string;city:string|null;state:string|null;is_active:boolean}
+type Media = {id:number;name:string;type:string;status:string;duration_seconds:number|null}
+type View = 'devices'|'campaigns'|'services'|'locations'|'media'
 type PortalResponse<T>={data:T}
 
-async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services',
+async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media',
   token:string|null,options:{page?:number;method?:'POST';body?:Record<string,string>;signal?:AbortSignal}={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
@@ -76,9 +78,11 @@ export default function ClientPortal(){
   const [devices,setDevices]=useState<Page<Device>|null>(null)
   const [campaigns,setCampaigns]=useState<Page<Campaign>|null>(null)
   const [services,setServices]=useState<Page<Service>|null>(null)
+  const [locations,setLocations]=useState<Page<Location>|null>(null)
+  const [media,setMedia]=useState<Page<Media>|null>(null)
   const [loading,setLoading]=useState(false)
   const clearSession=()=>{
-    setSession(null);setOverview(null);setDevices(null);setCampaigns(null);setServices(null)
+    setSession(null);setOverview(null);setDevices(null);setCampaigns(null);setServices(null);setLocations(null);setMedia(null)
     setPassword('');setPage(1);setError('')
   }
   const signOut=()=>{
@@ -105,20 +109,26 @@ export default function ClientPortal(){
     const abort=new AbortController()
     setLoading(true);setError('')
     // Responses from an old page/role must not appear while switching scope.
-    setDevices(null);setCampaigns(null);setServices(null)
+    setDevices(null);setCampaigns(null);setServices(null);setLocations(null);setMedia(null)
     Promise.all([
       portalRequest<PortalResponse<PortalOverview>>('overview',session.token,{signal:abort.signal}),
       view==='devices'
         ? portalRequest<Page<Device>>('devices',session.token,{page,signal:abort.signal})
         : view==='campaigns'
           ? portalRequest<Page<Campaign>>('campaigns',session.token,{page,signal:abort.signal})
-          : portalRequest<Page<Service>>('services',session.token,{page,signal:abort.signal}),
+          : view==='services'
+            ? portalRequest<Page<Service>>('services',session.token,{page,signal:abort.signal})
+            : view==='locations'
+              ? portalRequest<Page<Location>>('locations',session.token,{page,signal:abort.signal})
+              : portalRequest<Page<Media>>('media',session.token,{page,signal:abort.signal}),
     ]).then(([summary,list])=>{
       if(abort.signal.aborted)return
       setOverview(summary.data)
       if(view==='devices')setDevices(list as Page<Device>)
       else if(view==='campaigns')setCampaigns(list as Page<Campaign>)
-      else setServices(list as Page<Service>)
+      else if(view==='services')setServices(list as Page<Service>)
+      else if(view==='locations')setLocations(list as Page<Location>)
+      else setMedia(list as Page<Media>)
     }).catch(err=>{
       if(abort.signal.aborted)return
       if(err instanceof Error&&err.message.startsWith('Acesso não autorizado')){
@@ -129,7 +139,8 @@ export default function ClientPortal(){
   },[session,view,page,refresh])
 
   const changeView=(next:View)=>{setView(next);setPage(1)}
-  const list=view==='devices'?devices:view==='campaigns'?campaigns:services
+  const list=view==='devices'?devices:view==='campaigns'?campaigns:
+    view==='services'?services:view==='locations'?locations:media
   const cards=[
     ['Total de Players',overview?.devices.total??0,Monitor],
     ['Online',overview?.devices.online??0,BadgeCheck],
@@ -224,6 +235,16 @@ export default function ClientPortal(){
               (view==='services'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
             Meus serviços
           </button>
+          <button type='button' aria-pressed={view==='locations'} onClick={()=>changeView('locations')}
+            className={'px-4 py-3 rounded-xl text-sm font-bold '+
+              (view==='locations'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
+            Locais
+          </button>
+          <button type='button' aria-pressed={view==='media'} onClick={()=>changeView('media')}
+            className={'px-4 py-3 rounded-xl text-sm font-bold '+
+              (view==='media'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
+            Biblioteca de mídia
+          </button>
           <button type='button' aria-pressed={view==='campaigns'} onClick={()=>changeView('campaigns')}
             className={'px-4 py-3 rounded-xl text-sm font-bold '+
               (view==='campaigns'?'bg-blue-700 text-white':'bg-[#F5F7FA] text-black/70')}>
@@ -232,13 +253,16 @@ export default function ClientPortal(){
         </div>
         <div className='p-4 sm:p-6'>
           <h2 className='font-bold text-lg'>{view==='devices'?'Situação dos Players':
-            view==='campaigns'?'Pedidos como anunciante':'Assinaturas e planos'}</h2>
+            view==='campaigns'?'Pedidos como anunciante':view==='services'?'Assinaturas e planos':
+            view==='locations'?'Unidades e locais cadastrados':'Minha biblioteca'}</h2>
           <p className='text-xs text-black/60 mt-1 mb-6'>
             {view==='devices'
               ? 'Dispositivos deste cadastro. Pareamento e alteração de programação são operações autorizadas no painel de gestão.'
               : view==='campaigns'
                 ? 'A aprovação de uma ordem não garante automaticamente inserções concluídas ou audiência.'
-                : 'Consulte o plano, a vigência e o estado do serviço. Cobranças e pagamentos permanecem no financeiro do contrato.'}
+                : view==='services' ? 'Consulte o plano, a vigência e o estado do serviço. Cobranças e pagamentos permanecem no financeiro do contrato.'
+                  : view==='locations' ? 'Somente unidades e locais vinculados ao seu cadastro.'
+                    : 'Metadados da sua biblioteca sem expor links privados dos arquivos.'}
           </p>
           {!loading&&list?.data.length===0&&<p className='text-sm text-black/60 bg-[#F5F7FA] rounded-xl p-6'>
             Nenhum registro encontrado nesta categoria.
@@ -267,12 +291,23 @@ export default function ClientPortal(){
                 Criativo: {labels[c.creative_status]??c.creative_status}
               </p>
               <p className='text-xs text-black/60 mt-2'>Solicitado em: {date(c.submitted_at||c.created_at)}</p>
-            </article>):(services?.data??[]).map(service=><article key={service.id}
+            </article>):view==='services'?(services?.data??[]).map(service=><article key={service.id}
               className='rounded-xl border border-black/10 p-4 sm:p-5'>
               <h3 className='font-bold text-sm'>{service.plan?.name||'Serviço #'+service.id}</h3>
               <p className='text-xs mt-3'>Situação: {labels[service.status]??service.status}</p>
               <p className='text-xs text-black/60 mt-2'>Vigência até: {date(service.expires_at)}</p>
               <p className='text-xs text-black/60 mt-2'>{service.plan?.description||'Consulte o contrato para conhecer os recursos do plano.'}</p>
+            </article>):view==='locations'?(locations?.data??[]).map(loc=><article key={loc.id}
+              className='rounded-xl border border-black/10 p-4 sm:p-5'>
+              <h3 className='font-bold text-sm'>{loc.name}</h3>
+              <p className='text-xs text-black/60 mt-3'>{[loc.city,loc.state].filter(Boolean).join(' / ')||'Local sem endereço resumido'}</p>
+              <p className='text-xs text-black/60 mt-2'>{loc.is_active?'Ativo':'Inativo'}</p>
+            </article>):(media?.data??[]).map(item=><article key={item.id}
+              className='rounded-xl border border-black/10 p-4 sm:p-5'>
+              <h3 className='font-bold text-sm'>{item.name}</h3>
+              <p className='text-xs text-black/60 mt-3'>Formato: {item.type}</p>
+              <p className='text-xs text-black/60 mt-2'>Processamento: {labels[item.status]??item.status}</p>
+              {item.duration_seconds!==null&&<p className='text-xs text-black/60 mt-2'>Duração: {item.duration_seconds}s</p>}
             </article>)}
           </div>
           {list&&<div className='flex flex-wrap justify-between items-center gap-4 mt-6 border-t border-black/10 pt-5 text-xs'>
