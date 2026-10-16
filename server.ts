@@ -146,6 +146,44 @@ app.post("/api/commercial-leads", async (req, res) => {
 // Allowlisted, same-origin proxy for CLIENT credentials only. It never
 // forwards arbitrary paths, operator JWTs, cookies or query-controlled URLs.
 // All JWTs remain in memory in the React portal; this gateway does not log them.
+// Fixed binary BFF endpoint: no client IDs, arbitrary upstream paths or
+// permanent public storage. Express bounds the in-memory stream at 24 MiB.
+app.post('/api/portal/studio-upload',
+  express.raw({type: ['image/jpeg','image/png','video/mp4'], limit: '24mb'}),
+  async (req, res) => {
+    const bearer = req.get('authorization') ?? '';
+    if (!/^Bearer [A-Za-z0-9._~-]+$/.test(bearer))
+      return res.status(401).set('Cache-Control','no-store').json({message:'Sessão inválida.'});
+    const type = req.get('content-type')?.toLowerCase() ?? '';
+    const name = req.get('x-studio-name') ?? '';
+    if (!['image/jpeg','image/png','video/mp4'].includes(type)
+      || !Buffer.isBuffer(req.body) || req.body.length===0 || req.body.length>24*1024*1024
+      || !/^[a-zA-Z0-9%._~-]{1,450}$/.test(name))
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Selecione JPG, PNG ou MP4 e informe nome válido.'});
+    try {
+      const baseValue = process.env.MEUCOMERCIAL_API_URL?.trim();
+      if(!baseValue)throw new Error('backend-missing');
+      const base = new URL(baseValue.endsWith('/') ? baseValue : baseValue+'/');
+      if(base.protocol!=='https:' &&
+        !(process.env.NODE_ENV!=='production' && ['localhost','127.0.0.1'].includes(base.hostname)))
+        throw new Error('upstream-unsafe');
+      const upstream = await fetch(new URL('client/indoor/studio/media/upload',base),{
+        method:'POST',headers:{
+          Authorization:bearer,'Content-Type':type,'X-Studio-Name':name,
+          Accept:'application/json',
+        },
+        body:req.body,signal:AbortSignal.timeout(30000),redirect:'error',
+      });
+      const body=await upstream.json().catch(()=>({message:'Resposta inválida.'}));
+      return res.status(upstream.status).set('Cache-Control','private, no-store')
+        .set('Referrer-Policy','no-referrer').json(body);
+    }catch{
+      return res.status(503).set('Cache-Control','no-store')
+        .json({message:'Upload indisponível. Tente novamente.'});
+    }
+  });
+
 const portalRoutes = {
   'login': {method: 'POST', backend: 'client/login', auth: false},
   'logout': {method: 'POST', backend: 'client/logout', auth: true},
@@ -170,6 +208,8 @@ const portalRoutes = {
   'studio-update': {method: 'PUT', backend: 'client/indoor/studio/playlists/', auth: true},
   'studio-activate': {method: 'POST', backend: 'client/indoor/studio/playlists/', auth: true},
   'studio-duplicate': {method: 'POST', backend: 'client/indoor/studio/playlists/', auth: true},
+  'studio-story-get': {method: 'GET', backend: 'client/indoor/studio/playlists/', auth: true},
+  'studio-story-update': {method: 'PUT', backend: 'client/indoor/studio/playlists/', auth: true},
   'onboarding': {method: 'GET', backend: 'client/indoor/onboarding', auth: true},
   'publication-targets': {method: 'GET', backend: 'client/indoor/publications/', auth: true},
 } as const;
@@ -212,6 +252,18 @@ app.all('/api/portal/:action', async (req, res) => {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Playlist inválida.'});
     }
+    const studioStory = action === 'studio-story-get' || action === 'studio-story-update';
+    const storyRawPlaylist = req.method === 'GET' ? req.query.playlist_id : req.body?.playlist_id;
+    const storyRawItem = req.method === 'GET' ? req.query.item_id : req.body?.item_id;
+    const numericId = (value:unknown) => {
+      const normalized = typeof value==='string'&&/^[1-9][0-9]*$/.test(value) ? Number(value) : value;
+      return Number.isSafeInteger(normalized) && Number(normalized)>0 ? Number(normalized) : null;
+    };
+    const storyPlaylist = numericId(storyRawPlaylist);
+    const storyItem = numericId(storyRawItem);
+    if(studioStory && (!storyPlaylist || !storyItem))
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Cena inválida.'});
     const publicationTargets = action === 'publication-targets';
     const targetRawId = req.query.publication_id;
     const targetId = typeof targetRawId === 'string' && /^[1-9][0-9]*$/.test(targetRawId)
@@ -232,6 +284,8 @@ app.all('/api/portal/:action', async (req, res) => {
         ? 'client/indoor/publications/' + publicationId + '/withdraw'
         : publicationTargets
           ? 'client/indoor/publications/' + targetId + '/targets'
+        : studioStory
+          ? 'client/indoor/studio/playlists/' + storyPlaylist + '/items/' + storyItem + '/layout'
         : studioEntity
           ? 'client/indoor/studio/playlists/' + studioPlaylistId
             + (action === 'studio-activate' ? '/activate' : action === 'studio-duplicate' ? '/duplicate' : '')
@@ -256,7 +310,9 @@ app.all('/api/portal/:action', async (req, res) => {
           orientation: req.body?.orientation, items: req.body?.items,
           expected_revision: req.body?.expected_revision}
       : action === 'studio-activate'
-        ? {expected_revision: req.body?.expected_revision} : {};
+        ? {expected_revision: req.body?.expected_revision}
+        : action === 'studio-story-update'
+          ? {expected_revision: req.body?.expected_revision,layout:req.body?.layout} : {};
     const upstream = await fetch(endpoint, {
       method: route.method,
       headers: {

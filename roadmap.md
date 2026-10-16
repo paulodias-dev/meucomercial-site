@@ -7,9 +7,37 @@
 
 **Responsabilidade deste repositório:** Landing page, comunicação do produto, SEO, precificação e conversão comercial.
 
+## Sprint MVP — Upload privado + Modelos visuais do Estúdio TV (16/10/2026)
+
+**Estado:** PRs definitivos [API #79](https://github.com/paulodias-dev/meucomercial-api/pull/79) e [Site #27](https://github.com/paulodias-dev/meucomercial-site/pull/27) **abertos, mescláveis e não draft**, integração API→Site coordenada. A base já contém [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) mesclados na main. Workflow Laravel da API #79 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38929304217)) terminou em **failure**, mas ambos os jobs consultados exibiram **zero etapas**: não é evidência de PHPUnit executado. Nenhum merge novo, deploy ou operação destrutiva de banco realizada.
+
+**Critérios — 15/18 implementados em código (83,3%), 3 gates pendentes:**
+- [x] Upload exclusivo `auth:client`, cliente obtido pelo guard, concessão explícita de agência e assinatura/plano vigente revalidados pelo serviço comum.
+- [x] Gateway Express binário com caminho fixo, TLS, método, JWT, cabeçalho de nome codificado e limite de memória por chamada.
+- [x] Restringir arquivo a JPG/PNG <=12 MiB ou MP4 <=24 MiB, tipo real via finfo, sem aceitar MIME forjado ou caminhos arbitrários.
+- [x] Validar imagens por estrutura e dimensões, impedindo arquivos inválidos e resoluções excessivas.
+- [x] Validar MP4 via contêiner `ftyp` + ffprobe obrigatório, H.264/AAC, duração máxima 10 minutos e dimensão até 4K; sem ffprobe, recusar.
+- [x] Reutilizar disco privado Laravel `local`, caminho isolado por cliente+UUID, sem URL pública nem acesso à chave de armazenamento no payload de resposta.
+- [x] Aplicar cota `max_indoor_storage_mb` do plano, limite de segurança padrão, lock do cliente, rollback e remoção de blob em exceção.
+- [x] Atualizar catálogo do Estúdio por API existente com ativos novos `ready`, thumbnails/vídeos TV somente por preview assinado de curta duração.
+- [x] Expor API própria e client-scoped para consultar/salvar camadas TV com revisão inteira otimista e proibição de edição pós-publicação.
+- [x] Reutilizar `story_layout.version=1`, até 12 camadas tipadas `text`/`band`, restrições de coordenadas, fonte, cor e texto; sem HTML/CSS/JS fornecidos pelo cliente.
+- [x] Integrar 3 modelos personalizáveis (Oferta, Aviso, Boas-vindas) ao editor responsivo, com prévia aproximada e edição por cena salva.
+- [x] Publicar snapshot `story_published` na ativação da playlist sob transação, compatível com manifesto TV existente e separado da publicação de destino/grade.
+- [x] Impedir sobrescrita de cenas avançadas da agência, edição de playlists ativas e exposição de mídias de outro cliente.
+- [x] Criar testes Laravel Feature de upload, cotas, planos, acesso cruzado, preview/revisão, fail-closed e ativação; **testes escritos, não executados**.
+- [x] Ampliar guardas Site: **30/30 verificações estáticas executadas e aprovadas**; documentação técnica e operação de deploy atualizadas.
+- [ ] Executar PHP lint, PHPUnit/MySQL8, validação da API, OpenAPI e teste de vídeo com ffprobe no ambiente alvo.
+- [ ] Executar `npm ci`, `npm run lint`, `npm run build`, BFF HTTP/TLS e QA real mobile/desktop.
+- [ ] Homologar Player real em TV horizontal/vertical, mídia privada/MP4, sincronização/ACK, layout e segurança da veiculação.
+
+**Roadmap global:** API **29/59**, Admin **25/57**, Site **13/34**, total **67/150 = 44,7%** dos macromarcos integralmente aceitos. Apesar do volume funcional, o macro de Estúdio ainda abrange edição avançada, áudio, hardware e aceites operacionais; não inflar o percentual sem conclusão. O trabalho avança nos critérios internos desse marco.
+
+**Próximo bloco:** edição visual mais rica com controle de layers e presets, transcodificação assíncrona segura para vídeos pesados, envio/mixagem de rádio sob direitos e QR/ACK de reprodução real; priorizar desbloqueio de CI e homologação.
+
 ## Sprint MVP ampliada — Estúdio Simples + ativação assistida + diagnóstico de Players (16/10/2026)
 
-**Estado:** PRs definitivos [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) abertos, não draft, mescláveis e dependentes de integração conjunta; sem merge, migração, reset ou deploy. **API #77, Site #25 e Admin #45 já foram mesclados na main**. O workflow Laravel da API disparado no PR #78 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38924801603)) concluiu como **failure em jobs sem etapas exibidas**; motivo ainda não confirmado, CI não é verde.
+**Estado:** PRs definitivos [API #78](https://github.com/paulodias-dev/meucomercial-api/pull/78) e [Site #26](https://github.com/paulodias-dev/meucomercial-site/pull/26) mesclados na main; CI e homologação de dispositivos ainda não comprovados. **API #77, Site #25 e Admin #45 já foram mesclados na main**. O workflow Laravel da API disparado no PR #78 ([execução](https://github.com/paulodias-dev/meucomercial-api/actions/runs/38924801603)) concluiu como **failure em jobs sem etapas exibidas**; motivo ainda não confirmado, CI não é verde.
 
 **Critérios de sprint, 15/18 implementados em código (83,3%); três homologações pendentes:**
 - [x] Consultar catálogo TV pronto exclusivamente do cliente com paginação SQL, sem revelar armazenamento e com prévia local assinada curta.
