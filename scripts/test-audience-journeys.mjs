@@ -52,7 +52,7 @@ test('advertiser and agency need a different commercial brief than equipment cou
   assert.ok(page.includes('carteira'))
 })
 test('three roles cannot grant audience or cross-tenant authority',()=>{
-  assert.ok(journeys.includes('não comprova atenção individual'))
+  assert.ok(journeys.includes('nem comprova atenção individual'))
   assert.ok(journeys.includes('Sem acesso automático aos clientes'))
   assert.ok(journeys.includes('não garante inventário reservado'))
   assert.ok(policy.includes('não ativa conta, não cobra e não reserva anúncio'))
