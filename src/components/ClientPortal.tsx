@@ -1,4 +1,4 @@
-import {useEffect, useState, type FormEvent} from 'react'
+import {useEffect, useRef, useState, type FormEvent} from 'react'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Session = {token:string; client:{id:number;name?:string;email?:string}}
@@ -30,7 +30,7 @@ type Media = {id:number;name:string;type:string;status:string;duration_seconds:n
 type View = 'devices'|'campaigns'|'services'|'locations'|'media'
 type PortalResponse<T>={data:T}
 
-async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media',
+async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device',
   token:string|null,options:{page?:number;method?:'POST';body?:Record<string,string>;signal?:AbortSignal}={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
@@ -67,6 +67,10 @@ export default function ClientPortal(){
   // No persistent localStorage, sessionStorage, URL or cookie token.
   // A refresh requires a new login; the server validates every call.
   const [session,setSession]=useState<Session|null>(null)
+  const activeToken=useRef<string|null>(null)
+  const [deviceActionBusy,setDeviceActionBusy]=useState<number|null>(null)
+  const [deviceActionMessage,setDeviceActionMessage]=useState('')
+  const [pairingPin,setPairingPin]=useState<{deviceId:number;pin:string;expiresAt:string}|null>(null)
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
   const [busy,setBusy]=useState(false)
@@ -82,6 +86,8 @@ export default function ClientPortal(){
   const [media,setMedia]=useState<Page<Media>|null>(null)
   const [loading,setLoading]=useState(false)
   const clearSession=()=>{
+    activeToken.current=null
+    setPairingPin(null);setDeviceActionBusy(null);setDeviceActionMessage('')
     setSession(null);setOverview(null);setDevices(null);setCampaigns(null);setServices(null);setLocations(null);setMedia(null)
     setPassword('');setPage(1);setError('')
   }
@@ -99,6 +105,7 @@ export default function ClientPortal(){
         access_token:string;client:{id:number;name?:string;email?:string}
       }>('login',null,{method:'POST',body:{email:email.trim(),password}})
       if(!data.access_token||!data.client?.id)throw new Error('Resposta de autenticação inválida.')
+      activeToken.current=data.access_token
       setSession({token:data.access_token,client:data.client})
       setPassword('');setPage(1);setRefresh(x=>x+1)
     }catch(e){setError(e instanceof Error?e.message:'Falha de autenticação.')}
@@ -138,7 +145,38 @@ export default function ClientPortal(){
     return ()=>abort.abort()
   },[session,view,page,refresh])
 
-  const changeView=(next:View)=>{setView(next);setPage(1)}
+  const doDeviceAction=async(action:'pair-device'|'sync-device',device:Device)=>{
+    if(!session||deviceActionBusy!==null)return
+    const token=session.token
+    setDeviceActionBusy(device.id);setDeviceActionMessage('')
+    if(action==='pair-device')setPairingPin(null)
+    try{
+      const response=await portalRequest<{data:{
+        device_id:number;pin?:string;expires_at?:string;already_pending?:boolean
+      }}>(action,token,{method:'POST',body:{device_id:String(device.id)}})
+      if(activeToken.current!==token)return
+      if(response.data.device_id!==device.id)throw new Error('Resposta do dispositivo inválida.')
+      if(action==='pair-device'){
+        if(!response.data.pin||!/^\d{6}$/.test(response.data.pin)||!response.data.expires_at)
+          throw new Error('PIN temporário inválido. Tente novamente.')
+        setPairingPin({deviceId:device.id,pin:response.data.pin,expiresAt:response.data.expires_at})
+        setDeviceActionMessage('PIN gerado. Informe o código somente no Player correspondente.')
+      }else{
+        setDeviceActionMessage(response.data.already_pending
+          ? 'Já existe um comando de sincronização pendente para este Player.'
+          : 'Sincronização solicitada. A execução depende da próxima comunicação do Player.')
+        setRefresh(n=>n+1)
+      }
+    }catch(e){
+      if(activeToken.current!==token)return
+      if(e instanceof Error&&e.message.startsWith('Acesso não autorizado')){
+        clearSession();setError('Sessão encerrada. Entre novamente.')
+      }else setDeviceActionMessage(e instanceof Error?e.message:'Não foi possível solicitar a operação.')
+    }finally{if(activeToken.current===token)setDeviceActionBusy(null)}
+  }
+  const changeView=(next:View)=>{
+    setView(next);setPage(1);setPairingPin(null);setDeviceActionMessage('')
+  }
   const list=view==='devices'?devices:view==='campaigns'?campaigns:
     view==='services'?services:view==='locations'?locations:media
   const cards=[
@@ -257,13 +295,15 @@ export default function ClientPortal(){
             view==='locations'?'Unidades e locais cadastrados':'Minha biblioteca'}</h2>
           <p className='text-xs text-black/60 mt-1 mb-6'>
             {view==='devices'
-              ? 'Dispositivos deste cadastro. Pareamento e alteração de programação são operações autorizadas no painel de gestão.'
+              ? 'Gere um PIN para Players ainda não pareados ou solicite sincronização dos dispositivos ativos. Publicação e substituição de aparelhos pareados continuam restritas à gestão.'
               : view==='campaigns'
                 ? 'A aprovação de uma ordem não garante automaticamente inserções concluídas ou audiência.'
                 : view==='services' ? 'Consulte o plano, a vigência e o estado do serviço. Cobranças e pagamentos permanecem no financeiro do contrato.'
                   : view==='locations' ? 'Somente unidades e locais vinculados ao seu cadastro.'
                     : 'Metadados da sua biblioteca sem expor links privados dos arquivos.'}
           </p>
+          {view==='devices'&&deviceActionMessage&&<p role='status' aria-live='polite'
+            className='text-sm bg-blue-50 text-blue-900 p-3 rounded-xl mb-4'>{deviceActionMessage}</p>}
           {!loading&&list?.data.length===0&&<p className='text-sm text-black/60 bg-[#F5F7FA] rounded-xl p-6'>
             Nenhum registro encontrado nesta categoria.
           </p>}
