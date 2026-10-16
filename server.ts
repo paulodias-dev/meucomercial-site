@@ -214,6 +214,7 @@ const portalRoutes = {
   'studio-story-get': {method: 'GET', backend: 'client/indoor/studio/playlists/', auth: true},
   'studio-story-update': {method: 'PUT', backend: 'client/indoor/studio/playlists/', auth: true},
   'onboarding': {method: 'GET', backend: 'client/indoor/onboarding', auth: true},
+  'playback-overview': {method: 'GET', backend: 'client/indoor/playback-summary', auth: true},
   'publication-targets': {method: 'GET', backend: 'client/indoor/publications/', auth: true},
 } as const;
 
@@ -248,6 +249,13 @@ app.all('/api/portal/:action', async (req, res) => {
         .json({message:'Dispositivo inválido.'});
     }
     if (action === 'device-reports' && (
+      !['1','7','30'].includes(String(req.query.days ?? '7')) ||
+      !['all','tv','radio'].includes(String(req.query.kind ?? 'all')) ||
+      (req.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(String(req.query.page))))) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Filtro de relatório inválido.'});
+    }
+    if (action === 'playback-overview' && (
       !['1','7','30'].includes(String(req.query.days ?? '7')) ||
       !['all','tv','radio'].includes(String(req.query.kind ?? 'all')) ||
       (req.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(String(req.query.page))))) {
@@ -310,7 +318,7 @@ app.all('/api/portal/:action', async (req, res) => {
         ['tv','radio'].includes(String(req.query.kind))) {
         endpoint.searchParams.set('kind', String(req.query.kind));
       }
-      if (action === 'device-reports') {
+      if (action === 'device-reports' || action === 'playback-overview') {
         endpoint.searchParams.set('days', String(req.query.days ?? '7'));
         endpoint.searchParams.set('kind', String(req.query.kind ?? 'all'));
       }
