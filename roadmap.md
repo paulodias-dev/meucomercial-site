@@ -9,7 +9,7 @@
 
 ## Sprint MVP integrada — Autopublicação controlada do estabelecimento (16/10/2026)
 
-**Escopo implementado em código nas branches desta sprint:** API Laravel, Site React e Admin Metronic. PRs definitivos ainda sujeitos a revisão e merge coordenado; testes físicos e deploy não realizados.
+**PRs definitivos da sprint:** [API #77](https://github.com/paulodias-dev/meucomercial-api/pull/77), [Site #25](https://github.com/paulodias-dev/meucomercial-site/pull/25) e [Admin #45](https://github.com/paulodias-dev/meucomercial-admin/pull/45). Abertos, não draft, contra `main`; integração coordenada necessária. Testes físicos e deploy não realizados.
 
 **Critérios técnicos — 11/14 implementados em código (78,6%); três gates continuam pendentes:**
 - [x] Consultar exclusivamente playlists ativas do cliente, com paginação e mídia sem links privados.
