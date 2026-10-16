@@ -23,8 +23,8 @@ const makeLayout=(headline:string,subtitle:string,accent:string):Layout=>({
 const button='border rounded-xl min-h-11 px-3 text-xs font-semibold disabled:opacity-50'
 
 export default function ClientStoryEditor({
-  token,playlistId,itemId,previewUrl,orientation,onSaved,
-}:{token:string;playlistId:number;itemId:number;previewUrl?:string|null;
+  token,playlistId,itemId,previewUrl,mediaIsVideo,orientation,onSaved,
+}:{token:string;playlistId:number;itemId:number;previewUrl?:string|null;mediaIsVideo?:boolean;
   orientation:string;onSaved:()=>void}){
   const [revision,setRevision]=useState(0)
   const [template,setTemplate]=useState<Template>('oferta')
@@ -35,7 +35,6 @@ export default function ClientStoryEditor({
   const [error,setError]=useState('')
   const [message,setMessage]=useState('')
   const [loaded,setLoaded]=useState(false)
-  const [isVideo,setIsVideo]=useState(false)
   useEffect(()=>{
     const abort=new AbortController()
     setLoaded(false);setError('')
@@ -62,11 +61,6 @@ export default function ClientStoryEditor({
     }).catch(e=>{if(!abort.signal.aborted)setError(e instanceof Error?e.message:'Erro de consulta.')})
     return ()=>abort.abort()
   },[token,playlistId,itemId])
-  useEffect(()=>{
-    // Strictly temporary signed TV URL from the scoped Studio API.
-    // No browser persistence or transformation of the storage path.
-    if(previewUrl)setIsVideo(new URL(previewUrl,window.location.origin).pathname.includes('.mp4'))
-  },[previewUrl])
   const choose=(next:Template)=>{
     const preset=templates.find(x=>x.key===next)!
     setTemplate(next);setHeadline(preset.headline)
@@ -121,7 +115,7 @@ export default function ClientStoryEditor({
       <div className='rounded-2xl border border-black/10 bg-gray-900 overflow-hidden p-2'>
         <div className={'mx-auto relative overflow-hidden bg-slate-700 '+
           (orientation==='portrait'?'aspect-[9/16] max-w-48':'aspect-video max-w-xl')}>
-          {previewUrl&&(isVideo
+          {previewUrl&&(mediaIsVideo
             ?<video muted playsInline controls preload='metadata' src={previewUrl}
               className='absolute inset-0 h-full w-full object-cover'/>
             :<img src={previewUrl} alt='Plano de fundo da cena' className='absolute inset-0 w-full h-full object-cover'/>)}
