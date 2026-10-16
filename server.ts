@@ -157,6 +157,12 @@ const portalRoutes = {
   'media': {method: 'GET', backend: 'client/indoor/media', auth: true},
   'pair-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
   'sync-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true},
+  'publication-options': {method: 'GET', backend: 'client/indoor/publications/options', auth: true},
+  'publication-destinations': {method: 'GET', backend: 'client/indoor/publications/destinations', auth: true},
+  'publication-history': {method: 'GET', backend: 'client/indoor/publications', auth: true},
+  'publication-preview': {method: 'POST', backend: 'client/indoor/publications/preview', auth: true},
+  'publication-create': {method: 'POST', backend: 'client/indoor/publications', auth: true},
+  'publication-withdraw': {method: 'POST', backend: 'client/indoor/publications/', auth: true},
 } as const;
 
 app.all('/api/portal/:action', async (req, res) => {
@@ -187,14 +193,27 @@ app.all('/api/portal/:action', async (req, res) => {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Dispositivo inválido.'});
     }
+    const publicationWithdraw = action === 'publication-withdraw';
+    const publicationId = req.body?.publication_id;
+    if (publicationWithdraw && (!Number.isSafeInteger(publicationId) || publicationId <= 0)) {
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Publicação inválida.'});
+    }
     const endpoint = new URL(deviceAction
       ? 'client/indoor/devices/' + rawId + (action === 'pair-device' ? '/pairing-pin' : '/sync')
-      : route.backend, base);
+      : publicationWithdraw
+        ? 'client/indoor/publications/' + publicationId + '/withdraw'
+        : route.backend, base);
     if (req.method === 'GET') {
       const page = req.query.page;
       const perPage = req.query.per_page;
       if (typeof page === 'string') endpoint.searchParams.set('page', page.slice(0,5));
       if (typeof perPage === 'string') endpoint.searchParams.set('per_page', perPage.slice(0,3));
+      // The only additional query option on this gateway is a medium enum.
+      if (action === 'publication-destinations' &&
+        ['tv','radio'].includes(String(req.query.medium))) {
+        endpoint.searchParams.set('medium', String(req.query.medium));
+      }
     }
     const upstream = await fetch(endpoint, {
       method: route.method,
@@ -204,7 +223,18 @@ app.all('/api/portal/:action', async (req, res) => {
         ...(route.auth ? {Authorization: bearer} : {}),
       },
       body: req.method === 'POST' ? JSON.stringify(action === 'login'
-        ? {email: req.body?.email, password: req.body?.password} : {}) : undefined,
+        ? {email: req.body?.email, password: req.body?.password}
+        : action === 'publication-create' || action === 'publication-preview'
+          ? {
+              agency_tenant_id: req.body?.agency_tenant_id,
+              playlist_id: req.body?.playlist_id,
+              medium: req.body?.medium,
+              device_ids: req.body?.device_ids,
+              starts_on: req.body?.starts_on,
+              ends_on: req.body?.ends_on,
+              timezone: req.body?.timezone,
+              idempotency_key: req.body?.idempotency_key,
+            } : {}) : undefined,
       signal: AbortSignal.timeout(12000),
       redirect: 'error',
     });
