@@ -28,7 +28,7 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Install locked dependencies
-        run: npm ci --ignore-scripts
+        run: npm ci
       - name: Typecheck
         run: npm run lint
       - name: Validate portal, commercial journeys and radio contracts
