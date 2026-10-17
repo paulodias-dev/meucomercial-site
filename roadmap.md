@@ -1,3 +1,22 @@
+## Painel global atual — sprint ampliada de 17/10/2026
+
+**Status validado em código + CI:** **75/150 macromarcos = 50,0% do MVP** (API **29/59 = 49,2%** · Admin/Player **25/57 = 43,9%** · Site/Portal **21/34 = 61,8%**). Os quatro marcos novos são do **Site**, não implicam homologação de API, Admin ou hardware TV/Rádio.
+
+### Marcos concluídos nesta sprint (4)
+
+- [x] **TV publicamente demonstrável:** quatro composições locais responsivas, orientação 16:9/9:16, texto editável e opção de proposta com UTM/consentimento. Nenhuma transmissão ou publicação real é alegada.
+- [x] **E2E de jornadas reais:** Chrome/Playwright cobre simulador, proposta de anunciante, informações de localização inválidas, consultor, Rádio, portal privado, HTTP 422/503 e retry com idempotência.
+- [x] **Auditoria Lighthouse mobile + SEO:** relatórios JSON de três rotas compiladas, FCP/LCP/CLS/TBT e scores de Performance/Acessibilidade/SEO, URLs/canonicals distintos, com separação clara de métricas de laboratório e INP de campo.
+- [x] **Revisão editorial/comercial e privacidade técnica:** remoção de promessas sem evidência, consentimento explícito e testes de retenção de contexto, cookies próprios e publicidade sem inventário ou faturamento. Revisão jurídica formal e política publicada permanecem pendentes.
+
+**CI de implementação:** [workflow de Site / Portal #39058106394](https://github.com/paulodias-dev/meucomercial-site/actions/runs/39058106394) validou TypeScript, Node, Vite/Express, HTTP/TLS, Chromium e Lighthouse. Atualizações apenas documentais subsequentes não alteram o código testado.
+
+**Marcos que CONTINUAM abertos:** catálogo público com inventário/regiões/preços **autorizados** da API; cadastro/teste/assinatura automatizados e pagamento; conformidade jurídica e cookies de terceiros; INP medido em produção; homologação do Player físico; CI GitHub de API/Admin com jobs sem etapas/logs. A página `/anunciar` é uma vitrine **sem inventário vivo** e não encerra o marco de inventário real. Nenhum merge/deploy ou migration foi executado por esta sprint.
+
+**Próximo passo:** integração de planos e funil com API autorizada, homologação física do Player e recuperação dos runners API/Admin para avançar os marcos de backend e operações.
+
+---
+
 ## Sprint de consolidação do MVP — Site/Portal e Rádio (17/10/2026)
 
 **Entrega de código em PR definitivo, não draft:** versão pública `/radio-indoor` com amostras de locução por síntese nativa local e ação explícita; duas categorias de programação fictícia permanecem **apenas explicativas**, nunca música sem licença, campanha vendida ou reprodução confirmada. Deep link, meta Open Graph/canonical servido em HTML para bots e fallback 404.
@@ -462,8 +481,8 @@
 |---|---:|---:|---:|
 | [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 29 | 59 | 49,2% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 25 | 57 | 43,9% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 17 | 34 | 50,0% |
-| **Plataforma completa** | **71** | **150** | **47,3%** |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 21 | 34 | 61,8% |
+| **Plataforma completa** | **75** | **150** | **50,0%** |
 
 > **Atualização do painel:** 16/10/2026. Baseline mesclado 67/150 e marco de CI do Site concluído no PR definitivo #35, com workflow verde, totalizando **68/150**; até o merge, o incremento permanece na branch do PR. Séries históricas abaixo são mantidas para rastreabilidade.
 
@@ -551,7 +570,7 @@
 **Situação neste repositório:** Parcial · 1/3 marcos identificados.
 
 - [x] Simulador ilustrativo de TV corporativa disponível na landing page; **não é um Story Builder funcional**.
-- [ ] Integrar prévia de campanhas reais/templates do Story Builder com dados públicos seguros ou demonstração isolada.
+- [x] Integrar prévia de campanhas reais/templates do Story Builder com dados públicos seguros ou demonstração isolada. Rota `/demonstracao-tv`: quatro modelos locais, 16:9/9:16, texto editável, labels e testes Chromium. Não é Player real nem publicação.
 - [ ] Conectar CTA de teste da TV a fluxo real de teste/onboarding; validar acessibilidade do simulador.
 
 ## Fase 6: Automação Financeira e Integração de Pagamentos
@@ -579,9 +598,9 @@
 **Situação neste repositório:** CI aprovado · 1/5 marcos concluídos; 4 gates de QA/release pendentes.
 
 - [x] Configurar CI com `npm ci`, `npm run lint` (`tsc --noEmit`) e `npm run build`, obtendo [check verde no PR #35](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38983541605).
-- [ ] Criar testes E2E de formulários, links, consultor estratégico, simulação e falhas de rede.
-- [ ] Auditar Core Web Vitals, Lighthouse mobile, acessibilidade, SEO social/Open Graph e carregamento inicial.
-- [ ] Revisar depoimentos, cálculos comerciais, LGPD/cookies e ausência de alegações não verificadas.
+- [x] Criar testes E2E de formulários, links, consultor estratégico, simulação e falhas de rede. Suite Playwright/Chromium em GitHub CI cobre lead persistido por API HTTPS mock, 422/503, retry com idempotência, TV, Rádio, catálogo publicitário, atribuição UTM e roteamento privado.
+- [x] Auditar Core Web Vitals, Lighthouse mobile, acessibilidade, SEO social/Open Graph e carregamento inicial. O CI executa Lighthouse mobile em `/`, `/demonstracao-tv` e `/anunciar`, publica JSON/score/FCP/LCP/CLS/TBT e confere canonical/OG em HTTP; **INP em campo e metas de otimização continuam pendentes**, pois laboratório não equivale a dados de usuários.
+- [x] Revisar depoimentos, cálculos comerciais, LGPD/cookies e ausência de alegações não verificadas. Revisão **técnica/editorial** em `docs/SITE_COMPLIANCE_REVIEW_20261017.md` + testes de consentimento, finalidades, ausência de publicidade/preços inventados, cookies próprios e documentação de terceiros; **política jurídica aprovada ainda não publicada**, sem declaração de conformidade legal final.
 - [ ] Homologar domínio, SSL, analytics, monitoramento, backup, deploy e rollback.
 
 ## Gate P0 de integração — cadastro, planos e contratos verificáveis (planejado em 15/10/2026)
