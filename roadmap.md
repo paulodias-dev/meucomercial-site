@@ -1,3 +1,15 @@
+## REGRA OPERACIONAL PERMANENTE — SEM GITHUB ACTIONS AUTOMÁTICO (17/10/2026)
+
+**Restrição declarada pelo responsável do projeto:** não há cota/pacote disponível de GitHub Actions. É proibido desperdiçar tempo com reexecução, tentativa de desbloqueio ou disparo de workflows na plataforma sem autorização expressa posterior.
+
+- Todos os seis workflows existentes nos três repositórios devem ficar sem eventos `push` e `pull_request`; manter apenas `workflow_dispatch` para eventual acionamento futuro **somente quando o responsável autorizar e houver cota**. Não disparar execuções manuais agora.
+- **Plano de teste sem Actions:** executar localmente, sempre que o ambiente estiver disponível: API Laravel/PHPUnit, sintaxe PHP, Swagger L5 e MySQL 8 isolado; Site npm/TypeScript/Vite/testes Node/Chromium; Admin Metronic TypeScript/Vite/testes Node e Player Web. Preferir testes seletivos de regressão ligados ao bloco antes da suíte integral. Para QA integrado, levantar serviços localmente e exercitar jornadas de ponta a ponta.
+- **Evidência em PR:** registrar comandos, ambiente, resultados, falhas e limitações. Se não houver acesso aos runtimes, dependências, MySQL 8, navegador ou hardware, marcar o gate como **PENDENTE** e oferecer comandos reproduzíveis; jamais chamar verificações estáticas de homologação.
+- **Progresso:** ausência de Actions não impede escrever código e abrir PRs, mas também não autoriza afirmar que os testes passaram. Prosseguir com grandes blocos funcionais, sem inflar os 77/150 = 51,3% até aceite real.
+- **Reativação futura:** somente por nova decisão explícita do responsável, em PR revisado; não reintroduzir gatilhos automáticos silenciosamente.
+
+---
+
 ## POLÍTICA PERMANENTE DE ENTREGA — SPRINTS MACRO E AVANÇO REAL (17/10/2026)
 
 **Decisão do produto (válida nos três repositórios):** priorizar **blocos grandes e integrados**, capazes de alterar o progresso real do MVP. Não usar uma sequência de PRs cosméticos ou subtarefas isoladas como substituto de uma entrega considerável.
