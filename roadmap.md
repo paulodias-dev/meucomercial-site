@@ -8,7 +8,8 @@
 - [x] BFF autoriza apenas filtros enumerados e Portal valida evidências e invariantes de contagem em runtime.
 - [x] Atualização de baixo impacto a cada 45 segundos, apenas enquanto publicação ativa, com pendências e aba visível.
 - [x] Testes Node ampliados para relatos falsos, audiência fictícia e consulta sob controle.
-- [ ] CI TypeScript, testes Node, build Vite/Express, browser mobile e integração JWT/hardware.
+- [x] CI TypeScript, testes Node (incluindo falsificação de evidência e polling) e Vite/Express: [execução aprovada #38993429572](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38993429572).
+- [ ] Testes de navegador mobile, integração JWT/API com autenticação real e Player TV/Rádio físico: pendentes.
 
 **Macromarcos aceitos:** API 29/59 + Admin/Player 25/57 + Site 14/34 = **68/150 (45,3%)** até testes completos/homologação física, sem inflar o progresso por código não validado. **Merge recomendado:** API → Site; Player/Admin independente, após QA. Nenhum deploy, merge ou migração em produção sem aceite.
 
