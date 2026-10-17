@@ -1,3 +1,13 @@
+## Sprint ampliada — preços e inventário revisados (17/10/2026)
+
+- [x] Opt-in comercial consultado pela BFF sem expor URL da API ou JWT
+- [x] Planos oficiais com preços DECIMAL, limites, período e CTA atribuído por UTM/planId
+- [x] Oportunidades publicadas e revisadas apresentadas sem prometer disponibilidade nem booking
+- [x] Testes contratos Node, E2E Chromium, HTTPS mock e estados vazios de catálogo
+- [ ] CI Site e integração com API/MySQL real ainda pendentes.
+
+**Meta 60%:** 90/150 macromarcos, partindo de 75/150 (50,0%). Este código sozinho não comprova quinze marcos adicionais. Sem inflar métricas enquanto os pipelines API/Admin não executarem; sem merge/deploy/migrations de produção.
+
 ## Painel global atual — sprint ampliada de 17/10/2026
 
 **Status validado em código + CI:** **75/150 macromarcos = 50,0% do MVP** (API **29/59 = 49,2%** · Admin/Player **25/57 = 43,9%** · Site/Portal **21/34 = 61,8%**). Os quatro marcos novos são do **Site**, não implicam homologação de API, Admin ou hardware TV/Rádio.
