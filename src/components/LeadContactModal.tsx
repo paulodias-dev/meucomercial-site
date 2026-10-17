@@ -1,10 +1,20 @@
 import {Check, X} from 'lucide-react'
 import {motion, AnimatePresence} from 'motion/react'
+import {useEffect} from 'react'
 import type React from 'react'
 import type {CommercialAudience} from './AudienceJourneys'
 import type {LeadFormData} from './MarketingTypes'
 
 export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, setLeadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; setLeadKind:(v:CommercialAudience)=>void; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>}) {
+  useEffect(() => {
+    if (!isModalOpen) return
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsModalOpen(false)
+    }
+    document.addEventListener('keydown', closeOnEscape)
+    return () => document.removeEventListener('keydown', closeOnEscape)
+  }, [isModalOpen, setIsModalOpen])
+
   return (
     <>
 {/* --- LEAD BOOKING MODAL (DEMONSTRATION AND SPECIALIST) --- */}
@@ -26,6 +36,7 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
               initial={{ opacity: 0, scale: 0.95, y: 15 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              role="dialog" aria-modal="true" aria-labelledby="lead-dialog-title"
               className="relative my-4 w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto bg-white border border-black/15 rounded-3xl p-5 sm:p-8 shadow-2xl z-10"
             >
               
@@ -38,7 +49,7 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                   <span className="text-[10px] uppercase font-mono tracking-widest text-blue-600 block mb-1 font-bold">
                     Demonstração • Meu Comercial
                   </span>
-                  <h3 className="text-xl font-bold text-[#1D1D1F] tracking-tight">
+                  <h3 id="lead-dialog-title" className="text-xl font-bold text-[#1D1D1F] tracking-tight">
                     {leadKind === 'advertiser' ? 'Solicitar proposta de publicidade' :
                       leadKind === 'agency' ? 'Conhecer planos para agência' :
                       'Agendar conversa sobre TV e Rádio'}
@@ -49,6 +60,7 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
+                  type="button" aria-label="Fechar formulário"
                   className="p-1 rounded-lg text-black/40 hover:text-[#1D1D1F] hover:bg-black/5 transition-all cursor-pointer"
                 >
                   <X className="w-5 h-5" />
@@ -84,24 +96,26 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Seu Nome *</label>
+                      <label htmlFor="lead-name" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Seu Nome *</label>
                       <input
                         type="text"
                         required
                         value={formData.nome}
                         onChange={(e) => setFormData({...formData, nome: e.target.value})}
-                        placeholder="Nome completo"
+                        id="lead-name"
+                      placeholder="Nome completo"
                         className="w-full bg-white border border-black/10 rounded-xl px-3.5 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 shadow-sm placeholder:text-black/30"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Empresa *</label>
+                      <label htmlFor="lead-company" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Empresa *</label>
                       <input
                         type="text"
                         required
                         value={formData.empresa}
                         onChange={(e) => setFormData({...formData, empresa: e.target.value})}
-                        placeholder="Nome da sua empresa"
+                        id="lead-company"
+                      placeholder="Nome da sua empresa"
                         className="w-full bg-white border border-black/10 rounded-xl px-3.5 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 shadow-sm placeholder:text-black/30"
                       />
                     </div>
@@ -109,24 +123,26 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">E-mail Corporativo *</label>
+                      <label htmlFor="lead-email" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">E-mail Corporativo *</label>
                       <input
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        placeholder="nome@empresa.com.br"
+                        id="lead-email"
+                      placeholder="nome@empresa.com.br"
                         className="w-full bg-white border border-black/10 rounded-xl px-3.5 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 shadow-sm placeholder:text-black/30"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">WhatsApp / Telefone *</label>
+                      <label htmlFor="lead-whatsapp" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">WhatsApp / Telefone *</label>
                       <input
                         type="tel"
                         required
                         value={formData.whatsapp}
                         onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                        placeholder="(11) 99999-9999"
+                        id="lead-whatsapp"
+                      placeholder="(11) 99999-9999"
                         className="w-full bg-white border border-black/10 rounded-xl px-3.5 py-2 text-xs text-[#1D1D1F] focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600/20 shadow-sm placeholder:text-black/30"
                       />
                     </div>
