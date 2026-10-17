@@ -38,3 +38,5 @@ jobs:
           npm run test:portal
       - name: Compile Vite and Express
         run: npm run build
+      - name: Exercise compiled production server over HTTP/TLS
+        run: npm run test:http
