@@ -1,3 +1,20 @@
+## Sprint de consolidação do MVP — Site/Portal e Rádio (17/10/2026)
+
+**Entrega de código em PR definitivo, não draft:** versão pública `/radio-indoor` com amostras de locução por síntese nativa local e ação explícita; duas categorias de programação fictícia permanecem **apenas explicativas**, nunca música sem licença, campanha vendida ou reprodução confirmada. Deep link, meta Open Graph/canonical servido em HTML para bots e fallback 404.
+
+- [x] Demonstração sonora com três locuções próprias sintetizadas no navegador, seletor acessível, controles de iniciar/parar, status e tratamento de navegador sem TTS.
+- [x] Demonstrar com clareza grade editorial simulada versus áudio local; sem coleta de dados, anúncios ficticiamente contabilizados, JWT de Player ou streaming não autorizado.
+- [x] Remover supostos logotipos de clientes, links sociais simulados, CNPJ não verificado e compromissos comerciais sem contrato autorizado.
+- [x] Entregar auditoria técnica de SEO/performance, mapa de jornadas, responsabilidades por componente, pontos de privacidade e plano de correção documentado.
+- [x] Adicionar prova HTTP do servidor Express compilado, gateway com upstream HTTPS local e aceite real de lead (códigos 201/422/502), robots privados, canonical de Rádio e 404.
+- [ ] Confirmar CI do PR com `npm ci`, TypeScript, contratos React/Node, Vite e testes HTTP (workflow novo em execução).
+- [ ] Revisão jurídica, LGPD publicada, Lighthouse/Core Web Vitals, E2E navegador, conversão real e revisão mobile.
+- [ ] Integrar no Portal/Player real e homologar TV/Rádio com hardware; não presumir conclusão.
+
+**Marcos do roadmap encerrados em implementação verificável:** (1) auditoria inicial de SEO/performance e mapa de jornadas; (2) página de demonstração de Rádio com exemplos e locução local. O macro de Lighthouse, E2E de navegador, refatoração total do `App`, checkout, consentimento jurídico final e Player físico permanece aberto. **Indicador proposto após validação dos testes:** API 29/59 + Admin 25/57 + Site 16/34 = **70/150 (46,7%)**. Meta global 50% = 75/150; **faltam cinco outros macromarcos independentes**, não antecipar contagem de QA não realizado.
+
+**Próximo passo:** concentrar a próxima revisão em componentes grandes do Site e no fechamento dos gates operacionais do Admin/API, e não em mais incrementos de diagnósticos já implementados.
+
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
 ## Sprint integrada — triagem operacional da rede e Player resiliente (17/10/2026)
 
@@ -445,8 +462,8 @@
 |---|---:|---:|---:|
 | [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 29 | 59 | 49,2% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 25 | 57 | 43,9% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 14 | 34 | 41,2% |
-| **Plataforma completa** | **68** | **150** | **45,3%** |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 16 | 34 | 47,1% |
+| **Plataforma completa** | **70** | **150** | **46,7%** |
 
 > **Atualização do painel:** 16/10/2026. Baseline mesclado 67/150 e marco de CI do Site concluído no PR definitivo #35, com workflow verde, totalizando **68/150**; até o merge, o incremento permanece na branch do PR. Séries históricas abaixo são mantidas para rastreabilidade.
 
@@ -486,7 +503,7 @@
 
 ## Progresso deste repositório
 
-**14/34 marcos com evidência de código e CI = 41,2% neste repositório.** GitHub Actions #38983541605 verde no PR #35; QA manual, staging, homologação de Player físico e deploy permanecem abertos. As descrições de situação abaixo registram um inventário histórico parcial e não substituem a contagem atual.
+**16/34 marcos com evidência de implementação (47,1%) neste repositório.** GitHub Actions #38983541605 verde no PR #35; QA manual, staging, homologação de Player físico e deploy permanecem abertos. As descrições de situação abaixo registram um inventário histórico parcial e não substituem a contagem atual.
 
 ## Fase 1: Descoberta e Estruturação (Auditoria)
 
@@ -496,7 +513,7 @@
 - [x] Arquitetura inicial e orientações de execução documentadas no `README.md`.
 - [x] Código atual usa React, TypeScript, Vite e servidor Express (ver `package.json` e `server.ts`).
 - [x] Criar `AGENTS.md` para componentes, SEO, acessibilidade, responsividade, conteúdo e integrações sem dados fictícios.
-- [ ] Auditar performance/SEO e a concentração de lógica em `src/App.tsx`; definir mapa de componentes e journeys de conversão.
+- [x] Auditar performance/SEO e a concentração de lógica em `src/App.tsx`; definir mapa de componentes e journeys de conversão. Ver `docs/SITE_SEO_PERFORMANCE_AUDIT_20261017.md`; Lighthouse mobile é outro marco ainda pendente.
 
 ## Fase 2: Infraestrutura e Back-end Core (API Laravel)
 
@@ -524,7 +541,7 @@
 **Objetivo:** Desenvolver playlists musicais, grade de áudio e inserção automática de anúncios comerciais.  
 **Situação neste repositório:** Não evidenciado no código · 0/3 marcos identificados.
 
-- [ ] Publicar página de demonstração real de Rádio Indoor com exemplo de playlists e locução comercial.
+- [x] Publicar página de demonstração real de Rádio Indoor com exemplo de playlists e locução comercial. Página `/radio-indoor` com locução sintetizada local, agenda ilustrativa e licença esclarecida; não constitui streaming de música nem Player real.
 - [ ] Conectar exemplos de grade/intervalo de spots à API Rádio (somente quando a engine estiver pronta).
 - [x] Produzir conteúdo de documentação e FAQs do Rádio sobre licença, curadoria e programação.
 
