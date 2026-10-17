@@ -1,11 +1,12 @@
 import {ArrowLeft, Radio} from 'lucide-react'
 import SEO from './SEO'
 import RadioGuide from './RadioGuide'
+import {commercialContactUrl} from '../lib/commercialIntent.mjs'
 
 /** Public, standalone and demonstrative: no client data and no authenticated Player. */
 export default function RadioShowcasePage() {
   const contact = () => {
-    window.location.assign('/?interesse=radio#planos')
+    window.location.assign(commercialContactUrl({kind:'establishment',medium:'radio',source:'radio-demo'},window.location.search))
   }
   return <div className='min-h-screen bg-[#F5F7FA] text-slate-900'>
     <SEO title='Demonstração de Rádio Indoor' url='/radio-indoor'
