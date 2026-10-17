@@ -52,3 +52,14 @@ test('fixed public BFF endpoints cannot become arbitrary proxy or forward bearer
  assert.ok(!read('src/components/PublicIndoorPricing.tsx').includes('Authorization:'))
  assert.ok(!read('src/components/PublishedAdOffers.tsx').includes('Authorization:'))
 })
+
+test('a published plan inquiry is persisted as a server-verified identifier, not only an editable message',()=>{
+  const app=read('src/App.tsx')
+  const browser=read('scripts/test-site-browser.mjs')
+  assert.ok(app.includes("plan_id: leadKind === 'establishment'"))
+  assert.ok(app.includes("readCommercialIntent(window.location.search).planId"))
+  assert.ok(browser.includes("receipts.at(-1).plan_id,21"))
+  assert.ok(browser.includes("receipts.at(-1).utm_source,'facebook'"))
+  assert.ok(browser.includes("receipts.at(-1).consent,true"))
+  assert.ok(!app.includes('checkout('))
+})
