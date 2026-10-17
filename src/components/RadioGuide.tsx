@@ -65,6 +65,7 @@ export default function RadioGuide({onContact}:{onContact:(source:string)=>void}
                 <p className="text-xs text-black/60 mt-1">Veja inserções informadas, sem prometer audiência verificada.</p></div>
             </div>
           </div>
+          <div className='mt-5'><a href='/radio-indoor' className='text-xs font-semibold text-blue-700 underline underline-offset-2'>Abrir demonstração de Rádio em página própria</a></div>
           <button type="button" onClick={()=>onContact('Rádio Indoor - orientações e proposta')}
             className="mt-7 inline-flex items-center justify-center gap-2 rounded-full min-h-11 px-6 py-3 bg-blue-700 text-white text-sm font-bold hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
             Conversar sobre Rádio Indoor <ArrowRight size={17} aria-hidden/>
