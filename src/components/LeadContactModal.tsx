@@ -4,7 +4,7 @@ import type React from 'react'
 import type {CommercialAudience} from './AudienceJourneys'
 import type {LeadFormData} from './MarketingTypes'
 
-export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>}) {
+export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, setLeadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; setLeadKind:(v:CommercialAudience)=>void; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>}) {
   return (
     <>
 {/* --- LEAD BOOKING MODAL (DEMONSTRATION AND SPECIALIST) --- */}
