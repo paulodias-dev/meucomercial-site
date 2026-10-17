@@ -595,3 +595,18 @@ test('own playback first-report contract is separate from manifest ACK and count
   assert.ok(server.includes("'playback_reported','awaiting_playback_report'"))
   assert.ok(targets.includes('Relato autenticado de conclusão de conteúdo próprio'))
 })
+
+test('publication first-play monitor refreshes in foreground without misleading delivery guarantees',()=>{
+  assert.ok(targets.includes("data.summary.publication_status!=='published'"))
+  assert.ok(targets.includes('data.summary.awaiting_own_playback_report===0'))
+  assert.ok(targets.includes('window.setInterval('))
+  assert.ok(targets.includes("document.visibilityState==='visible'"))
+  assert.ok(targets.includes('},45000)'))
+  assert.ok(targets.includes('window.clearInterval(timer)'))
+  assert.ok(targets.includes('Relato de execução recebido'))
+  assert.ok(targets.includes('Sem relato desta publicação'))
+  assert.ok(targets.includes('Ainda sem relato de conclusão desta publicação'))
+  assert.ok(targets.includes('não comprova audiência ou visualização independente'))
+  assert.ok(!targets.includes('localStorage'))
+  assert.ok(server.includes("'playback_reported','awaiting_playback_report'"))
+})
