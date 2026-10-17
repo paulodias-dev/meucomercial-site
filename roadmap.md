@@ -1,4 +1,20 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
+## Sprint — Recuperação assistida de Players (16/10/2026)
+
+**Entrega integrada:** API, Portal do cliente e Admin Metronic; nenhuma mutação automática sem confirmação, sem deduzir audiência independente.
+
+- [x] Plano de recuperação server-driven no diagnóstico de cada Player, sem permitir ações nas prioridades bloqueadas.
+- [x] Ressincronização intencional com confirmação em duas etapas e envio somente por BFF JWT com ID de dispositivo restrito.
+- [x] Verificação rígida de HTTP 202, device_id e `command_queued_not_player_ack`; diferenciar enfileiramento de confirmação do Player.
+- [x] Estado de erro/autorização claro, cancelamento, fila pendente e atualização após comando no Portal e no resumo de Players.
+- [x] Testes de contrato de ação manual, ausência de credenciais persistidas, permissões e textos sem falsas confirmações.
+- [x] CI completo do Portal com instalação, TypeScript, testes Node e build Vite/Express: [GitHub Actions #38987716642](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38987716642) concluído com sucesso após correção da mensagem persistente de comando enfileirado.
+- [ ] E2E cliente–API, sessão expirando e Player físico ainda pendentes.
+- [ ] QA responsivo mobile-first/teclado e dispositivo real.
+
+**Macromarcos aceitos de referência:** API 29/59 + Admin 25/57 + Site 14/34 = **68/150 (45,3%)**. Os subcritérios da sprint não encerram automaticamente macromarcos dependentes de homologação física e CI. **Ordem de merge:** API → Portal; Admin independente. Sem reset/deploy e sem merge automático desta sprint.
+
+
 ## Sprint integrada — Triagem operacional da rede TV/Rádio (16/10/2026)
 
 **Objetivo:** experiência responsiva de suporte operacional para estabelecimentos, com indicadores da rede completa e filtro seguro por situação dos Players.

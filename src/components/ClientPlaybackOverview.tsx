@@ -41,6 +41,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
   const [attention,setAttention]=useState<Attention>('all')
   const [page,setPage]=useState(1)
   const [refresh,setRefresh]=useState(0)
+  const [recoveryNotice,setRecoveryNotice]=useState('')
   const [selectedDeviceId,setSelectedDeviceId]=useState<number|null>(null)
   const [data,setData]=useState<Response|null>(null)
   const [error,setError]=useState('')
@@ -105,6 +106,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         <RefreshCcw size={15} aria-hidden/>Atualizar
       </button>
     </div>
+    {recoveryNotice&&<p role='status' className='text-xs bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 text-blue-900'>{recoveryNotice}</p>}
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5'>
       <label className='block text-xs font-semibold' htmlFor='playback-days'>Período
         <select id='playback-days' value={days} onChange={event=>{setDays(Number(event.target.value) as Day);setPage(1);setSelectedDeviceId(null)}}
@@ -197,7 +199,8 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         </table>
       </div>
       {selectedDeviceId!==null&&data.data.some(device=>device.device_id===selectedDeviceId)&&<div id='playback-selected-diagnostics' className='mt-4'>
-        <ClientDeviceDiagnostics key={selectedDeviceId} token={token} deviceId={selectedDeviceId}/>
+        <ClientDeviceDiagnostics key={selectedDeviceId} token={token} deviceId={selectedDeviceId}
+          onUpdated={()=>{setRecoveryNotice('Comando solicitado ao servidor. Aguarde a confirmação do Player no diagnóstico.');setRefresh(n=>n+1)}}/>
       </div>}
       {data.data.length===0&&<p className='text-xs text-black/60 py-4'>Nenhum Player encontrado para a situação selecionada.</p>}
       <div className='flex justify-between items-center gap-3 mt-4 text-xs'>
