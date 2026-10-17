@@ -47,7 +47,9 @@ test('compiled Express site: SEO, private portal and real lead/error contracts o
       const offer={data:[{offer_id:31,title:'Spot autorizado em Aracaju',region:'Aracaju - SE',
         description:'Consultar espaços autorizados por período e contrato.',
         medium:'radio',availability:'consultation_required'}],
-        evidence:'curated_authorized_offer_not_realtime_capacity'}
+        evidence:'curated_authorized_offer_not_realtime_capacity',
+        pagination:{page:1,per_page:12,total:1,last_page:1}}
+      if(req.url.includes('page=2')){offer.data=[];offer.pagination={page:2,per_page:12,total:1,last_page:1}}
       const plans=req.url.includes('/plans')
       res.writeHead(200,{'Content-Type':'application/json'})
       res.end(JSON.stringify(plans?plan:offer))
