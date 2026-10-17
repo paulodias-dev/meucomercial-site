@@ -411,9 +411,11 @@ test('owner-wide playback component uses server aggregates and explicit daily ev
 
 test('player summary runtime guard rejects malformed or confidential contract shapes',()=>{
   const row={device_id:11,name:'Tela loja',device_type:'tv_app',reports_total:2,
+    operational_status:'online',last_seen_at:'2026-10-16T19:00:00Z',
     last_reported_at:'2026-10-16T19:00:00Z',by_type:{image:1,video:1,audio:0}}
   const fixture={
-    data:[row],summary:{days:7,kind:'all',bucket_timezone:'UTC',
+    data:[row],summary:{days:7,kind:'all',attention:'all',bucket_timezone:'UTC',
+      attention_counts:{blocked:0,unpaired:0,offline:0,sync_pending:0,no_reports:19},
       devices_total:20,devices_with_reports:1,reports_total:2,
       by_type:{image:1,video:1,audio:0},
       by_day:[{date:'2026-10-16',total:2}],
@@ -431,13 +433,13 @@ test('player summary runtime guard rejects malformed or confidential contract sh
 
 test('CSV export includes only visible fields and neutralizes hostile names',()=>{
   const row={device_id:11,name:' =HYPERLINK("https://test.invalid";"click")',
-    device_type:'tv_app',reports_total:3,
+    device_type:'tv_app',operational_status:'online',last_seen_at:null,reports_total:3,
     by_type:{image:2,video:1,audio:0},last_reported_at:null,
     device_token:'NEVER_IN_CSV',client_id:555,storage_path:'private/secret'}
   const csv=buildPlaybackOverviewCsv([row])
   assert.ok(csv.startsWith('\uFEFF"Dispositivo";'))
   assert.ok(csv.includes("\"' =HYPERLINK(\"\"https://test.invalid\"\";\"\"click\"\")\""))
-  assert.ok(csv.includes('"tv_app";"3";"2";"1";"0";""'))
+  assert.ok(csv.includes('"tv_app";"online";"3";"2";"1";"0";"";""'))
   assert.equal(csv.trim().split('\r\n').length,2)
   for (const secret of ['NEVER_IN_CSV','private/secret','client_id','device_token']) {
     assert.ok(!csv.includes(secret),secret)
@@ -456,4 +458,36 @@ test('network overview exposes authenticated drilldown only on explicit request'
   assert.ok(playbackOverview.includes('CSV desta página'))
   assert.ok(playbackOverview.includes('setSelectedDeviceId(null)'))
   assert.ok(!playbackOverview.includes('localStorage.setItem'))
+})
+
+
+test('authenticated network attention contract is scoped, filtered and reset on navigation',()=>{
+  assert.ok(server.includes("['all','blocked','unpaired','offline','sync_pending','no_reports'].includes"))
+  assert.ok(server.includes("endpoint.searchParams.set('attention', String(req.query.attention ?? 'all'))"))
+  assert.ok(!server.includes("req.query.client_id"))
+  assert.ok(playbackOverview.includes("url.searchParams.set('attention',attention)"))
+  assert.ok(playbackOverview.includes("id='playback-attention'"))
+  assert.ok(playbackOverview.includes('summary.attention_counts[key]'))
+  assert.ok(playbackOverview.includes('device.operational_status'))
+  assert.ok(playbackOverview.includes('setSelectedDeviceId(null)'))
+  assert.ok(playbackOverview.includes('setPage(1)'))
+  assert.ok(playbackOverview.includes('Indicadores de toda a rede autorizada'))
+})
+
+test('attention validator rejects unsupported statuses, counterfeit counts and cross-contract fields',()=>{
+  const row={device_id:1,name:'TV',device_type:'tv_app',reports_total:0,
+    operational_status:'unpaired',last_seen_at:null,last_reported_at:null,
+    by_type:{image:0,video:0,audio:0}}
+  const summary={days:7,kind:'all',attention:'unpaired',bucket_timezone:'UTC',
+    devices_total:1,devices_with_reports:0,reports_total:0,
+    by_type:{image:0,video:0,audio:0},
+    attention_counts:{blocked:0,unpaired:1,offline:0,sync_pending:0,no_reports:1},
+    by_day:[{date:'2026-10-16',total:0}],
+    evidence:'authenticated_player_report_not_independent_audience'}
+  const valid={data:[row],summary,pagination:{page:1,last_page:1,per_page:12,total:1}}
+  assert.equal(isPlaybackOverviewResponse(valid),true)
+  assert.equal(isPlaybackOverviewResponse({...valid,data:[{...row,operational_status:'approved_audience'}]}),false)
+  assert.equal(isPlaybackOverviewResponse({...valid,summary:{...summary,attention:'all_networks'}}),false)
+  assert.equal(isPlaybackOverviewResponse({...valid,summary:{...summary,attention_counts:{...summary.attention_counts,offline:-4}}}),false)
+  assert.equal(isPlaybackOverviewResponse({...valid,data:[{...row,last_seen_at:[]}]}),false)
 })
