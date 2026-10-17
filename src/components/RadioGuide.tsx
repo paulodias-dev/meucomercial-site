@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import RadioDemoPlayer from './RadioDemoPlayer'
 import {ArrowRight,ChevronDown,Headphones,Radio,ShieldCheck,SlidersHorizontal,Volume2} from 'lucide-react'
 
 export type RadioFaq = {id:string;question:string;answer:string}
@@ -95,6 +96,7 @@ export default function RadioGuide({onContact}:{onContact:(source:string)=>void}
                 </div>
               </li>)}
             </ol>
+            <div className="px-5 sm:px-7 pb-5"><RadioDemoPlayer /></div>
             <div className="px-5 sm:px-7 pb-6">
               <button type="button" aria-expanded={showTechnical} aria-controls="radio-technical"
                 onClick={()=>setShowTechnical(open=>!open)}
@@ -108,8 +110,8 @@ export default function RadioGuide({onContact}:{onContact:(source:string)=>void}
                 um evento técnico autenticado; download do áudio não é contabilizado como reprodução.
               </div>}
               <p className="text-[11px] text-slate-300 leading-5 mt-4">
-                Esta é uma simulação textual de programação; não reproduz músicas,
-                não representa transmissão ativa nem usa gravações sem autorização.
+                Esta é uma simulação textual da grade; não reproduz músicas,
+                não representa transmissão ativa nem usa gravações sem autorização. As locuções são geradas localmente.
               </p>
             </div>
           </div>
