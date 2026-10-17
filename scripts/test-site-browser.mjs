@@ -258,6 +258,17 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
         await page.getByRole('dialog').waitFor()
         assert.ok((await page.locator('#lead-details').inputValue()).includes('Plano publicado de interesse: #21'))
         assert.equal(new URL(page.url()).searchParams.get('utm_source'),'facebook')
+        await page.locator('#lead-name').fill('Joana')
+        await page.locator('#lead-company').fill('Café Central')
+        await page.locator('#lead-email').fill('joana@example.org')
+        await page.locator('#lead-whatsapp').fill('79999999999')
+        await page.getByRole('dialog').locator('input[type="checkbox"]').check()
+        await page.getByRole('dialog').getByRole('button',{name:'Enviar solicitação'}).click()
+        await page.getByText('Solicitação Recebida!').waitFor()
+        assert.equal(receipts.at(-1).plan_id,21)
+        assert.equal(receipts.at(-1).kind,'establishment')
+        assert.equal(receipts.at(-1).utm_source,'facebook')
+        assert.equal(receipts.at(-1).consent,true)
       }finally{await page.close()}
     })
 

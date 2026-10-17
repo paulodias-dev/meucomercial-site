@@ -73,3 +73,14 @@ test('curated inventory pages are bounded, with filters and no made-up capacity'
  assert.ok(server.includes("key==='per_page'?24:10000"))
  assert.ok(!ui.includes('price_per_insertion'))
 })
+
+test('a published plan inquiry is persisted as a server-verified identifier, not only an editable message',()=>{
+  const app=read('src/App.tsx')
+  const browser=read('scripts/test-site-browser.mjs')
+  assert.ok(app.includes("plan_id: leadKind === 'establishment'"))
+  assert.ok(app.includes("readCommercialIntent(window.location.search).planId"))
+  assert.ok(browser.includes("receipts.at(-1).plan_id,21"))
+  assert.ok(browser.includes("receipts.at(-1).utm_source,'facebook'"))
+  assert.ok(browser.includes("receipts.at(-1).consent,true"))
+  assert.ok(!app.includes('checkout('))
+})

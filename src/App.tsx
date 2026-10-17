@@ -218,6 +218,10 @@ export default function App() {
         body: JSON.stringify({
           idempotency_key: submissionKey.current,
           kind: leadKind,
+          // Only opt-in public plans; Laravel re-checks current publication
+          // state and snapshots the exact DECIMAL as non-binding interest.
+          plan_id: leadKind === 'establishment'
+            ? readCommercialIntent(window.location.search).planId : null,
           name: formData.nome.trim(),
           company: formData.empresa.trim(),
           email: formData.email.trim(),
