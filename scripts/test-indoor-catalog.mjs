@@ -78,6 +78,8 @@ test('a published plan inquiry is persisted as a server-verified identifier, not
   const app=read('src/App.tsx')
   const browser=read('scripts/test-site-browser.mjs')
   assert.ok(app.includes("plan_id: leadKind === 'establishment'"))
+  assert.ok(app.includes("offer_id: leadKind === 'advertiser'"))
+  assert.ok(app.includes("readCommercialIntent(window.location.search).offerId"))
   assert.ok(app.includes("readCommercialIntent(window.location.search).planId"))
   assert.ok(browser.includes("receipts.at(-1).plan_id,21"))
   assert.ok(browser.includes("receipts.at(-1).utm_source,'facebook'"))
