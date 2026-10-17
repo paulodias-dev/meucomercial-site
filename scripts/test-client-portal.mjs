@@ -515,8 +515,9 @@ test('assisted recovery is tied to authenticated, explicitly confirmed idempoten
 })
 
 test('recovery UI is shared by fleet and device lists, refreshing both after an action',()=>{
-  assert.ok(playbackOverview.includes('onUpdated={()=>setRefresh(n=>n+1)}'))
-  assert.ok(portal.includes('onUpdated={()=>setRefresh(n=>n+1)}'))
+  assert.ok(playbackOverview.includes('setRecoveryNotice('))
+  assert.ok(playbackOverview.includes('onUpdated={()=>{setRecoveryNotice('))
+  assert.ok(portal.includes("setDeviceActionMessage('Sincronização solicitada."))
   assert.ok(deviceDiagnostics.includes('onUpdated?.()'))
   assert.ok(deviceDiagnostics.includes('setReload(n=>n+1)'))
   assert.ok(deviceDiagnostics.includes("recovery.pending_sync_command"))
