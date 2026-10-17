@@ -36,6 +36,7 @@ import { motion, AnimatePresence } from "motion/react";
 import SEO from "./components/SEO";
 import RadioGuide from "./components/RadioGuide";
 import CommercialTrust from "./components/CommercialTrust";
+import RadioShowcasePage from "./components/RadioShowcasePage";
 import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
 import ClientPortal from "./components/ClientPortal";
 
@@ -326,6 +327,9 @@ export default function App() {
   // Dedicated client JWT area, not the agency Admin or the lead flow.
   if (window.location.pathname === '/portal' || window.location.pathname === '/portal/') {
     return <ClientPortal />;
+  }
+  if (window.location.pathname === '/radio-indoor' || window.location.pathname === '/radio-indoor/') {
+    return <RadioShowcasePage />;
   }
 
   return (
