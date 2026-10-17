@@ -50,7 +50,7 @@ export default function FinalContactCTA({openLeadModal}: {openLeadModal:(s:strin
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-500" />
-                  Teste gratuito sujeito à disponibilidade e proposta
+                  Demonstração disponível mediante avaliação comercial
                 </span>
               </div>
             </div>
