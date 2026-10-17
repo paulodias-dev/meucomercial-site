@@ -1,3 +1,15 @@
+## Sprint integrada — proposta atribuída a anúncio revisado (17/10/2026)
+
+**Jornada:** vitrine /anunciar → escolha de oferta pública #ID → formulário com consentimento → campo estruturado `offer_id` → validação Laravel → contexto histórico no Master. Não há checkout, reserva ou previsão de audiência.
+
+- [x] Formulário mantém `plan_id` exclusivo do estabelecimento e transmite `offer_id` somente para anunciante, sem credenciais ou dados privados.
+- [x] Jornada respeita UTM, consentimento, campo honeypot e UUID estável para retentativas.
+- [x] Regressões Node garantem o contrato; cenário Chromium preenche pedido de oferta e verifica ID estruturado exato recebido pela API mock.
+- [ ] Validar `npm ci`, TypeScript, build Vite/Express, Node e Chromium desta branch; integrar contra Laravel/MySQL 8 reais e homologar mobile. Testes de browser com mocks isolados não certificam API de produção.
+
+**Progresso conservador:** API 29/59 + Admin 25/57 + Site 23/34 = **77/150 (51,3%)**; a meta de 60,0% permanece 90/150. Atribuição de interesse não implica campanha contratada e não pontua marco ainda não homologado. API/migration antes de Site e Admin; sem deploy/merge automático.
+
+---
 ## Revisão de marcos Site — catálogo curado e planos aprovados (17/10/2026)
 
 **Progresso validado de implementação:** 77/150 = 51,3% (API 29/59, Admin 25/57, Site 23/34). [CI Site/Portal #39072933020](https://github.com/paulodias-dev/meucomercial-site/actions/runs/39072933020) passou por TypeScript, Node, Vite/Express, HTTP/TLS, Chromium e Lighthouse.
