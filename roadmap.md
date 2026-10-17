@@ -8,7 +8,8 @@
 - [x] Abrir diagnóstico real com JWT do cliente, ação de sync já protegida por confirmação explícita, sem comandos automáticos.
 - [x] Exportar somente por interação manual resumo de suporte sanitizado e sem credenciais.
 - [x] Validar tipo, nível, código, semântica da triagem e totais do conjunto em runtime e testes Node.
-- [ ] Executar TypeScript/contratos/build, validar mobile e concluir QA integrado com API e Player TV/Rádio.
+- [x] CI TypeScript, contratos Node e build Vite/Express executados com sucesso: [Site/Portal quality #39031804783](https://github.com/paulodias-dev/meucomercial-site/actions/runs/39031804783).
+- [ ] Validar navegador mobile, integração com API real e Player TV/Rádio físico.
 
 **Progresso baseado em macromarcos aceitos (gates de CI/hardware ainda pendentes):** API 29/59 + Admin 25/57 + Site 14/34 = **68/150 (45,3%)**. Não contar subtarefas escritas como conclusões de macromarcos não homologados. Prioridade API → Portal; Admin/Player independente. Sem merge/deploy automático ou alterações destrutivas.
 
