@@ -11,7 +11,7 @@
 - [ ] Revisão jurídica, LGPD publicada, Lighthouse/Core Web Vitals, E2E navegador, conversão real e revisão mobile.
 - [ ] Integrar no Portal/Player real e homologar TV/Rádio com hardware; não presumir conclusão.
 
-**Marcos do roadmap encerrados em implementação verificável:** (1) auditoria inicial de SEO/performance e mapa de jornadas; (2) página de demonstração de Rádio com exemplos e locução local. O macro de Lighthouse, E2E de navegador, refatoração total do `App`, checkout, consentimento jurídico final e Player físico permanece aberto. **Indicador proposto após validação dos testes:** API 29/59 + Admin 25/57 + Site 16/34 = **70/150 (46,7%)**. Meta global 50% = 75/150; **faltam cinco outros macromarcos independentes**, não antecipar contagem de QA não realizado.
+**Marcos do roadmap encerrados em implementação verificável:** (1) auditoria inicial de SEO/performance e mapa de jornadas; (2) página de demonstração de Rádio com exemplos e locução local; (3) refatoração da home em componentes de simulador, briefing, consultoria e formulário mantendo submissão idempotente. O macro de Lighthouse, E2E de navegador, refatoração total do `App`, checkout, consentimento jurídico final e Player físico permanece aberto. **Indicador proposto após validação dos testes:** API 29/59 + Admin 25/57 + Site 17/34 = **71/150 (47,3%)**. Meta global 50% = 75/150; **faltam quatro outros macromarcos independentes**, não antecipar contagem de QA não realizado.
 
 **Próximo passo:** concentrar a próxima revisão em componentes grandes do Site e no fechamento dos gates operacionais do Admin/API, e não em mais incrementos de diagnósticos já implementados.
 
@@ -462,8 +462,8 @@
 |---|---:|---:|---:|
 | [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 29 | 59 | 49,2% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 25 | 57 | 43,9% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 16 | 34 | 47,1% |
-| **Plataforma completa** | **70** | **150** | **46,7%** |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 17 | 34 | 50,0% |
+| **Plataforma completa** | **71** | **150** | **47,3%** |
 
 > **Atualização do painel:** 16/10/2026. Baseline mesclado 67/150 e marco de CI do Site concluído no PR definitivo #35, com workflow verde, totalizando **68/150**; até o merge, o incremento permanece na branch do PR. Séries históricas abaixo são mantidas para rastreabilidade.
 
@@ -503,7 +503,7 @@
 
 ## Progresso deste repositório
 
-**16/34 marcos com evidência de implementação (47,1%) neste repositório.** GitHub Actions #38983541605 verde no PR #35; QA manual, staging, homologação de Player físico e deploy permanecem abertos. As descrições de situação abaixo registram um inventário histórico parcial e não substituem a contagem atual.
+**17/34 marcos com evidência de implementação (50,0%) neste repositório.** GitHub Actions #38983541605 verde no PR #35; QA manual, staging, homologação de Player físico e deploy permanecem abertos. As descrições de situação abaixo registram um inventário histórico parcial e não substituem a contagem atual.
 
 ## Fase 1: Descoberta e Estruturação (Auditoria)
 
@@ -533,7 +533,7 @@
 - [x] Site React responsivo com seções comerciais, menus móveis e componentes visuais implementados.
 - [x] Simulador visual de TV e calculadora interativa de planos presentes no código.
 - [x] Seções de SEO e apresentação do produto presentes; não equivalem à validação de SEO real.
-- [ ] Refatorar `src/App.tsx` em componentes de jornada, pricing, formulário e simulador com testes.
+- [x] Refatorar `src/App.tsx` em componentes de jornada, pricing, formulário e simulador com testes. Extraídos `HeroSimulator`, `CommercialBrief`, `LeadContactModal`, `StrategicConsultant`, `BenefitsSection`, `FeaturesSection`, `FinalContactCTA`; contratos tipados e regressão Node.
 - [ ] Integrar CTAs com demonstração/agendamento e onboarding do cliente, mantendo rastreamento de atribuição.
 
 ## Fase 4: Módulo de Rádio Indoor
