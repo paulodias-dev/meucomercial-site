@@ -431,6 +431,25 @@ async function startServer() {
         .set('Referrer-Policy', 'no-referrer')
         .type('html').send(html);
     });
+    app.get(['/radio-indoor', '/radio-indoor/'], (_req, res) => {
+      // Public social previews cannot rely on React hydration.
+      const canonical = 'https://meucomercial.com.br/radio-indoor';
+      const title = 'Demonstração de Rádio Indoor | Meu Comercial';
+      const description = 'Ouça locuções geradas no navegador e conheça programação, licenças e contratação de Rádio Indoor.';
+      const escapedTitle = title.replace(/&/g, '&amp;');
+      const html = readFileSync(path.join(distPath, 'index.html'), 'utf8')
+        .replace(/<title>[^<]*<\/title>/, '<title>' + escapedTitle + '</title>')
+        .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="' + description + '" />')
+        .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="' + escapedTitle + '" />')
+        .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="' + description + '" />')
+        .replace(/<meta property="og:url"[^>]*>/, '<meta property="og:url" content="' + canonical + '" />')
+        .replace(/<meta name="twitter:title"[^>]*>/, '<meta name="twitter:title" content="' + escapedTitle + '" />')
+        .replace(/<meta name="twitter:description"[^>]*>/, '<meta name="twitter:description" content="' + description + '" />')
+        .replace(/<meta name="twitter:url"[^>]*>/, '<meta name="twitter:url" content="' + canonical + '" />')
+        .replace(/<link rel="canonical"[^>]*>/, '<link rel="canonical" href="' + canonical + '" />')
+        .replace(/<link rel="alternate"[^>]*>/g, '');
+      return res.set('Cache-Control', 'public, max-age=300').type('html').send(html);
+    });
     app.get('/', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
     // Unknown URLs and missing assets must not be indexed as duplicate homepages.
     app.get('*', (_req, res) => res.status(404).set('X-Robots-Tag', 'noindex')
