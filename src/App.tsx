@@ -500,7 +500,7 @@ export default function App() {
                   <span>(62) 9 9196-2033 (WhatsApp)</span>
                 </li>
                 <li className="text-[10px] text-black/40 mt-1 leading-relaxed font-semibold">
-                  Atendimento 100% remoto em todo o Brasil
+                  Consulte disponibilidade de atendimento remoto
                 </li>
               </ul>
             </div>
