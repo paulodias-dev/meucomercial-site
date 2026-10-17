@@ -63,3 +63,19 @@ test('critical anchors and lead form are preserved',()=>{
   }
   assert.ok(page.includes('handleLeadSubmit'))
 })
+
+test('public trust does not forge customer references, legal identity or unapproved commercial benefits',()=>{
+ const trust=read('src/components/CommercialTrust.tsx')
+ const seo=read('src/seo.config.ts')
+ const html=read('index.html')
+ assert.ok(page.includes('<CommercialTrust />'))
+ assert.ok(trust.includes('preços, prazos') || trust.includes('Preços, prazos'))
+ for(const claim of ['INOVA TECH','SUL ALIMENTOS','REDE SMART','LOGI GROUP','CLÍNICA VIDA','Sem fidelidade contratual','Testes grátis por 7 dias','Estudos de ROI','CNPJ 42.126.901']) {
+   assert.ok(!page.includes(claim),claim)
+ }
+ assert.ok(!html.includes('legalName'))
+ assert.ok(!seo.includes('legalName'))
+ assert.ok(!page.includes('>In</span>') && !page.includes('>Ig</span>'))
+ assert.ok(page.includes('Solicitar política de privacidade'))
+ assert.ok(page.includes('Solicitar termos de uso'))
+})
