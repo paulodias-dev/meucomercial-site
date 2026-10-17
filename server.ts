@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import {readFileSync} from "node:fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 
@@ -7,7 +8,8 @@ import { createServer as createViteServer } from "vite";
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const requestedPort = Number(process.env.PORT ?? '3000');
+const PORT = Number.isInteger(requestedPort) && requestedPort > 0 && requestedPort < 65536 ? requestedPort : 3000;
 
 app.use(express.json());
 
@@ -412,10 +414,27 @@ async function startServer() {
   } else {
     console.log("Iniciando servidor em modo PRODUÇÃO...");
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+    app.use(express.static(distPath, {index: false}));
+    // The authenticated client portal must never inherit the indexable public
+    // homepage metadata, even for bots that never execute JavaScript.
+    app.get(['/portal', '/portal/'], (_req, res) => {
+      const html = readFileSync(path.join(distPath, 'index.html'), 'utf8')
+        .replace(/<meta name="robots"[^>]*>/, '<meta name="robots" content="noindex, nofollow, noarchive" />')
+        .replace(/<meta name="googlebot"[^>]*>/, '<meta name="googlebot" content="noindex, nofollow, noarchive" />')
+        .replace(/<link rel="canonical"[^>]*>/, '')
+        .replace(/<link rel="alternate"[^>]*>/g, '')
+        .replace(/<meta property="og:url"[^>]*>/, '')
+        .replace(/<meta name="twitter:url"[^>]*>/, '');
+      return res.status(200)
+        .set('X-Robots-Tag', 'noindex, nofollow, noarchive')
+        .set('Cache-Control', 'private, no-store')
+        .set('Referrer-Policy', 'no-referrer')
+        .type('html').send(html);
     });
+    app.get('/', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+    // Unknown URLs and missing assets must not be indexed as duplicate homepages.
+    app.get('*', (_req, res) => res.status(404).set('X-Robots-Tag', 'noindex')
+      .type('text/plain').send('Página não encontrada.'));
   }
 
   app.listen(PORT, "0.0.0.0", () => {
