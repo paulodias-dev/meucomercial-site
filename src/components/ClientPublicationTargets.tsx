@@ -1,16 +1,21 @@
 import {useEffect,useState} from 'react'
 import {RefreshCcw,X} from 'lucide-react'
 import {isPublicationDeliveryResponse} from '../lib/publicationDelivery.mjs'
+import {publicationSupportBrief} from '../lib/publicationAttention.mjs'
+import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'
 
-type Delivery='all'|'acknowledged'|'awaiting_ack'|'offline'|'sync_pending'|'playback_reported'|'awaiting_playback_report'
+type Delivery='all'|'acknowledged'|'awaiting_ack'|'offline'|'sync_pending'|'playback_reported'|'awaiting_playback_report'|'needs_attention'
+type Attention={code:string;level:'neutral'|'info'|'warning'|'critical';title:string;guidance:string;needs_attention:boolean;evidence:string}
 type Target={device_id:number;name:string;connected_recently:boolean;needs_sync:boolean;
   last_seen_at:string|null;last_sync_at:string|null;requested_manifest_version:number;
   current_manifest_version:number;operational_state:string;playback_confirmed:false;
   sync_acknowledged:boolean;sync_acknowledged_at:string|null;sync_evidence:string;
-  own_playback_reported:boolean;first_own_playback_reported_at:string|null;own_playback_evidence:string}
+  own_playback_reported:boolean;first_own_playback_reported_at:string|null;own_playback_evidence:string;
+  attention:Attention}
 type Response={data:Target[];summary:{targets:number;sync_pending_flagged:number;
   sync_acknowledged_total:number;awaiting_player_ack:number;recently_connected:number;unavailable:number;
   own_playback_reported_devices:number;awaiting_own_playback_report:number;
+  needs_attention:number;attention_grace_minutes:number;attention_evidence:string;
   delivery:Delivery;publication_status:string;playback_confirmed:false};pagination:{page:number;last_page:number;per_page:number;total:number};
   evidence:string}
 const when=(value:string|null)=>value
@@ -26,6 +31,9 @@ export default function ClientPublicationTargets({
   const [data,setData]=useState<Response|null>(null)
   const [error,setError]=useState('')
   const [loading,setLoading]=useState(true)
+  const [diagnosticsId,setDiagnosticsId]=useState<number|null>(null)
+  const [supportNotice,setSupportNotice]=useState('')
+  const [supportError,setSupportError]=useState('')
   useEffect(()=>{
     const abort=new AbortController()
     const url=new URL('/api/portal/publication-targets',window.location.origin)
@@ -51,13 +59,23 @@ export default function ClientPublicationTargets({
   // sync acknowledgements. Do not poll a hidden tab or withdrawn publication.
   useEffect(()=>{
     if(!data || data.summary.publication_status!=='published' ||
-      (data.summary.awaiting_player_ack===0 && data.summary.awaiting_own_playback_report===0))return
+      (data.summary.awaiting_player_ack===0 && data.summary.awaiting_own_playback_report===0 &&
+       data.summary.needs_attention===0))return
     const timer=window.setInterval(()=>{
       if(document.visibilityState==='visible')setReload(v=>v+1)
     },45000)
     return ()=>window.clearInterval(timer)
   },[batchId,token,data?.summary.publication_status,
-    data?.summary.awaiting_player_ack,data?.summary.awaiting_own_playback_report])
+    data?.summary.awaiting_player_ack,data?.summary.awaiting_own_playback_report,
+    data?.summary.needs_attention])
+  const copySupport=async(item:Target)=>{
+    setSupportNotice('');setSupportError('')
+    try{
+      if(!navigator.clipboard?.writeText)throw Error('A cópia requer HTTPS e permissão do navegador.')
+      await navigator.clipboard.writeText(publicationSupportBrief(batchId,item))
+      setSupportNotice('Resumo operacional copiado. Confira antes de encaminhar à agência.')
+    }catch(error){setSupportError(error instanceof Error?error.message:'Não foi possível copiar o resumo.')} 
+  }
   return <div className='mt-5 border border-blue-100 rounded-2xl bg-white overflow-hidden' aria-label='Situação dos Players'>
     <div className='p-4 flex flex-wrap justify-between items-center gap-2 border-b border-black/10'>
       <div>
@@ -82,12 +100,15 @@ export default function ClientPublicationTargets({
           <option value='sync_pending'>Sincronização pendente</option>
           <option value='playback_reported'>Relato de execução recebido</option>
           <option value='awaiting_playback_report'>Sem relato desta publicação</option>
+          <option value='needs_attention'>Precisam de atenção</option>
         </select>
       </label>
       <p className='text-xs text-black/60 self-end'>Os filtros são processados no servidor, com totais de toda a publicação.</p>
     </div>
     {loading&&<p role='status' className='text-sm p-4'>Consultando estados registrados…</p>}
     {error&&<p role='alert' className='text-red-800 p-4 text-sm'>{error}</p>}
+    {supportNotice&&<p role='status' className='px-4 py-2 text-xs text-blue-900'>{supportNotice}</p>}
+    {supportError&&<p role='alert' className='px-4 py-2 text-xs text-red-800'>{supportError}</p>}
     {data&&<>
       <div className='grid grid-cols-2 lg:grid-cols-5 gap-2 p-3 border-b border-black/10'>
         {([
@@ -98,6 +119,7 @@ export default function ClientPublicationTargets({
           ['Sync pendente',data.summary.sync_pending_flagged],
           ['Relataram execução',data.summary.own_playback_reported_devices],
           ['Aguardando relato',data.summary.awaiting_own_playback_report],
+          ['Precisam de atenção',data.summary.needs_attention],
         ] as const).map(([label,value])=><div key={label} className='rounded-xl bg-blue-50 p-3'>
           <span className='text-[11px] text-blue-900 block'>{label}</span>
           <strong className='text-xl tabular-nums text-blue-950'>{value.toLocaleString('pt-BR')}</strong>
@@ -109,11 +131,21 @@ export default function ClientPublicationTargets({
         Relato autenticado de conclusão de conteúdo próprio também não comprova audiência ou visualização independente.
         Categorias operacionais podem se sobrepor.</p>
       <p className='px-4 pt-2 text-xs text-black/70'>
+        A triagem sinaliza possíveis intervenções após {data.summary.attention_grace_minutes} minutos;
+        ausência de conteúdo próprio concluído não é automaticamente um incidente.
+      </p>
+      <p className='px-4 pt-2 text-xs text-black/70'>
         {data.pagination.total} destino(s) encontrado(s) com o filtro selecionado.
       </p>
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 p-3'>
         {data.data.map(item=><article key={item.device_id} className='rounded-xl border border-black/10 p-4'>
           <h4 className='font-bold text-sm break-words'>{item.name}</h4>
+          <section aria-label='Prioridade operacional' className={'mt-3 p-3 rounded-xl border '+
+            (item.attention.level==='critical'?'bg-red-50 border-red-200':
+              item.attention.level==='warning'?'bg-amber-50 border-amber-200':'bg-slate-50 border-black/10')}>
+            <strong className='block text-xs'>{item.attention.title}</strong>
+            <p className='mt-1 text-xs text-black/70'>{item.attention.guidance}</p>
+          </section>
           <p className='text-xs mt-2'>{item.operational_state==='sync_pending'
             ?'Sincronização pendente':item.operational_state==='device_unavailable'
               ?'Dispositivo indisponível':'Sem pendência de sincronização sinalizada'}</p>
@@ -137,6 +169,19 @@ export default function ClientPublicationTargets({
           <p className='text-xs text-black/60 mt-1'>Última comunicação: {when(item.last_seen_at)}</p>
           <p className='text-xs text-black/60 mt-1'>Última sincronização: {when(item.last_sync_at)}</p>
           <p className='text-xs text-black/60 mt-1'>Manifesto solicitado: v{item.requested_manifest_version}</p>
+          <div className='flex flex-wrap gap-2 mt-3'>
+            <button type='button' className='min-h-11 px-3 text-xs rounded-lg border border-blue-200 text-blue-800'
+              onClick={()=>setDiagnosticsId(v=>v===item.device_id?null:item.device_id)}>
+              {diagnosticsId===item.device_id?'Fechar diagnóstico':'Abrir diagnóstico'}
+            </button>
+            <button type='button' className='min-h-11 px-3 text-xs rounded-lg border border-black/20'
+              onClick={()=>void copySupport(item)}>Copiar resumo de suporte</button>
+          </div>
+          {diagnosticsId===item.device_id&&<ClientDeviceDiagnostics key={item.device_id}
+            token={token} deviceId={item.device_id} onUpdated={()=>{
+              setSupportNotice('Solicitação registrada; atualize os dados para verificar o ACK do Player.')
+              setReload(v=>v+1)
+            }}/>} 
         </article>)}
         {data.data.length===0&&<p className='text-xs text-black/60 p-4' role='status'>Nenhum destino corresponde ao filtro selecionado.</p>}
       </div>
