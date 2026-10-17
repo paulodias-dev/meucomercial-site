@@ -204,7 +204,7 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                     <input type="checkbox" checked={privacyConsent}
                       onChange={e => setPrivacyConsent(e.target.checked)}
                       required className="mt-0.5 accent-blue-600" />
-                    <span>Autorizo o contato comercial do Meu Comercial por e-mail ou WhatsApp sobre esta solicitação. Meus dados serão utilizados para este atendimento.</span>
+                    <span>Autorizo o uso de nome, empresa, e-mail e WhatsApp para responder a esta solicitação de TV, Rádio ou publicidade. O envio não cria contrato, cobrança ou veiculação. Para solicitar informações sobre seus dados, escreva ao contato comercial.</span>
                   </label>
                   {formError && <div role="alert" aria-live="polite" className="rounded-lg border border-red-200 bg-red-50 text-red-800 p-3 text-xs">{formError}</div>}
                   {/* Submission buttons */}

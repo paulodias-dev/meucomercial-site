@@ -127,6 +127,87 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
       }finally{await page.close()}
     })
 
+    await t.test('TV mock updates layout and preserves attributed establishment lead intent',async()=>{
+      const page=await browser.newPage({viewport:{width:390,height:844}})
+      try{
+        await page.goto(origin+'/demonstracao-tv?utm_source=instagram&utm_campaign=tv-2026')
+        await page.getByRole('heading',{name:'Escolha um modelo e veja a composição'}).waitFor()
+        await page.getByRole('button',{name:/Ofertas ilustrativas/}).click()
+        assert.equal(await page.getByRole('button',{name:/Ofertas ilustrativas/}).getAttribute('aria-pressed'),'true')
+        await page.getByLabel('Mensagem de exemplo').fill('Oferta demonstrativa da unidade')
+        assert.ok((await page.getByTestId('tv-preview').innerText()).includes('Oferta demonstrativa da unidade'))
+        await page.getByRole('button',{name:'Vertical (9:16)'}).click()
+        assert.equal(await page.getByRole('button',{name:'Vertical (9:16)'}).getAttribute('aria-pressed'),'true')
+        const width=await page.evaluate(()=>document.documentElement.scrollWidth)
+        assert.ok(width<=392,'TV demo overflowed mobile viewport: '+width)
+        await page.getByRole('link',{name:'Conversar sobre implantação de TV'}).click()
+        const dialog=page.getByRole('dialog')
+        await dialog.waitFor()
+        assert.equal(await dialog.locator('#lead-kind').inputValue(),'establishment')
+        assert.ok((await dialog.locator('#lead-details').inputValue()).includes('Interesse em TV Indoor'))
+        assert.equal(new URL(page.url()).searchParams.get('utm_source'),'instagram')
+        assert.equal(new URL(page.url()).searchParams.has('action'),false)
+      }finally{await page.close()}
+    })
+
+    await t.test('advertising catalogue filters formats and opens scoped advertiser proposal',async()=>{
+      const page=await browser.newPage({viewport:{width:375,height:812}})
+      try{
+        await page.goto(origin+'/anunciar?utm_medium=social')
+        await page.getByRole('heading',{name:'Planeje sua campanha sem compromissos automáticos'}).waitFor()
+        await page.getByRole('button',{name:/Spot em Rádio Indoor/}).click()
+        await page.locator('#ad-city').fill('Aracaju')
+        await page.getByRole('button',{name:'Preparar pedido de proposta'}).click()
+        await page.getByRole('dialog').waitFor()
+        assert.equal(await page.locator('#lead-kind').inputValue(),'advertiser')
+        assert.ok((await page.locator('#lead-details').inputValue()).includes('Cidade de interesse: Aracaju'))
+        assert.ok((await page.locator('#lead-details').inputValue()).includes('Rádio Indoor'))
+        assert.equal(new URL(page.url()).searchParams.get('utm_medium'),'social')
+        assert.equal(new URL(page.url()).searchParams.has('action'),false)
+      }finally{await page.close()}
+    })
+
+    await t.test('malformed city is blocked before preparing an advertiser proposal',async()=>{
+      const page=await browser.newPage({viewport:{width:375,height:812}})
+      try{
+        await page.goto(origin+'/anunciar')
+        await page.locator('#ad-city').fill('https://spam.invalid')
+        await page.getByRole('button',{name:'Preparar pedido de proposta'}).click()
+        await page.getByRole('alert').waitFor()
+        assert.equal(new URL(page.url()).pathname,'/anunciar')
+      }finally{await page.close()}
+    })
+
+    await t.test('network outage does not show fictitious lead success and preserves retry key',async()=>{
+      const page=await browser.newPage({viewport:{width:390,height:844}})
+      let attempt=0
+      try{
+        await page.route('**/api/commercial-leads',async route=>{
+          attempt+=1
+          if(attempt===1) await route.fulfill({status:503,contentType:'application/json',
+            body:JSON.stringify({message:'Canal temporariamente indisponível'})})
+          else await route.continue()
+        })
+        await page.goto(origin+'/?action=contact&kind=advertiser&source=media-catalog&utm_source=e2e')
+        const dialog=page.getByRole('dialog')
+        await dialog.waitFor()
+        assert.equal(await dialog.locator('#lead-kind').inputValue(),'advertiser')
+        await page.locator('#lead-name').fill('Valid')
+        await page.locator('#lead-company').fill('Empresa')
+        await page.locator('#lead-email').fill('teste@example.org')
+        await page.locator('#lead-whatsapp').fill('79999999999')
+        await dialog.locator('input[type="checkbox"]').check()
+        await dialog.getByRole('button',{name:'Enviar solicitação'}).click()
+        await dialog.getByRole('alert').waitFor()
+        assert.equal(await page.getByText('Solicitação Recebida!').count(),0)
+        await dialog.getByRole('button',{name:'Enviar solicitação'}).click()
+        await page.getByText('Solicitação Recebida!').waitFor()
+        assert.equal(attempt,2)
+        assert.equal(receipts.at(-1).kind,'advertiser')
+        assert.equal(receipts.at(-1).utm_source,'e2e')
+      }finally{await page.close()}
+    })
+
     await t.test('portal is private at HTTP and client route loads separate from public site',async()=>{
       const page=await browser.newPage({viewport:{width:390,height:844}})
       try{

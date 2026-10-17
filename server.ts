@@ -450,6 +450,33 @@ async function startServer() {
         .replace(/<link rel="alternate"[^>]*>/g, '');
       return res.set('Cache-Control', 'public, max-age=300').type('html').send(html);
     });
+    // Public pages get crawler-readable route-specific titles/canonicals.
+    // These are editorial examples, not dynamic private media or live inventory.
+    const showcasePages = [
+      {route: ['/demonstracao-tv', '/demonstracao-tv/'], slug: 'demonstracao-tv',
+       title: 'Prévia interativa de TV Indoor | Meu Comercial',
+       description: 'Experimente modelos visuais ilustrativos de TV Indoor, sem publicar nem transmitir conteúdo.'},
+      {route: ['/anunciar', '/anunciar/'], slug: 'anunciar',
+       title: 'Publicidade em Rádio e TV Indoor | Meu Comercial',
+       description: 'Conheça formatos de publicidade Indoor e solicite análise de disponibilidade com autorização e contrato.'},
+    ];
+    for (const page of showcasePages) {
+      app.get(page.route, (_req, res) => {
+        const canonical = 'https://meucomercial.com.br/' + page.slug;
+        const html = readFileSync(path.join(distPath, 'index.html'), 'utf8')
+          .replace(/<title>[^<]*<\/title>/, '<title>' + page.title + '</title>')
+          .replace(/<meta name="description"[^>]*>/, '<meta name="description" content="' + page.description + '" />')
+          .replace(/<meta property="og:title"[^>]*>/, '<meta property="og:title" content="' + page.title + '" />')
+          .replace(/<meta property="og:description"[^>]*>/, '<meta property="og:description" content="' + page.description + '" />')
+          .replace(/<meta property="og:url"[^>]*>/, '<meta property="og:url" content="' + canonical + '" />')
+          .replace(/<meta name="twitter:title"[^>]*>/, '<meta name="twitter:title" content="' + page.title + '" />')
+          .replace(/<meta name="twitter:description"[^>]*>/, '<meta name="twitter:description" content="' + page.description + '" />')
+          .replace(/<meta name="twitter:url"[^>]*>/, '<meta name="twitter:url" content="' + canonical + '" />')
+          .replace(/<link rel="canonical"[^>]*>/, '<link rel="canonical" href="' + canonical + '" />')
+          .replace(/<link rel="alternate"[^>]*>/g, '');
+        return res.set('Cache-Control', 'public, max-age=300').type('html').send(html);
+      });
+    }
     app.get('/', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
     // Unknown URLs and missing assets must not be indexed as duplicate homepages.
     app.get('*', (_req, res) => res.status(404).set('X-Robots-Tag', 'noindex')

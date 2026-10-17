@@ -83,6 +83,14 @@ test('compiled Express site: SEO, private portal and real lead/error contracts o
       assert.match(html,/<title>Demonstração de Rádio Indoor \| Meu Comercial<\/title>/)
       assert.match(html,/rel="canonical" href="https:\/\/meucomercial.com.br\/radio-indoor"/)
       assert.match(html,/property="og:url" content="https:\/\/meucomercial.com.br\/radio-indoor"/)
+      for (const [slug,title] of [['demonstracao-tv','Prévia interativa de TV Indoor'],['anunciar','Publicidade em Rádio e TV Indoor']]) {
+        response=await fetch(origin+'/'+slug)
+        assert.equal(response.status,200,slug)
+        html=await response.text()
+        assert.ok(html.includes(title),slug)
+        assert.ok(html.includes('href="https://meucomercial.com.br/'+slug+'"'),slug)
+        assert.ok(html.includes('content="https://meucomercial.com.br/'+slug+'"'),slug)
+      }
       response=await fetch(origin+'/nao-existe')
       assert.equal(response.status,404)
       assert.match(response.headers.get('x-robots-tag')??'',/noindex/)
