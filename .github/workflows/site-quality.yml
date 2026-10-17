@@ -36,13 +36,41 @@ jobs:
           npm run test:radio
           npm run test:journeys
           npm run test:portal
+          npm run test:showcase
       - name: Compile Vite and Express
         run: npm run build
       - name: Exercise compiled production server over HTTP/TLS
         run: npm run test:http
       - name: Install pinned Playwright Chromium for browser E2E
         run: |
-          npm install --no-save --no-package-lock playwright@1.57.0
+          npm install --no-save --no-package-lock playwright@1.57.0 lighthouse@12
           npx playwright install --with-deps chromium
       - name: Verify mobile TV, forms, SEO and radio in Chromium
         run: npm run test:browser
+      - name: Audit mobile Performance, Accessibility and SEO by route
+        run: |
+          mkdir -p artifacts/lighthouse
+          PORT=3000 NODE_ENV=production npm run start > /tmp/site-mvp-audit.log 2>&1 &
+          server_pid=$!
+          trap 'kill $server_pid 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:3000/ >/dev/null; then break; fi
+            sleep 1
+          done
+          export CHROME_PATH="$(node -p "require('playwright').chromium.executablePath()")"
+          for name in home demonstracao-tv anunciar; do
+            if [ "$name" = "home" ]; then endpoint=""; else endpoint="$name"; fi
+            ./node_modules/.bin/lighthouse "http://127.0.0.1:3000/$endpoint" \
+              --chrome-flags="--headless --no-sandbox --disable-dev-shm-usage" \
+              --only-categories=performance,accessibility,seo \
+              --output=json --output-path="artifacts/lighthouse/$name.json" --quiet
+          done
+          node scripts/summarize-lighthouse.mjs
+      - name: Preserve mobile Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: meucomercial-site-mobile-lighthouse
+          path: artifacts/lighthouse/*.json
+          if-no-files-found: ignore
+          retention-days: 14
