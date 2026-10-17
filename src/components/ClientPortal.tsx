@@ -424,7 +424,8 @@ export default function ClientPortal(){
                 {diagnosticsId===d.id?'Fechar diagnóstico':'Ver histórico e diagnóstico'}
               </button>
               {diagnosticsId===d.id&&session&&
-                <ClientDeviceDiagnostics key={d.id} token={session.token} deviceId={d.id}/>}
+                <ClientDeviceDiagnostics key={d.id} token={session.token} deviceId={d.id}
+                  onUpdated={()=>setRefresh(n=>n+1)}/>}
               {pairingPin?.deviceId===d.id&&<div className='mt-4 rounded-xl bg-blue-50 border border-blue-200 p-4' role='status'>
                 <p className='text-xs font-semibold text-blue-900'>Código temporário — informe somente no seu Player</p>
                 <code className='block mt-2 text-2xl font-bold tracking-widest text-blue-950 select-all'>{pairingPin.pin}</code>
