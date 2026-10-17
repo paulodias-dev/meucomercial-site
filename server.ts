@@ -284,7 +284,7 @@ app.all('/api/portal/:action', async (req, res) => {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Cena inválida.'});
     if (action === 'publication-targets' &&
-      (!['all','acknowledged','awaiting_ack','offline','sync_pending'].includes(String(req.query.delivery ?? 'all')) ||
+      (!['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report'].includes(String(req.query.delivery ?? 'all')) ||
         (req.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(String(req.query.page)))))
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Filtro de distribuição inválido.'});
