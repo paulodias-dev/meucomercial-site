@@ -1,5 +1,23 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
 
+## Sprint — Triagem e qualidade do Portal de Players (16/10/2026)
+
+**Objetivo demonstrável:** encerrar o conflito do PR Site #34 sem regressão do checklist #33 e transformar o resumo de TV/Rádio em uma porta de entrada para diagnóstico de cada Player, exportação local segura e validação automatizada de qualidade.
+
+- [x] Integrar os PRs Site [#33](https://github.com/paulodias-dev/meucomercial-site/pull/33) e [#34](https://github.com/paulodias-dev/meucomercial-site/pull/34) sem apagar funcionalidades concorrentes; #34 confirmado como mesclado na main após merge explícito da main na branch.
+- [x] Validar em tempo de execução contrato recebido da API (escopo, evidência, filtros, paginação, formatos, dias UTC), exibindo erro recuperável em caso de incompatibilidade.
+- [x] Abrir diagnóstico por dispositivo via endpoint autenticado existente, sob demanda, com possibilidade de fechar e sem disparar uma consulta por linha (sem N+1 de browser).
+- [x] Exportar CSV local e limitado à página visível, com cabeçalho UTF-8, coluna de data UTC, neutralização de fórmulas e campos autorizados sem token, client_id ou armazenamento.
+- [x] Criar testes Node funcionais para contrato, payload inválido, CSV injection e superfície de triagem; manter os testes de contrato anteriores no build.
+- [x] Adicionar workflow de GitHub Actions do Site com npm ci, typecheck, testes Node de rádio/jornadas/Portal e compilação Vite/Express, sem segredos ou acesso de escrita.
+- [x] **CI executado e verde:** [GitHub Actions #38983541605](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38983541605) passou em `npm ci`, `npm run lint`, testes Node de rádio/jornadas/Portal e `npm run build` (Vite/Express).
+- [ ] Homologar interação 320–1440 px, acessibilidade por teclado, JWT e integração com MySQL/API/Player reais, incluindo cenários de falha de rede e expiração de sessão.
+
+**Status de aceite:** sete subcritérios concluídos, um gate de QA manual pendente. O marco específico de CI do Site foi concluído com check verde real; homologação de dispositivos e deploy continuam pendentes. **Indicador global atualizado:** API 29/59 + Admin 25/57 + Site 14/34 = **68/150 = 45,3%** de macromarcos; não equivale a produção pronta.
+
+**Próxima sprint:** executar e corrigir os pipelines em runners disponíveis, estabilizar a cadeia JWT/API e validar um fluxo completo em TV/Rádio físico; em paralelo, avançar do histórico de mídia própria à reconciliação de campanhas comerciais sem tratar relatos de Player como audiência independente.
+
+
 ## Sprint integrada — Ativação orientada e recuperação operacional (16/10/2026)
 
 **Meta do bloco:** tornar utilizável e mensurável a jornada já implementada de ativação, pareamento, Estúdio, publicação própria e diagnóstico. Alterações coordenadas na API, Portal e Admin, em PRs definitivos contra main, sem deploy/merge automático.
@@ -354,10 +372,10 @@
 |---|---:|---:|---:|
 | [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 29 | 59 | 49,2% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 25 | 57 | 43,9% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 13 | 34 | 38,2% |
-| **Plataforma completa** | **67** | **150** | **44,7%** |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 14 | 34 | 41,2% |
+| **Plataforma completa** | **68** | **150** | **45,3%** |
 
-> **Atualização do painel:** 16/10/2026, baseline mesclado 67/150. As séries históricas abaixo são mantidas para rastreabilidade e não representam o estado atual.
+> **Atualização do painel:** 16/10/2026. Baseline mesclado 67/150 e marco de CI do Site concluído no PR definitivo #35, com workflow verde, totalizando **68/150**; até o merge, o incremento permanece na branch do PR. Séries históricas abaixo são mantidas para rastreabilidade.
 
 **Cálculo:** marcos `[x]` com evidência de implementação na `main` ou em PR definitivo referenciado ÷ total de marcos deste roadmap × 100. **Escopo ampliado em 15 marcos ainda pendentes (+6 API, +6 Admin, +3 Site); a queda de 44,1% para 38,0% resulta do aumento do denominador, não de regressão técnica.** **Desde a linha de base de 41/108, dezesseis marcos granulares efetivamente implementados (oito na API e oito no Admin) foram acrescentados ao escopo e concluídos em código; resultando em 57/124 antes do desdobramento da Fase 9.** **Inclui PRs abertos, ainda não disponíveis em produção.** Cada marco tem peso igual. **Não é percentual de homologação ou de prontidão para produção.** Marcos `[ ]` abrangem trabalho ainda não encontrado, implementação parcial ou aceite ainda não comprovado. Alterar um marco de `[ ]` para `[x]` somente após apontar PR/commit e evidência verificável.
 
@@ -395,7 +413,7 @@
 
 ## Progresso deste repositório
 
-**8/33 marcos com evidência de código = 24,2% de cobertura de implementação identificada.** Pendências de CI, staging, homologação e deploy permanecem abertas independentemente deste índice.
+**14/34 marcos com evidência de código e CI = 41,2% neste repositório.** GitHub Actions #38983541605 verde no PR #35; QA manual, staging, homologação de Player físico e deploy permanecem abertos. As descrições de situação abaixo registram um inventário histórico parcial e não substituem a contagem atual.
 
 ## Fase 1: Descoberta e Estruturação (Auditoria)
 
@@ -468,9 +486,9 @@
 ## Fase 8: Homologação, Refatoração e Deploy
 
 **Objetivo:** Demonstrar qualidade ponta a ponta, estabilidade, performance e operação em produção.  
-**Situação neste repositório:** Não evidenciado no código · 0/5 marcos identificados.
+**Situação neste repositório:** CI aprovado · 1/5 marcos concluídos; 4 gates de QA/release pendentes.
 
-- [ ] Configurar CI com `npm ci`, `npm run lint` (`tsc --noEmit`) e `npm run build`, obtendo check verde.
+- [x] Configurar CI com `npm ci`, `npm run lint` (`tsc --noEmit`) e `npm run build`, obtendo [check verde no PR #35](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38983541605).
 - [ ] Criar testes E2E de formulários, links, consultor estratégico, simulação e falhas de rede.
 - [ ] Auditar Core Web Vitals, Lighthouse mobile, acessibilidade, SEO social/Open Graph e carregamento inicial.
 - [ ] Revisar depoimentos, cálculos comerciais, LGPD/cookies e ausência de alegações não verificadas.

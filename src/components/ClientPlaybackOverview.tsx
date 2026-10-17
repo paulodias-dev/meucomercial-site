@@ -1,5 +1,7 @@
 import {useEffect, useState} from 'react'
-import {RefreshCcw} from 'lucide-react'
+import {Download,RefreshCcw} from 'lucide-react'
+import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'
+import {buildPlaybackOverviewCsv,isPlaybackOverviewResponse} from '../lib/playbackOverview.mjs'
 
 // Read-only operational evidence from the authenticated establishment.
 // Player-reported completion is not independent audience or billing proof.
@@ -35,6 +37,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
   const [kind,setKind]=useState<Kind>('all')
   const [page,setPage]=useState(1)
   const [refresh,setRefresh]=useState(0)
+  const [selectedDeviceId,setSelectedDeviceId]=useState<number|null>(null)
   const [data,setData]=useState<Response|null>(null)
   const [error,setError]=useState('')
   const [loading,setLoading]=useState(true)
@@ -53,6 +56,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         if(!res.ok)throw new Error(res.status===401||res.status===403
           ? 'Sua sessão não está autorizada para consultar estes relatórios.'
           : payload.message||'Não foi possível carregar os relatos.')
+        if(!isPlaybackOverviewResponse(payload))throw new Error('Resposta de relatório incompatível. Atualize ou tente novamente.')
         return payload as Response
       })
       .then(result=>{if(!controller.signal.aborted)setData(result)})
@@ -70,6 +74,21 @@ export default function ClientPlaybackOverview({token}:{token:string}){
     ['Imagens / Vídeos / Áudios',summary
       ? summary.by_type.image+' / '+summary.by_type.video+' / '+summary.by_type.audio : '—'],
   ] as const
+
+  const exportPage=()=>{
+    if(!data?.data.length)return
+    const csv=buildPlaybackOverviewCsv(data.data)
+    const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}))
+    try{
+      const link=document.createElement('a')
+      link.href=url
+      link.download='meucomercial-resumo-players-'+kind+'-'+days+'dias-p'+page+'.csv'
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    }finally{window.setTimeout(()=>URL.revokeObjectURL(url),1000)}
+  }
+
   return <section className='bg-white border border-black/10 rounded-2xl p-4 sm:p-6 mb-6'
     aria-label='Relatos de reprodução do estabelecimento'>
     <div className='flex flex-wrap justify-between items-start gap-3 mb-4'>
@@ -83,13 +102,13 @@ export default function ClientPlaybackOverview({token}:{token:string}){
     </div>
     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5'>
       <label className='block text-xs font-semibold' htmlFor='playback-days'>Período
-        <select id='playback-days' value={days} onChange={event=>{setDays(Number(event.target.value) as Day);setPage(1)}}
+        <select id='playback-days' value={days} onChange={event=>{setDays(Number(event.target.value) as Day);setPage(1);setSelectedDeviceId(null)}}
           className='mt-1 w-full min-h-11 border border-black/20 rounded-xl px-3 bg-white text-sm'>
           <option value={1}>Últimas 24 horas</option><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option>
         </select>
       </label>
       <label className='block text-xs font-semibold' htmlFor='playback-kind'>Conteúdo
-        <select id='playback-kind' value={kind} onChange={event=>{setKind(event.target.value as Kind);setPage(1)}}
+        <select id='playback-kind' value={kind} onChange={event=>{setKind(event.target.value as Kind);setPage(1);setSelectedDeviceId(null)}}
           className='mt-1 w-full min-h-11 border border-black/20 rounded-xl px-3 bg-white text-sm'>
           <option value='all'>TV e Rádio</option><option value='tv'>TV (imagens e vídeos)</option><option value='radio'>Rádio (spots próprios)</option>
         </select>
@@ -125,26 +144,39 @@ export default function ClientPlaybackOverview({token}:{token:string}){
           <caption className='sr-only'>Players do próprio estabelecimento e quantidades de relatos no período</caption>
           <thead><tr className='border-b border-black/10'>
             <th scope='col' className='p-2'>Dispositivo</th><th scope='col' className='p-2'>Relatos</th>
-            <th scope='col' className='p-2'>Imagem / Vídeo / Áudio</th><th scope='col' className='p-2'>Último relato</th>
+            <th scope='col' className='p-2'>Imagem / Vídeo / Áudio</th><th scope='col' className='p-2'>Último relato</th><th scope='col' className='p-2'>Ações</th>
           </tr></thead>
           <tbody>{data.data.map(device=><tr key={device.device_id} className='border-b border-black/5'>
             <td className='p-2 font-semibold'>{device.name}</td>
             <td className='p-2'>{device.reports_total.toLocaleString('pt-BR')}</td>
             <td className='p-2'>{device.by_type.image} / {device.by_type.video} / {device.by_type.audio}</td>
             <td className='p-2'>{readableDate(device.last_reported_at)}</td>
+            <td className='p-2'><button type='button' className='min-h-11 px-3 border border-blue-200 rounded-lg text-blue-800 font-semibold'
+              aria-expanded={selectedDeviceId===device.device_id} aria-controls='playback-selected-diagnostics'
+              onClick={()=>setSelectedDeviceId(current=>current===device.device_id?null:device.device_id)}>
+              {selectedDeviceId===device.device_id?'Fechar diagnóstico':'Ver diagnóstico'}
+            </button></td>
           </tr>)}</tbody>
         </table>
       </div>
+      {selectedDeviceId!==null&&data.data.some(device=>device.device_id===selectedDeviceId)&&<div id='playback-selected-diagnostics' className='mt-4'>
+        <ClientDeviceDiagnostics key={selectedDeviceId} token={token} deviceId={selectedDeviceId}/>
+      </div>}
       {data.data.length===0&&<p className='text-xs text-black/60 py-4'>Nenhum Player cadastrado neste estabelecimento.</p>}
       <div className='flex justify-between items-center gap-3 mt-4 text-xs'>
         <span>Página {data.pagination.page} de {data.pagination.last_page} · {data.pagination.total} Players</span>
-        <div className='flex gap-2'>
-          <button type='button' disabled={page<=1||loading} onClick={()=>setPage(n=>n-1)}
+        <div className='flex flex-wrap gap-2 justify-end'>
+          <button type='button' disabled={loading||!data.data.length} onClick={exportPage}
+            className='min-h-11 px-3 border border-blue-200 rounded-lg flex items-center gap-1 disabled:opacity-40'>
+            <Download size={14} aria-hidden/>CSV desta página
+          </button>
+          <button type='button' disabled={page<=1||loading} onClick={()=>{setSelectedDeviceId(null);setPage(n=>Math.max(1,n-1))}}
             className='min-h-11 px-3 border rounded-lg disabled:opacity-40'>Anterior</button>
           <button type='button' disabled={page>=data.pagination.last_page||loading}
-            onClick={()=>setPage(n=>n+1)} className='min-h-11 px-3 border rounded-lg disabled:opacity-40'>Próxima</button>
+            onClick={()=>{setSelectedDeviceId(null);setPage(n=>n+1)}} className='min-h-11 px-3 border rounded-lg disabled:opacity-40'>Próxima</button>
         </div>
       </div>
+      <p className='text-xs text-black/60 mt-3'>O CSV é gerado localmente, com somente os Players desta página, sem credenciais ou exportação de outras páginas.</p>
       <p className='text-xs text-black/60 mt-4'>Estes são relatos autenticados do próprio Player e não comprovam audiência independente, disponibilidade contínua ou faturamento de anúncios.</p>
     </>}
   </section>
