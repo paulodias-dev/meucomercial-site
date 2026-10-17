@@ -39,6 +39,20 @@ test('compiled Express site: SEO, private portal and real lead/error contracts o
 
   let forwarded = []
   const mock=createHttpsServer({key:readFileSync(key),cert:readFileSync(cert)},async(req,res)=>{
+    if(req.method==='GET' && req.url?.startsWith('/api/site/indoor/')){
+      const plan={data:[{plan_id:21,name:'Indoor Oficial',description:'Plano publicado',
+        price:'249.90',currency:'BRL',interval:'monthly',max_devices:4,
+        storage_mb:512,trial_days:0,checkout_available:false}],
+        evidence:'approved_active_plan_not_purchase'}
+      const offer={data:[{offer_id:31,title:'Spot autorizado em Aracaju',region:'Aracaju - SE',
+        description:'Consultar espaços autorizados por período e contrato.',
+        medium:'radio',availability:'consultation_required'}],
+        evidence:'curated_authorized_offer_not_realtime_capacity'}
+      const plans=req.url.includes('/plans')
+      res.writeHead(200,{'Content-Type':'application/json'})
+      res.end(JSON.stringify(plans?plan:offer))
+      return
+    }
     if(req.url!=='/api/site/commercial-leads' || req.method!=='POST'){
       res.writeHead(404).end();return
     }
@@ -124,6 +138,23 @@ test('compiled Express site: SEO, private portal and real lead/error contracts o
       assert.equal(forwarded[0].data.consent,true)
       assert.ok(!forwarded[0].headers.authorization)
       assert.ok(!forwarded[0].headers.cookie)
+    })
+
+    await t.test('fixed public Indoor catalog and plans forward no secrets, preserving official prices',async()=>{
+      let r=await fetch(origin+'/api/indoor-plans')
+      assert.equal(r.status,200)
+      let j=await r.json()
+      assert.equal(j.evidence,'approved_active_plan_not_purchase')
+      assert.equal(j.data[0].price,'249.90')
+      assert.equal(j.data[0].checkout_available,false)
+      r=await fetch(origin+'/api/indoor-catalog?medium=radio')
+      assert.equal(r.status,200)
+      j=await r.json()
+      assert.equal(j.evidence,'curated_authorized_offer_not_realtime_capacity')
+      assert.equal(j.data[0].availability,'consultation_required')
+      assert.ok(!JSON.stringify(j).includes('authorization_reference'))
+      r=await fetch(origin+'/api/indoor-catalog?medium=private')
+      assert.equal(r.status,422)
     })
 
     await t.test('consultant returns bounded template content and validation error',async()=>{
