@@ -11,23 +11,26 @@ export function readCommercialIntent(search = '') {
   const medium = media.has(qs.get('medium')) ? qs.get('medium') : null
   const source = sources.has(qs.get('source')) ? qs.get('source') : 'homepage'
   const city = clean(qs.get('city') || '').slice(0, 60)
-  return {kind, medium, source, city, action: qs.get('action') === 'contact' ? 'contact' : null}
+  const planId = /^[1-9][0-9]{0,8}$/.test(qs.get('plan_id')||'') ? Number(qs.get('plan_id')) : null
+  return {kind, medium, source, city, planId, action: qs.get('action') === 'contact' ? 'contact' : null}
 }
-export function commercialContactUrl({kind='establishment', medium='tv', source='homepage', city='' } = {}, search = '') {
+export function commercialContactUrl({kind='establishment', medium='tv', source='homepage', city='', planId=null } = {}, search = '') {
   const qs = new URLSearchParams(search)
-  for (const key of ['kind', 'medium', 'source', 'city', 'action']) qs.delete(key)
+  for (const key of ['kind', 'medium', 'source', 'city', 'plan_id', 'action']) qs.delete(key)
   qs.set('action', 'contact')
   qs.set('kind', roles.has(kind) ? kind : 'establishment')
   qs.set('medium', media.has(medium) ? medium : 'tv')
   qs.set('source', sources.has(source) ? source : 'homepage')
   if (clean(city)) qs.set('city', clean(city).slice(0, 60))
+  if(Number.isSafeInteger(planId)&&planId>0)qs.set('plan_id',String(planId))
   return '/?' + qs.toString() + '#planos'
 }
-export function commercialMessage({medium,city}) {
+export function commercialMessage({medium,city,planId}) {
   const parts = []
   if (medium === 'tv') parts.push('Interesse em TV Indoor')
   if (medium === 'radio') parts.push('Interesse em Rádio Indoor')
   if (medium === 'mixed') parts.push('Interesse em TV e Rádio Indoor')
   if (city) parts.push('Cidade de interesse: ' + clean(city))
+  if (Number.isSafeInteger(planId) && planId > 0)parts.push('Plano publicado de interesse: #'+planId)
   return parts.join('. ').slice(0, 200)
 }

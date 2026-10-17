@@ -38,6 +38,7 @@ jobs:
           npm run test:portal
           npm run test:showcase
           npm run test:compliance
+          npm run test:indoor-catalog
       - name: Compile Vite and Express
         run: npm run build
       - name: Exercise compiled production server over HTTP/TLS

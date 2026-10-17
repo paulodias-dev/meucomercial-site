@@ -145,6 +145,37 @@ app.post("/api/commercial-leads", async (req, res) => {
   }
 });
 
+// Two fixed, public read-only contracts; never expose MEUCOMERCIAL_API_URL,
+// forward cookies/JWT or allow a query parameter to become an upstream path.
+app.get(['/api/indoor-catalog','/api/indoor-plans'],async(req,res)=>{
+  const config=process.env.MEUCOMERCIAL_API_URL?.trim()
+  res.setHeader('Cache-Control','no-store')
+  if(!config)return res.status(503).json({message:'Catálogo temporariamente indisponível.'})
+  try{
+    const base=new URL(config.endsWith('/')?config:config+'/')
+    if(base.protocol!=='https:' && !(process.env.NODE_ENV!=='production' && base.hostname==='localhost'))
+      return res.status(503).json({message:'Canal comercial indisponível.'})
+    const endpoint=new URL(req.path==='/api/indoor-catalog'?'site/indoor/catalog':'site/indoor/plans',base)
+    const medium=req.query.medium
+    if(req.path==='/api/indoor-catalog'&&medium!==undefined){
+      if(medium!=='tv'&&medium!=='radio')return res.status(422).json({message:'Meio inválido.'})
+      endpoint.searchParams.set('medium',medium)
+    }
+    const upstream=await fetch(endpoint,{headers:{Accept:'application/json'},
+      redirect:'error',signal:AbortSignal.timeout(8000)})
+    if(!upstream.ok)return res.status(upstream.status===422?422:503)
+      .json({message:'Consulta comercial indisponível.'})
+    const payload=await upstream.json()
+    if(!payload||!Array.isArray(payload.data)||payload.data.length>30||
+      !['curated_authorized_offer_not_realtime_capacity','approved_active_plan_not_purchase'].includes(payload.evidence))
+      return res.status(502).json({message:'Contrato comercial inválido.'})
+    res.setHeader('Cache-Control','public, max-age=60')
+    return res.status(200).json(payload)
+  }catch{
+    return res.status(503).json({message:'Catálogo temporariamente indisponível.'})
+  }
+})
+
 // Allowlisted, same-origin proxy for CLIENT credentials only. It never
 // forwards arbitrary paths, operator JWTs, cookies or query-controlled URLs.
 // All JWTs remain in memory in the React portal; this gateway does not log them.

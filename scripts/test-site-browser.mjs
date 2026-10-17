@@ -33,6 +33,20 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
   ],{stdio:'ignore'})
   const receipts=[]
   const upstream=createHttpsServer({key:readFileSync(key),cert:readFileSync(cert)},async(req,res)=>{
+    if(req.method==='GET' && req.url?.startsWith('/api/site/indoor/')){
+      const plan={data:[{plan_id:21,name:'Indoor Oficial',description:'Plano publicado',
+        price:'249.90',currency:'BRL',interval:'monthly',max_devices:4,
+        storage_mb:512,trial_days:0,checkout_available:false}],
+        evidence:'approved_active_plan_not_purchase'}
+      const offer={data:[{offer_id:31,title:'Spot autorizado em Aracaju',region:'Aracaju - SE',
+        description:'Consultar espaços autorizados por período e contrato.',
+        medium:'radio',availability:'consultation_required'}],
+        evidence:'curated_authorized_offer_not_realtime_capacity'}
+      const plans=req.url.includes('/plans')
+      res.writeHead(200,{'Content-Type':'application/json'})
+      res.end(JSON.stringify(plans?plan:offer))
+      return
+    }
     if(req.url!=='/api/site/commercial-leads'){res.writeHead(404).end();return}
     let raw=''
     for await(const chunk of req)raw+=chunk.toString()
@@ -205,6 +219,29 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
         assert.equal(attempt,2)
         assert.equal(receipts.at(-1).kind,'advertiser')
         assert.equal(receipts.at(-1).utm_source,'e2e')
+      }finally{await page.close()}
+    })
+
+    await t.test('approved plan CTA displays exact official price and preserves plan ID',async()=>{
+      const page=await browser.newPage({viewport:{width:390,height:844}})
+      try{
+        await page.goto(origin+'/?utm_source=facebook',{waitUntil:'domcontentloaded'})
+        await page.getByText('Indoor Oficial').waitFor({timeout:9000})
+        assert.ok((await page.getByText('R$ 249,90').count())>=1)
+        await page.getByRole('link',{name:'Solicitar proposta deste plano'}).first().click()
+        await page.getByRole('dialog').waitFor()
+        assert.ok((await page.locator('#lead-details').inputValue()).includes('Plano publicado de interesse: #21'))
+        assert.equal(new URL(page.url()).searchParams.get('utm_source'),'facebook')
+      }finally{await page.close()}
+    })
+
+    await t.test('authorized public media offer is curatorial, not a guaranteed insertion',async()=>{
+      const page=await browser.newPage({viewport:{width:375,height:812}})
+      try{
+        await page.goto(origin+'/anunciar',{waitUntil:'domcontentloaded'})
+        await page.getByRole('button',{name:/Spot em Rádio Indoor/}).click()
+        await page.getByText('Spot autorizado em Aracaju').waitFor({timeout:9000})
+        assert.ok((await page.getByText('Disponibilidade, veiculação e preço sujeitos à confirmação.').count())>=1)
       }finally{await page.close()}
     })
 

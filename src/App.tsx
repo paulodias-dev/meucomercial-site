@@ -8,6 +8,7 @@ const RadioShowcasePage = React.lazy(() => import("./components/RadioShowcasePag
 const TvDemoPage = React.lazy(() => import("./components/TvDemoPage"));
 const AdvertisingPage = React.lazy(() => import("./components/AdvertisingPage"));
 import {readCommercialIntent, commercialMessage} from "./lib/commercialIntent.mjs";
+import PublicIndoorPricing from './components/PublicIndoorPricing';
 import HeroSimulator from './components/HeroSimulator';
 import BenefitsSection from './components/BenefitsSection';
 import FeaturesSection from './components/FeaturesSection';
@@ -468,7 +469,7 @@ export default function App() {
 
       <BenefitsSection /><FeaturesSection layouts={layouts} /><AudienceJourneys onContact={openAudienceContact} />
       <RadioGuide onContact={openLeadModal} />
-      <StrategicConsultant selectedSegment={selectedSegment} setSelectedSegment={setSelectedSegment} additionalDetails={additionalDetails} setAdditionalDetails={setAdditionalDetails} consultResponse={consultResponse} consultError={consultError} isConsulting={isConsulting} handleStrategyConsult={handleStrategyConsult} parseMarkdownToJSX={parseMarkdownToJSX} openLeadModal={openLeadModal} /><CommercialBrief screensCount={screensCount} setScreensCount={setScreensCount} leadKind={leadKind} setLeadKind={setLeadKind} openAudienceContact={openAudienceContact} /><FinalContactCTA  openLeadModal={openLeadModal} />
+      <StrategicConsultant selectedSegment={selectedSegment} setSelectedSegment={setSelectedSegment} additionalDetails={additionalDetails} setAdditionalDetails={setAdditionalDetails} consultResponse={consultResponse} consultError={consultError} isConsulting={isConsulting} handleStrategyConsult={handleStrategyConsult} parseMarkdownToJSX={parseMarkdownToJSX} openLeadModal={openLeadModal} /><CommercialBrief screensCount={screensCount} setScreensCount={setScreensCount} leadKind={leadKind} setLeadKind={setLeadKind} openAudienceContact={openAudienceContact} /><PublicIndoorPricing /><FinalContactCTA  openLeadModal={openLeadModal} />
       {/* --- FOOTER --- */}
       <footer className="bg-[#F5F5F7] border-t border-black/5 pt-16 pb-8 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-7xl mx-auto">
