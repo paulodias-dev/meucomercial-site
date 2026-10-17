@@ -204,6 +204,17 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
         assert.equal(await dialog.locator('#lead-kind').inputValue(),'advertiser')
         assert.ok((await dialog.locator('#lead-details').inputValue()).includes('Oferta pública de interesse: #31'))
         assert.equal(new URL(page.url()).searchParams.get('utm_source'),'meta')
+        await page.locator('#lead-name').fill('Roberta')
+        await page.locator('#lead-company').fill('Agência Alfa')
+        await page.locator('#lead-email').fill('roberta@example.org')
+        await page.locator('#lead-whatsapp').fill('79999999999')
+        await dialog.locator('input[type="checkbox"]').check()
+        await dialog.getByRole('button',{name:'Enviar solicitação'}).click()
+        await page.getByText('Solicitação Recebida!').waitFor()
+        assert.equal(receipts.at(-1).offer_id,31,'A oferta deve chegar em campo estruturado')
+        assert.equal(receipts.at(-1).kind,'advertiser')
+        assert.equal(receipts.at(-1).utm_source,'meta')
+        assert.equal(receipts.at(-1).plan_id,null,'O anunciante não escolheu um plano SaaS')
       }finally{await page.close()}
     })
 
