@@ -333,6 +333,7 @@ export default function HeroSimulator({activeLayout, setActiveLayout, layouts, c
                   {layouts.map((layout) => (
                     <button
                       key={layout.id}
+                      type="button" aria-pressed={activeLayout === layout.id}
                       onClick={() => setActiveLayout(layout.id)}
                       className={`p-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 justify-center transition-all duration-300 ${
                         activeLayout === layout.id
