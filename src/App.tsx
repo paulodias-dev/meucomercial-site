@@ -5,6 +5,9 @@ import SEO from "./components/SEO";
 import RadioGuide from "./components/RadioGuide";
 import CommercialTrust from "./components/CommercialTrust";
 import RadioShowcasePage from "./components/RadioShowcasePage";
+import TvDemoPage from "./components/TvDemoPage";
+import AdvertisingPage from "./components/AdvertisingPage";
+import {readCommercialIntent, commercialMessage} from "./lib/commercialIntent.mjs";
 import HeroSimulator from './components/HeroSimulator';
 import BenefitsSection from './components/BenefitsSection';
 import FeaturesSection from './components/FeaturesSection';
@@ -181,6 +184,22 @@ export default function App() {
     submissionKey.current = null;
   };
 
+  // Accept a single, enumerated public journey request. No query-supplied
+  // credentials, pricing, scopes, device identifiers or inventory are trusted.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const intent = readCommercialIntent(window.location.search)
+    if (intent.action !== 'contact') return
+    params.delete('action')
+    window.history.replaceState(window.history.state, '', window.location.pathname +
+      (params.toString() ? '?' + params.toString() : '') + window.location.hash)
+    setLeadKind(intent.kind as CommercialAudience)
+    setModalSource('Jornada - ' + intent.source)
+    setFormSubmitted(false);setFormError('');setPrivacyConsent(false)
+    setFormData(v => ({...v, mensagem: commercialMessage(intent)}))
+    setIsModalOpen(true)
+  }, [])
+
   // Commercial inquiries are only marked successful after API persistence.
   // Keep the same UUID across retries to make network timeouts safe.
   const handleLeadSubmit = async (e: React.FormEvent) => {
@@ -301,6 +320,12 @@ export default function App() {
   if (window.location.pathname === '/radio-indoor' || window.location.pathname === '/radio-indoor/') {
     return <RadioShowcasePage />;
   }
+  if (window.location.pathname === '/demonstracao-tv' || window.location.pathname === '/demonstracao-tv/') {
+    return <TvDemoPage />;
+  }
+  if (window.location.pathname === '/anunciar' || window.location.pathname === '/anunciar/') {
+    return <AdvertisingPage />;
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white">
@@ -332,7 +357,8 @@ export default function App() {
             <a href="/portal" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Área do cliente</a>
             <a href="#para-quem" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Para quem é</a>
             <a href="#radio-indoor" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Rádio Indoor</a>
-            <a href="#simulador" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Demonstração</a>
+            <a href="/demonstracao-tv" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Prévia TV</a>
+            <a href="/anunciar" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Anunciar</a>
             <a href="#consultor-estrategico" className="text-sm text-black/60 hover:text-blue-600 flex items-center gap-1 transition-colors duration-200 font-medium">
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
               Consultor Estratégico
@@ -400,13 +426,10 @@ export default function App() {
                   className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
                   Rádio Indoor
                 </a>
-                <a 
-                  href="#simulador" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
-                >
-                  Demonstração
-                </a>
+                <a href="/demonstracao-tv" onClick={() => setMobileMenuOpen(false)}
+                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">Prévia TV</a>
+                <a href="/anunciar" onClick={() => setMobileMenuOpen(false)}
+                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">Anunciar</a>
                 <a 
                   href="#consultor-estrategico" 
                   onClick={() => setMobileMenuOpen(false)}
@@ -439,11 +462,14 @@ export default function App() {
         </AnimatePresence>
       </header>
 
-      <HeroSimulator activeLayout={activeLayout} setActiveLayout={setActiveLayout} layouts={layouts} customTickerText={customTickerText} setCustomTickerText={setCustomTickerText} simulatedClockTime={simulatedClockTime} openLeadModal={openLeadModal} />      <CommercialTrust />
+      <div className="sr-only">A demonstração abaixo é ilustrativa e não corresponde à reprodução em dispositivos reais.</div>
+      <HeroSimulator activeLayout={activeLayout} setActiveLayout={setActiveLayout} layouts={layouts} customTickerText={customTickerText} setCustomTickerText={setCustomTickerText} simulatedClockTime={simulatedClockTime} openLeadModal={openLeadModal} />
+      <CommercialTrust />
 
       <BenefitsSection /><FeaturesSection layouts={layouts} /><AudienceJourneys onContact={openAudienceContact} />
       <RadioGuide onContact={openLeadModal} />
-      <StrategicConsultant selectedSegment={selectedSegment} setSelectedSegment={setSelectedSegment} additionalDetails={additionalDetails} setAdditionalDetails={setAdditionalDetails} consultResponse={consultResponse} consultError={consultError} isConsulting={isConsulting} handleStrategyConsult={handleStrategyConsult} parseMarkdownToJSX={parseMarkdownToJSX} openLeadModal={openLeadModal} /><CommercialBrief screensCount={screensCount} setScreensCount={setScreensCount} leadKind={leadKind} setLeadKind={setLeadKind} openAudienceContact={openAudienceContact} /><FinalContactCTA  openLeadModal={openLeadModal} />{/* --- FOOTER --- */}
+      <StrategicConsultant selectedSegment={selectedSegment} setSelectedSegment={setSelectedSegment} additionalDetails={additionalDetails} setAdditionalDetails={setAdditionalDetails} consultResponse={consultResponse} consultError={consultError} isConsulting={isConsulting} handleStrategyConsult={handleStrategyConsult} parseMarkdownToJSX={parseMarkdownToJSX} openLeadModal={openLeadModal} /><CommercialBrief screensCount={screensCount} setScreensCount={setScreensCount} leadKind={leadKind} setLeadKind={setLeadKind} openAudienceContact={openAudienceContact} /><FinalContactCTA  openLeadModal={openLeadModal} />
+      {/* --- FOOTER --- */}
       <footer className="bg-[#F5F5F7] border-t border-black/5 pt-16 pb-8 px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-7xl mx-auto">
           
