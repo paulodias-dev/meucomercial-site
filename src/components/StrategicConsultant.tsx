@@ -20,7 +20,7 @@ export default function StrategicConsultant({selectedSegment, setSelectedSegment
               Gere um Plano de Conteúdo Customizado Instantaneamente
             </h2>
             <p className="text-black/60 text-sm sm:text-base leading-relaxed">
-              Dúvidas sobre o que exibir em suas TVs? Selecione o seu segmento de negócio, adicione alguma particularidade e receba uma estratégia corporativa completa em segundos.
+              Dúvidas sobre o que exibir em suas TVs? Selecione o seu segmento de negócio, adicione alguma particularidade e receba orientações ilustrativas por segmento, não um diagnóstico individual automatizado.
             </p>
           </div>
 
@@ -86,7 +86,7 @@ export default function StrategicConsultant({selectedSegment, setSelectedSegment
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4 text-white animate-pulse" />
-                    Gerar Plano Estratégico Sob Medida Grátis
+                    Ver sugestões por segmento
                   </>
                 )}
               </button>
@@ -116,7 +116,7 @@ export default function StrategicConsultant({selectedSegment, setSelectedSegment
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                       <span className="text-xs bg-blue-50 border border-blue-100 text-blue-600 px-2.5 py-1 rounded-full font-semibold flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-blue-600" />
-                        Plano Estratégico Gerado
+                        Sugestões de conteúdo disponíveis
                       </span>
                       <span className="text-[10px] text-black/40 font-mono">Gerado em: 2026</span>
                     </div>
@@ -129,7 +129,7 @@ export default function StrategicConsultant({selectedSegment, setSelectedSegment
                     {/* Strategic CTA */}
                     <div className="mt-6 pt-5 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-4">
                       <p className="text-xs text-black/50 text-center sm:text-left font-medium">
-                        💡 Gostou do plano? Nosso hardware de TV já vem com todos esses templates configurados!
+                        💡 Gostou do plano? A configuração de equipamentos e modelos depende do escopo contratado.
                       </p>
                       <button
                         onClick={() => openLeadModal(`Consultor Estratégico - ${selectedSegment}`)}
