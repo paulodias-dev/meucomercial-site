@@ -108,8 +108,8 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
       const page=await browser.newPage({viewport:{width:768,height:900}})
       try{
         await page.goto(origin+'/',{waitUntil:'domcontentloaded'})
-        await page.getByRole('button',{name:'Gerar Plano Estratégico Sob Medida Grátis'}).click()
-        await page.getByText('Plano Estratégico Gerado').waitFor({timeout:8000})
+        await page.getByRole('button',{name:'Ver sugestões por segmento'}).click()
+        await page.getByText('Sugestões de conteúdo disponíveis').waitFor({timeout:8000})
         assert.equal(await page.locator('#consultor-estrategico').count(),1)
       }finally{await page.close()}
     })
