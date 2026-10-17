@@ -4,6 +4,7 @@ import {readFileSync} from 'node:fs'
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 const component=read('src/components/RadioGuide.tsx')
 const app=read('src/App.tsx')
+const audio=read('src/components/RadioDemoPlayer.tsx')
 const guide=read('docs/RADIO_INDOOR_GUIA.md')
 const faqs=Array.from(component.matchAll(/\{id:'([^']+)',question:/g),match=>match[1])
 test('FAQ has 8 distinct topics of licensing, online status and technical reporting',()=>{
@@ -21,6 +22,7 @@ test('radio guides explicitly distinguish software from music rights',()=>{
 test('illustrative schedule is not presented as playable audio',()=>{
   assert.ok(component.includes('Esta é uma simulação textual'))
   assert.ok(component.includes('não reproduz músicas'))
+  assert.ok(component.includes('<RadioDemoPlayer />'))
   assert.ok(component.includes('Ilustrativo'))
   assert.ok(!component.includes('<audio'))
   assert.ok(!component.includes('new Audio('))
@@ -53,4 +55,17 @@ test('no fabricated checkout, recurring price or live music download is advertis
   assert.ok(component.toLowerCase().includes('não necessariamente'))
   assert.ok(!component.includes('https://cdn'))
   assert.ok(!component.includes('checkout'))
+})
+
+test('spoken radio samples are local, accessible, opt-in and never billed or sent as real playback',()=>{
+  assert.ok(audio.includes('new SpeechSynthesisUtterance(item.copy)'))
+  assert.ok(audio.includes('window.speechSynthesis.speak(message)'))
+  assert.ok(audio.includes('window.speechSynthesis.cancel()'))
+  assert.ok(audio.includes("message.lang = 'pt-BR'"))
+  assert.ok(audio.includes("aria-live='polite'"))
+  assert.ok(audio.includes("aria-pressed={active === item.id}"))
+  assert.ok(audio.includes('não contabilizamos veiculações'))
+  assert.ok(!audio.includes('fetch('))
+  assert.ok(!audio.includes('localStorage'))
+  assert.ok(!audio.includes('<audio'))
 })
