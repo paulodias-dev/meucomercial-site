@@ -35,6 +35,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import SEO from "./components/SEO";
 import RadioGuide from "./components/RadioGuide";
+import CommercialTrust from "./components/CommercialTrust";
 import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
 import ClientPortal from "./components/ClientPortal";
 
@@ -834,32 +835,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* --- LOGO BANNER (TRUST SECTION) --- */}
-      <section className="py-12 border-y border-black/5 bg-[#EAEAEA]/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-xs uppercase tracking-widest text-black/40 font-mono font-semibold mb-6">
-            Empresas inovadoras que comunicam com o Meu Comercial
-          </p>
-          
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60">
-            <div className="flex items-center gap-1.5 font-display text-black/50 font-bold text-lg">
-              <span className="text-blue-600">■</span> INOVA TECH
-            </div>
-            <div className="flex items-center gap-1.5 font-display text-black/50 font-bold text-lg">
-              <span className="text-indigo-600">▲</span> SUL ALIMENTOS
-            </div>
-            <div className="flex items-center gap-1.5 font-display text-black/50 font-bold text-lg">
-              <span className="text-purple-500">◆</span> REDE SMART
-            </div>
-            <div className="flex items-center gap-1.5 font-display text-black/50 font-bold text-lg">
-              <span className="text-amber-500">●</span> LOGI GROUP
-            </div>
-            <div className="flex items-center gap-1.5 font-display text-black/50 font-bold text-lg">
-              <span className="text-rose-500">▼</span> CLÍNICA VIDA
-            </div>
-          </div>
-        </div>
-      </section>
+      <CommercialTrust />
 
       {/* --- PROBLEMA VS. SOLUÇÃO --- */}
       <section id="beneficios" className="py-20 sm:py-28 px-4 sm:px-6 lg:px-8 relative">
@@ -1405,15 +1381,15 @@ export default function App() {
               <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs text-black/50 font-mono font-semibold">
                 <span className="flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-500" />
-                  Sem fidelidade contratual
+                  Condições contratuais sob consulta
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-500" />
-                  Suporte humanizado por telefone e WhatsApp
+                  Suporte conforme o plano contratado
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Check className="w-4 h-4 text-emerald-500" />
-                  Testes grátis por 7 dias sem compromisso
+                  Teste gratuito sujeito à disponibilidade e proposta
                 </span>
               </div>
             </div>
@@ -1446,10 +1422,8 @@ export default function App() {
                 A plataforma de TV Corporativa e Sinalização Digital em nuvem que conecta líderes e liderados com velocidade, modernidade e extrema clareza visual.
               </p>
               <div className="flex items-center gap-3 mt-2">
-                {/* Simulated Social link buttons */}
-                <span className="w-8 h-8 rounded-lg bg-white border border-black/10 hover:bg-black/5 flex items-center justify-center text-xs text-black/60 hover:text-[#1D1D1F] transition-colors cursor-pointer font-mono font-bold shadow-sm">In</span>
-                <span className="w-8 h-8 rounded-lg bg-white border border-black/10 hover:bg-black/5 flex items-center justify-center text-xs text-black/60 hover:text-[#1D1D1F] transition-colors cursor-pointer font-mono font-bold shadow-sm">Yt</span>
-                <span className="w-8 h-8 rounded-lg bg-white border border-black/10 hover:bg-black/5 flex items-center justify-center text-xs text-black/60 hover:text-[#1D1D1F] transition-colors cursor-pointer font-mono font-bold shadow-sm">Ig</span>
+                {/* Canal comercial oficial, sem perfis sociais fictícios. */}
+                <a href="mailto:comercial@meucomercial.com.br" className="text-xs font-semibold text-blue-700 hover:underline">Fale com o comercial por e-mail</a>
               </div>
             </div>
 
@@ -1460,8 +1434,8 @@ export default function App() {
                 <li><a href="#recursos" className="hover:text-blue-600 transition-colors">Recursos Gerais</a></li>
                 <li><a href="#simulador" className="hover:text-blue-600 transition-colors">TV Simuladora</a></li>
                 <li><a href="#consultor-estrategico" className="hover:text-blue-600 transition-colors">Consultor Estratégico</a></li>
-                <li><a href="#planos" className="hover:text-blue-600 transition-colors">Tabela de Preços</a></li>
-                <li><a href="#beneficios" className="hover:text-blue-600 transition-colors">Estudos de ROI</a></li>
+                <li><a href="#planos" className="hover:text-blue-600 transition-colors">Solicitar Proposta</a></li>
+                <li><a href="#beneficios" className="hover:text-blue-600 transition-colors">Como Funciona</a></li>
               </ul>
             </div>
 
@@ -1505,11 +1479,11 @@ export default function App() {
 
           {/* Legal / Copyright line */}
           <div className="pt-8 mt-8 border-t border-black/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-black/40 font-mono font-semibold">
-            <span>© Meu Comercial LTDA 2026 • CNPJ 42.126.901/0001-44 • Todos os direitos reservados.</span>
+            <span>© Meu Comercial 2026 • Condições comerciais sujeitas a confirmação formal.</span>
             <div className="flex gap-4">
-              <span className="hover:text-[#1D1D1F] transition-colors cursor-pointer">Políticas de Privacidade</span>
+              <a href="mailto:comercial@meucomercial.com.br?subject=Solicitacao%20de%20politica%20de%20privacidade" className="hover:text-[#1D1D1F] underline">Solicitar política de privacidade</a>
               <span>•</span>
-              <span className="hover:text-[#1D1D1F] transition-colors cursor-pointer">Termos de Uso de Nuvem</span>
+              <a href="mailto:comercial@meucomercial.com.br?subject=Solicitacao%20dos%20termos%20de%20uso" className="hover:text-[#1D1D1F] underline">Solicitar termos de uso</a>
             </div>
           </div>
 
