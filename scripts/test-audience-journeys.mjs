@@ -2,7 +2,17 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
-const page=read('src/App.tsx')
+// Contract checks now follow business sections after extracting them from App.
+const page = [
+  'src/App.tsx',
+  'src/components/HeroSimulator.tsx',
+  'src/components/BenefitsSection.tsx',
+  'src/components/FeaturesSection.tsx',
+  'src/components/StrategicConsultant.tsx',
+  'src/components/CommercialBrief.tsx',
+  'src/components/FinalContactCTA.tsx',
+  'src/components/LeadContactModal.tsx'
+].map(read).join('\n')
 const journeys=read('src/components/AudienceJourneys.tsx')
 const policy=read('AGENTS.md')
 
@@ -78,4 +88,20 @@ test('public trust does not forge customer references, legal identity or unappro
  assert.ok(!page.includes('>In</span>') && !page.includes('>Ig</span>'))
  assert.ok(page.includes('Solicitar política de privacidade'))
  assert.ok(page.includes('Solicitar termos de uso'))
+})
+
+test('primary commercial areas are isolated, typed and share one lead submission implementation',()=>{
+  const app = read('src/App.tsx')
+  const types = read('src/components/MarketingTypes.ts')
+  assert.ok(app.split('\n').length < 700, 'App must remain a composition root')
+  for (const name of ['HeroSimulator','BenefitsSection','FeaturesSection','StrategicConsultant',
+    'CommercialBrief','FinalContactCTA','LeadContactModal']) {
+    assert.ok(app.includes('<'+name+' ' ) || app.includes('<'+name+' />'),name)
+    assert.ok(read('src/components/'+name+'.tsx').includes('export default function '+name),name)
+  }
+  assert.ok(types.includes('export type LeadFormData'))
+  assert.equal((app.match(/fetch\("\/api\/commercial-leads"/g)||[]).length,1)
+  assert.ok(read('src/components/LeadContactModal.tsx').includes('handleLeadSubmit'))
+  assert.ok(read('src/components/HeroSimulator.tsx').includes('setActiveLayout'))
+  assert.ok(read('src/components/CommercialBrief.tsx').includes("setLeadKind"))
 })
