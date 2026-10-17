@@ -1,3 +1,16 @@
+## Sprint integrada — Catálogo público escalável e curadoria de espaços (17/10/2026)
+
+**Produto:** oferta aprovada pelo Master → vitrine paginada e regional no Site → lead consentido com referência/UTM. **Nunca** consulta disponibilidade real, reserva ou recebe pagamentos.
+
+- [x] Oportunidades reais aprovadas com pesquisa de região, meio e navegação em páginas.
+- [x] Oferta selecionada acompanha o lead consentido e UTMs, sem reservar ou cobrar.
+- [x] BFF allowlist para paginação/região, contrato fail-closed e testes Node/Chromium/HTTP ampliados.
+- [ ] API integrada e CI Site atualizado devem ser comprovados antes de aceitar marco.
+
+**Percentual conservador até QA:** 75/150 = 50,0% (API 29/59, Admin 25/57, Site 21/34); 60% requer 90/150. Os testes da API e do Admin continuam pendentes até runners funcionais; não antecipar macromarcos sem validação. Merge API primeiro, depois Site e Admin, com rollback e QA. Não executar deploy/migração automaticamente.
+
+---
+
 ## Sprint ampliada — preços e inventário revisados (17/10/2026)
 
 - [x] Opt-in comercial consultado pela BFF sem expor URL da API ou JWT
