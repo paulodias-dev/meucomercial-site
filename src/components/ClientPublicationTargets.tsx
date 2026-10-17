@@ -2,13 +2,15 @@ import {useEffect,useState} from 'react'
 import {RefreshCcw,X} from 'lucide-react'
 import {isPublicationDeliveryResponse} from '../lib/publicationDelivery.mjs'
 
-type Delivery='all'|'acknowledged'|'awaiting_ack'|'offline'|'sync_pending'
+type Delivery='all'|'acknowledged'|'awaiting_ack'|'offline'|'sync_pending'|'playback_reported'|'awaiting_playback_report'
 type Target={device_id:number;name:string;connected_recently:boolean;needs_sync:boolean;
   last_seen_at:string|null;last_sync_at:string|null;requested_manifest_version:number;
   current_manifest_version:number;operational_state:string;playback_confirmed:false;
-  sync_acknowledged:boolean;sync_acknowledged_at:string|null;sync_evidence:string}
+  sync_acknowledged:boolean;sync_acknowledged_at:string|null;sync_evidence:string;
+  own_playback_reported:boolean;first_own_playback_reported_at:string|null;own_playback_evidence:string}
 type Response={data:Target[];summary:{targets:number;sync_pending_flagged:number;
   sync_acknowledged_total:number;awaiting_player_ack:number;recently_connected:number;unavailable:number;
+  own_playback_reported_devices:number;awaiting_own_playback_report:number;
   delivery:Delivery;publication_status:string;playback_confirmed:false};pagination:{page:number;last_page:number;per_page:number;total:number};
   evidence:string}
 const when=(value:string|null)=>value
@@ -67,6 +69,8 @@ export default function ClientPublicationTargets({
           <option value='all'>Todos os destinos</option><option value='acknowledged'>Manifesto confirmado</option>
           <option value='awaiting_ack'>Aguardando confirmação</option><option value='offline'>Sem conexão recente</option>
           <option value='sync_pending'>Sincronização pendente</option>
+          <option value='playback_reported'>Relato de execução recebido</option>
+          <option value='awaiting_playback_report'>Sem relato desta publicação</option>
         </select>
       </label>
       <p className='text-xs text-black/60 self-end'>Os filtros são processados no servidor, com totais de toda a publicação.</p>
@@ -81,6 +85,8 @@ export default function ClientPublicationTargets({
           ['Aguardando ACK',data.summary.awaiting_player_ack],
           ['Conectados recentemente',data.summary.recently_connected],
           ['Sync pendente',data.summary.sync_pending_flagged],
+          ['Relataram execução',data.summary.own_playback_reported_devices],
+          ['Aguardando relato',data.summary.awaiting_own_playback_report],
         ] as const).map(([label,value])=><div key={label} className='rounded-xl bg-blue-50 p-3'>
           <span className='text-[11px] text-blue-900 block'>{label}</span>
           <strong className='text-xl tabular-nums text-blue-950'>{value.toLocaleString('pt-BR')}</strong>
@@ -89,6 +95,7 @@ export default function ClientPublicationTargets({
       <p className='px-4 pt-3 text-xs text-black/60'>Informações de {data.summary.targets} destinos próprios;
         {data.summary.unavailable} desativado(s)/bloqueado(s). ACK v2 confirma somente a sincronização reportada
         pelo Player, não certifica exibição nem audiência. A ausência de pendência não equivale a recebimento, exibição ou audiência comprovada.
+        Relato autenticado de conclusão de conteúdo próprio também não comprova audiência ou visualização independente.
         Categorias operacionais podem se sobrepor.</p>
       <p className='px-4 pt-2 text-xs text-black/70'>
         {data.pagination.total} destino(s) encontrado(s) com o filtro selecionado.
@@ -105,6 +112,14 @@ export default function ClientPublicationTargets({
               ? 'Manifesto confirmado pelo Player (protocolo v2)'
               : 'Sem confirmação v2 desta versão de manifesto'}
           </p>
+          <p className={'mt-2 text-xs font-semibold '+(item.own_playback_reported?'text-blue-800':'text-black/60')}>
+            {item.own_playback_reported
+              ?'Player relatou conclusão de conteúdo próprio desta publicação'
+              :'Ainda sem relato de conclusão desta publicação'}
+          </p>
+          {item.first_own_playback_reported_at&&<p className='text-xs text-black/60 mt-1'>
+            Primeiro relato: {when(item.first_own_playback_reported_at)}
+          </p>}
           {item.sync_acknowledged_at&&<p className='text-xs text-black/60 mt-1'>
             ACK registrado: {when(item.sync_acknowledged_at)}
           </p>}
