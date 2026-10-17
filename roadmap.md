@@ -8,7 +8,8 @@
 - [x] Verificação rígida de HTTP 202, device_id e `command_queued_not_player_ack`; diferenciar enfileiramento de confirmação do Player.
 - [x] Estado de erro/autorização claro, cancelamento, fila pendente e atualização após comando no Portal e no resumo de Players.
 - [x] Testes de contrato de ação manual, ausência de credenciais persistidas, permissões e textos sem falsas confirmações.
-- [ ] CI TypeScript, testes Node e build Vite/Express verdes e E2E cliente–API.
+- [x] CI completo do Portal com instalação, TypeScript, testes Node e build Vite/Express: [GitHub Actions #38987716642](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38987716642) concluído com sucesso após correção da mensagem persistente de comando enfileirado.
+- [ ] E2E cliente–API, sessão expirando e Player físico ainda pendentes.
 - [ ] QA responsivo mobile-first/teclado e dispositivo real.
 
 **Macromarcos aceitos de referência:** API 29/59 + Admin 25/57 + Site 14/34 = **68/150 (45,3%)**. Os subcritérios da sprint não encerram automaticamente macromarcos dependentes de homologação física e CI. **Ordem de merge:** API → Portal; Admin independente. Sem reset/deploy e sem merge automático desta sprint.
