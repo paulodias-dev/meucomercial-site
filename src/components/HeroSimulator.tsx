@@ -23,7 +23,7 @@ export default function HeroSimulator({activeLayout, setActiveLayout, layouts, c
             </h1>
 
             <p className="text-black/60 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Gerencie telas remotamente, atualize campanhas em segundos e leve mais impacto para comunicados internos, promoções, ofertas e avisos importantes. Use as TVs que você já tem ou receba a solução completa pronta para ligar.
+              Organize conteúdos, grades e avisos a partir de um painel, de acordo com as permissões da sua operação. Avaliamos a compatibilidade das TVs existentes e as opções de equipamento na proposta.
             </p>
 
             {/* Action Buttons */}
@@ -44,19 +44,19 @@ export default function HeroSimulator({activeLayout, setActiveLayout, layouts, c
               </a>
             </div>
 
-            {/* Micro Highlights */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-black/5 max-w-md mx-auto lg:mx-0 mt-4">
+            {/* Workflow capabilities: no unmeasured speed or engagement KPIs. */}
+            <div className="grid grid-cols-3 gap-3 pt-6 border-t border-black/5 max-w-md mx-auto lg:mx-0 mt-4" aria-label="Etapas do serviço">
               <div className="text-center lg:text-left">
-                <span className="block text-2xl font-bold text-[#1D1D1F] font-display">10s</span>
-                <span className="text-xs text-black/40">Para atualizar a tela</span>
+                <span className="block text-base font-bold text-[#1D1D1F] font-display">Criar</span>
+                <span className="text-xs text-black/60">Conteúdos da sua empresa</span>
               </div>
               <div className="text-center lg:text-left">
-                <span className="block text-2xl font-bold text-[#1D1D1F] font-display">100%</span>
-                <span className="text-xs text-black/40">Gestão na nuvem</span>
+                <span className="block text-base font-bold text-[#1D1D1F] font-display">Programar</span>
+                <span className="text-xs text-black/60">Por local e período</span>
               </div>
               <div className="text-center lg:text-left">
-                <span className="block text-2xl font-bold text-[#1D1D1F] font-display">+80%</span>
-                <span className="text-xs text-black/40">De engajamento</span>
+                <span className="block text-base font-bold text-[#1D1D1F] font-display">Acompanhar</span>
+                <span className="text-xs text-black/60">Sinais operacionais do Player</span>
               </div>
             </div>
 
@@ -70,7 +70,7 @@ export default function HeroSimulator({activeLayout, setActiveLayout, layouts, c
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3 px-1">
                 <span className="text-xs text-black/50 font-mono flex items-center gap-1.5">
                   <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                  Simulador de TV On-line
+                  Prévia visual ilustrativa de TV
                 </span>
                 <span className="text-xs text-blue-600 font-semibold">Tente mudar o Layout abaixo!</span>
               </div>
