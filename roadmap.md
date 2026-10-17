@@ -7,7 +7,8 @@
 - [x] Detalhe de uma publicação agora exibe contadores de todos os destinos: ACK validado, aguardando ACK, online e sync pendente.
 - [x] Filtragem por situação processada na API e lista paginada; layouts responsivos e estados sem resultados.
 - [x] Contrato JS de runtime recusa evidências falsas, contagens inconsistentes e payloads incompatíveis; testes Node ampliados.
-- [ ] CI Node/TypeScript/Vite e QA de integração API/JWT/Player real: pendentes.
+- [x] CI do Portal com 52 testes Node, TypeScript e compilação Vite/Express verde: [run #38991600290](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38991600290). A primeira execução detectou duas mensagens de ressalva removidas e a interface foi corrigida antes do resultado verde.
+- [ ] QA integrado com API/JWT reais, navegadores mobile e Players físicos: pendente.
 
 **Progresso conservador até os gates de aceite:** API 29/59, Admin 25/57, Site 14/34; total **68/150 = 45,3%**. Subtarefas de uma sprint não contam como macromarcos encerrados antes dos testes e homologação. Integração pela ordem API → Site, Player/Admin conforme QA independente. Não mesclar nem implantar automaticamente. Sem migração destrutiva.
 
