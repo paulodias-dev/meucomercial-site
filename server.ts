@@ -258,6 +258,7 @@ app.all('/api/portal/:action', async (req, res) => {
     if (action === 'playback-overview' && (
       !['1','7','30'].includes(String(req.query.days ?? '7')) ||
       !['all','tv','radio'].includes(String(req.query.kind ?? 'all')) ||
+      !['all','blocked','unpaired','offline','sync_pending','no_reports'].includes(String(req.query.attention ?? 'all')) ||
       (req.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(String(req.query.page))))) {
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Filtro de relatório inválido.'});
@@ -321,6 +322,8 @@ app.all('/api/portal/:action', async (req, res) => {
       if (action === 'device-reports' || action === 'playback-overview') {
         endpoint.searchParams.set('days', String(req.query.days ?? '7'));
         endpoint.searchParams.set('kind', String(req.query.kind ?? 'all'));
+        if (action === 'playback-overview')
+          endpoint.searchParams.set('attention', String(req.query.attention ?? 'all'));
       }
       if (action === 'publication-destinations' &&
         ['tv','radio'].includes(String(req.query.medium))) {
