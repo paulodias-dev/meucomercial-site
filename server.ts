@@ -156,10 +156,29 @@ app.get(['/api/indoor-catalog','/api/indoor-plans'],async(req,res)=>{
     if(base.protocol!=='https:' && !(process.env.NODE_ENV!=='production' && base.hostname==='localhost'))
       return res.status(503).json({message:'Canal comercial indisponível.'})
     const endpoint=new URL(req.path==='/api/indoor-catalog'?'site/indoor/catalog':'site/indoor/plans',base)
-    const medium=req.query.medium
-    if(req.path==='/api/indoor-catalog'&&medium!==undefined){
-      if(medium!=='tv'&&medium!=='radio')return res.status(422).json({message:'Meio inválido.'})
-      endpoint.searchParams.set('medium',medium)
+    if(req.path==='/api/indoor-catalog'){
+      const medium=req.query.medium
+      if(medium!==undefined){
+        if(typeof medium!=='string'||!['tv','radio'].includes(medium))
+          return res.status(422).json({message:'Meio inválido.'})
+        endpoint.searchParams.set('medium',medium)
+      }
+      for(const key of ['page','per_page'] as const){
+        const value=req.query[key]
+        if(value!==undefined){
+          if(typeof value!=='string'||!/^[1-9][0-9]{0,3}$/.test(value)||
+            Number(value)>(key==='per_page'?24:10000))
+            return res.status(422).json({message:'Paginação inválida.'})
+          endpoint.searchParams.set(key,value)
+        }
+      }
+      const region=req.query.region
+      if(region!==undefined){
+        if(typeof region!=='string'||region.length>80||
+           !/^[\p{L}\p{N}\s.'-]{2,80}$/u.test(region.trim()))
+           return res.status(422).json({message:'Região inválida.'})
+        endpoint.searchParams.set('region',region.trim())
+      }
     }
     const upstream=await fetch(endpoint,{headers:{Accept:'application/json'},
       redirect:'error',signal:AbortSignal.timeout(8000)})
