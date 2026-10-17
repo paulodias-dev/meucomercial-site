@@ -2,15 +2,17 @@
 // A positive ACK proves only a device-reported protocol-v2 sync, not content or audience.
 const obj=v=>v!==null&&typeof v==='object'&&!Array.isArray(v)
 const count=v=>Number.isSafeInteger(v)&&v>=0
-export const deliveryFilters=['all','acknowledged','awaiting_ack','offline','sync_pending']
+export const deliveryFilters=['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report']
 export function isPublicationDeliveryResponse(v,filter='all'){
   if(!obj(v)||!Array.isArray(v.data)||!obj(v.summary)||!obj(v.pagination))return false
   const s=v.summary,p=v.pagination
   if(!deliveryFilters.includes(filter)||s.delivery!==filter ||
     !count(s.targets)||!count(s.sync_acknowledged_total)||
     !count(s.awaiting_player_ack)||!count(s.sync_pending_flagged)||
+    !count(s.own_playback_reported_devices)||!count(s.awaiting_own_playback_report)||
     !count(s.recently_connected)||!count(s.unavailable)||
     s.sync_acknowledged_total+s.awaiting_player_ack!==s.targets ||
+    s.own_playback_reported_devices+s.awaiting_own_playback_report!==s.targets ||
     [s.sync_pending_flagged,s.recently_connected,s.unavailable].some(n=>n>s.targets) ||
     s.playback_confirmed!==false ||
     !['published','withdrawn'].includes(s.publication_status))return false
@@ -25,6 +27,11 @@ export function isPublicationDeliveryResponse(v,filter='all'){
     typeof row.sync_evidence==='string'&&
     ['player_reported_protocol_v2','not_reported'].includes(row.sync_evidence)&&
     row.sync_acknowledged===(row.sync_evidence==='player_reported_protocol_v2')&&
+    typeof row.own_playback_reported==='boolean' &&
+    (row.first_own_playback_reported_at===null||typeof row.first_own_playback_reported_at==='string') &&
+    ['authenticated_player_report_not_independent_audience','not_reported'].includes(row.own_playback_evidence)&&
+    row.own_playback_reported===(row.own_playback_evidence==='authenticated_player_report_not_independent_audience') &&
+    (row.own_playback_reported ? row.first_own_playback_reported_at!==null : row.first_own_playback_reported_at===null)&&
     row.playback_confirmed===false&&count(row.requested_manifest_version)&&
     count(row.current_manifest_version)&&
     ['sync_pending','device_unavailable','no_pending_sync_reported'].includes(row.operational_state))
