@@ -1,4 +1,19 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
+## Sprint integrada — primeiro relato de execução por publicação (16–17/10/2026)
+
+**Objetivo:** completar a rastreabilidade de cada publicação do agendamento até o relato autenticado do Player, mantendo ACK, relato de mídia própria e audiência em domínios distintos.
+
+- [x] Dashboard por publicação distingue ACK do manifesto de primeiro relato autenticado de mídia própria.
+- [x] Novos filtros da rede com contadores globais e indicação por dispositivo do horário do primeiro relato.
+- [x] BFF autoriza apenas filtros enumerados e Portal valida evidências e invariantes de contagem em runtime.
+- [x] Atualização de baixo impacto a cada 45 segundos, apenas enquanto publicação ativa, com pendências e aba visível.
+- [x] Testes Node ampliados para relatos falsos, audiência fictícia e consulta sob controle.
+- [x] CI TypeScript, testes Node (incluindo falsificação de evidência e polling) e Vite/Express: [execução aprovada #38993429572](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38993429572).
+- [ ] Testes de navegador mobile, integração JWT/API com autenticação real e Player TV/Rádio físico: pendentes.
+
+**Macromarcos aceitos:** API 29/59 + Admin/Player 25/57 + Site 14/34 = **68/150 (45,3%)** até testes completos/homologação física, sem inflar o progresso por código não validado. **Merge recomendado:** API → Site; Player/Admin independente, após QA. Nenhum deploy, merge ou migração em produção sem aceite.
+
+
 ## Sprint integrada — publicação, confirmação e isolamento do Player (16/10/2026)
 
 **Objetivo:** percorrer a publicação até a evidência de sincronização autenticada e proteger o aparelho contra efeitos tardios de sessões anteriores. **ACK de manifesto não é reprodução certificada ou audiência.**
