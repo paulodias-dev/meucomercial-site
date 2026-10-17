@@ -1,6 +1,7 @@
 import {useMemo,useState} from 'react'
 import {ArrowRight, MapPin, Radio, Tv, ShieldCheck} from 'lucide-react'
 import {commercialContactUrl} from '../lib/commercialIntent.mjs'
+import PublishedAdOffers from './PublishedAdOffers'
 
 export type AdFormat={id:'tv'|'radio'|'mixed';label:string;description:string;requirements:string}
 export const adFormats:AdFormat[]=[
@@ -55,5 +56,6 @@ export default function AdvertisingCatalogue(){
        <p className='mt-3 text-xs text-slate-600'>O formulário seguinte exige consentimento e confirmação real de recebimento; não contrata, não cobra e não reserva espaços.</p>
      </div>
    </div>
+   <PublishedAdOffers medium={format}/>
  </section>
 }
