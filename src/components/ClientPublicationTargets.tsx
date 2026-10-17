@@ -88,7 +88,8 @@ export default function ClientPublicationTargets({
       </div>
       <p className='px-4 pt-3 text-xs text-black/60'>Informações de {data.summary.targets} destinos próprios;
         {data.summary.unavailable} desativado(s)/bloqueado(s). ACK v2 confirma somente a sincronização reportada
-        pelo Player, não certifica exibição nem audiência. Categorias operacionais podem se sobrepor.</p>
+        pelo Player, não certifica exibição nem audiência. A ausência de pendência não equivale a recebimento, exibição ou audiência comprovada.
+        Categorias operacionais podem se sobrepor.</p>
       <p className='px-4 pt-2 text-xs text-black/70'>
         {data.pagination.total} destino(s) encontrado(s) com o filtro selecionado.
       </p>
