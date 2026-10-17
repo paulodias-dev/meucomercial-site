@@ -283,6 +283,11 @@ app.all('/api/portal/:action', async (req, res) => {
     if(studioStory && (!storyPlaylist || !storyItem))
       return res.status(422).set('Cache-Control','no-store')
         .json({message:'Cena inválida.'});
+    if (action === 'publication-targets' &&
+      (!['all','acknowledged','awaiting_ack','offline','sync_pending'].includes(String(req.query.delivery ?? 'all')) ||
+        (req.query.page !== undefined && !/^[1-9][0-9]{0,3}$/.test(String(req.query.page)))))
+      return res.status(422).set('Cache-Control','no-store')
+        .json({message:'Filtro de distribuição inválido.'});
     const publicationTargets = action === 'publication-targets';
     const targetRawId = req.query.publication_id;
     const targetId = typeof targetRawId === 'string' && /^[1-9][0-9]*$/.test(targetRawId)
@@ -325,6 +330,8 @@ app.all('/api/portal/:action', async (req, res) => {
         if (action === 'playback-overview')
           endpoint.searchParams.set('attention', String(req.query.attention ?? 'all'));
       }
+      if (publicationTargets)
+        endpoint.searchParams.set('delivery', String(req.query.delivery ?? 'all'));
       if (action === 'publication-destinations' &&
         ['tv','radio'].includes(String(req.query.medium))) {
         endpoint.searchParams.set('medium', String(req.query.medium));

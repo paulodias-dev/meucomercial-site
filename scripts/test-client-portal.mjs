@@ -2,6 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {csvCell,buildPlaybackOverviewCsv,isPlaybackOverviewResponse} from '../src/lib/playbackOverview.mjs'
+import {isPublicationDeliveryResponse,deliveryFilters} from '../src/lib/publicationDelivery.mjs'
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const server=read('server.ts')
 const portal=read('src/components/ClientPortal.tsx')
@@ -525,4 +526,41 @@ test('recovery UI is shared by fleet and device lists, refreshing both after an 
   assert.ok(deviceDiagnostics.includes("role='alert'"))
   assert.ok(server.includes("'sync-device': {method: 'POST', backend: 'client/indoor/devices/', auth: true}"))
   assert.ok(!server.includes('req.query.client_id'))
+})
+
+test('publication delivery counts are validated across the full fleet, not only the filtered page',()=>{
+  const row={device_id:3,name:'TV recepção',connected_recently:true,needs_sync:false,
+    last_seen_at:'2026-10-16T12:00:00Z',last_sync_at:null,requested_manifest_version:7,
+    current_manifest_version:7,operational_state:'no_pending_sync_reported',playback_confirmed:false,
+    sync_acknowledged:true,sync_acknowledged_at:'2026-10-16T12:05:00Z',sync_evidence:'player_reported_protocol_v2'}
+  const response={data:[row],
+    summary:{targets:21,sync_acknowledged_total:4,awaiting_player_ack:17,
+      recently_connected:5,unavailable:3,sync_pending_flagged:9,
+      delivery:'acknowledged',publication_status:'published',playback_confirmed:false},
+    pagination:{page:1,per_page:20,last_page:1,total:4},
+    evidence:'device_reported_sync_v2_not_independent_playback'}
+  assert.equal(isPublicationDeliveryResponse(response,'acknowledged'),true)
+  assert.equal(isPublicationDeliveryResponse({...response,summary:{...response.summary,awaiting_player_ack:16}},'acknowledged'),false)
+  assert.equal(isPublicationDeliveryResponse({...response,summary:{...response.summary,delivery:'offline'}},'acknowledged'),false)
+  assert.equal(isPublicationDeliveryResponse({...response,summary:{...response.summary,sync_pending_flagged:22}},'acknowledged'),false)
+  assert.equal(isPublicationDeliveryResponse({...response,summary:{...response.summary,playback_confirmed:true}},'acknowledged'),false)
+  assert.equal(isPublicationDeliveryResponse({...response,data:[{...row,sync_acknowledged:true,sync_evidence:'not_reported'}]},'acknowledged'),false)
+  assert.equal(isPublicationDeliveryResponse({...response,data:[{...row,playback_confirmed:true}]},'acknowledged'),false)
+  assert.deepEqual(deliveryFilters,['all','acknowledged','awaiting_ack','offline','sync_pending'])
+})
+test('delivery UI sends an allowlisted filter via authenticated BFF and does not infer playback from ACK',()=>{
+  assert.ok(server.includes("'publication-targets': {method: 'GET'"))
+  assert.ok(server.includes("['all','acknowledged','awaiting_ack','offline','sync_pending'].includes"))
+  assert.ok(server.includes("endpoint.searchParams.set('delivery', String(req.query.delivery ?? 'all'))"))
+  assert.ok(!server.includes('req.query.client_id'))
+  assert.ok(targets.includes("url.searchParams.set('delivery',delivery)"))
+  assert.ok(targets.includes('isPublicationDeliveryResponse(payload,delivery)'))
+  assert.ok(targets.includes('sync_acknowledged_total'))
+  assert.ok(targets.includes('awaiting_player_ack'))
+  assert.ok(targets.includes('recently_connected'))
+  assert.ok(targets.includes('data.pagination.total'))
+  assert.ok(targets.includes('setDelivery(event.target.value as Delivery);setPage(1)'))
+  assert.ok(targets.includes('ACK v2 confirma somente a sincronização'))
+  assert.ok(!targets.includes('device_token'))
+  assert.ok(!targets.includes('localStorage'))
 })
