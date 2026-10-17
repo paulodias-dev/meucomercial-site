@@ -1,5 +1,5 @@
 import {Calendar, Play, TrendingUp, Clock, CloudSun, ArrowRight, Zap, Monitor, QrCode, ShieldCheck} from 'lucide-react'
-import {motion} from 'motion/react'
+import {motion, AnimatePresence} from 'motion/react'
 import type {TVLayout} from './MarketingTypes'
 
 export default function HeroSimulator({activeLayout, setActiveLayout, layouts, customTickerText, setCustomTickerText, simulatedClockTime, openLeadModal}: {activeLayout:string; setActiveLayout:(v:string)=>void; layouts:TVLayout[]; customTickerText:string; setCustomTickerText:(v:string)=>void; simulatedClockTime:string; openLeadModal:(s:string)=>void}) {
