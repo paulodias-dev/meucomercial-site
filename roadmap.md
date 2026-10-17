@@ -1,3 +1,27 @@
+## Revisão de marcos Site — catálogo curado e planos aprovados (17/10/2026)
+
+**Progresso validado de implementação:** 77/150 = 51,3% (API 29/59, Admin 25/57, Site 23/34). [CI Site/Portal #39072933020](https://github.com/paulodias-dev/meucomercial-site/actions/runs/39072933020) passou por TypeScript, Node, Vite/Express, HTTP/TLS, Chromium e Lighthouse.
+
+- [x] Planos oficiais: PublicIndoorPricing consulta ofertas opt-in, ativação real do plano, valores DECIMAL e limites; nenhuma assinatura/checkout é iniciada.
+- [x] Catálogo de mídia: pesquisa/paginação de inventário curado e oferta referenciada no lead com consentimento e atribuição UTM.
+- [ ] Integração física e jurídica: API #94 ainda requer PHPUnit/MySQL8; Admin #59 requer build Metronic. CI Site utiliza mock HTTPS e não certifica estoque publicitário, contratos ou hardware. Ordem de integração: API antes de Site.
+
+**Meta de 60% = 90/150. Ainda faltam 13 macromarcos aceitos**. Subtarefas ou PRs novos não substituem testes e homologação.
+
+---
+## Sprint integrada — Catálogo público escalável e curadoria de espaços (17/10/2026)
+
+**Produto:** oferta aprovada pelo Master → vitrine paginada e regional no Site → lead consentido com referência/UTM. **Nunca** consulta disponibilidade real, reserva ou recebe pagamentos.
+
+- [x] Oportunidades reais aprovadas com pesquisa de região, meio e navegação em páginas.
+- [x] Oferta selecionada acompanha o lead consentido e UTMs, sem reservar ou cobrar.
+- [x] BFF allowlist para paginação/região, contrato fail-closed e testes Node/Chromium/HTTP ampliados.
+- [ ] API integrada e CI Site atualizado devem ser comprovados antes de aceitar marco.
+
+**Percentual conservador até QA:** 75/150 = 50,0% (API 29/59, Admin 25/57, Site 21/34); 60% requer 90/150. Os testes da API e do Admin continuam pendentes até runners funcionais; não antecipar macromarcos sem validação. Merge API primeiro, depois Site e Admin, com rollback e QA. Não executar deploy/migração automaticamente.
+
+---
+
 ## Sprint integrada — proposta de plano público vinculada ao lead (17/10/2026)
 
 - [x] Capturar o identificador de plano público selecionado como campo estruturado `plan_id` no formulário oficial, apenas para estabelecimento, preservando UTM, consentimento e idempotência.
@@ -502,8 +526,8 @@
 |---|---:|---:|---:|
 | [meucomercial-api](https://github.com/paulodias-dev/meucomercial-api/blob/main/roadmap.md) | 29 | 59 | 49,2% |
 | [meucomercial-admin](https://github.com/paulodias-dev/meucomercial-admin/blob/main/roadmap.md) | 25 | 57 | 43,9% |
-| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 21 | 34 | 61,8% |
-| **Plataforma completa** | **75** | **150** | **50,0%** |
+| [meucomercial-site](https://github.com/paulodias-dev/meucomercial-site/blob/main/roadmap.md) | 23 | 34 | 67,6% |
+| **Plataforma completa** | **77** | **150** | **51,3%** |
 
 > **Atualização do painel:** 16/10/2026. Baseline mesclado 67/150 e marco de CI do Site concluído no PR definitivo #35, com workflow verde, totalizando **68/150**; até o merge, o incremento permanece na branch do PR. Séries históricas abaixo são mantidas para rastreabilidade.
 
@@ -600,7 +624,7 @@
 **Situação neste repositório:** Parcial · 1/4 marcos identificados.
 
 - [x] Calculadora comercial apresenta cenários de quantidade de telas e ciclo de cobrança.
-- [ ] Sincronizar preços, limites e disponibilidade com o catálogo de planos da API para evitar divergências comerciais.
+- [x] Sincronizar preços, limites e disponibilidade com o catálogo de planos da API para evitar divergências comerciais. `PublicIndoorPricing` já apresenta somente planos ativos com divulgação explicitamente autorizada via API, preço DECIMAL, limites e CTA sem checkout. Testes em `scripts/test-indoor-catalog.mjs` e CI Site.
 - [ ] Integrar checkout Mercado Pago/onboarding recorrente de forma segura (sem processar credenciais no browser).
 - [ ] Integrar leads e assinaturas com atribuição UTM/funil e métricas de conversão.
 
@@ -610,7 +634,7 @@
 
 - [x] **Proposta de valor e navegação por público.** Criar jornadas distintas e claras para Estabelecimentos (Rádio/TV, instalação, contrato recorrente, dispositivos) e Anunciantes (rede de pontos, segmentação, mídia disponível, campanhas, prova de exibição e proposta de veiculação). Manter página principal e identidade, com SEO/FAQ/CTAs próprios e sem prometer audiência ou cobertura não comprovadas.
 - [x] **Captação e conversão bilateral integrada ao CRM/API.** Formulários/contexto de demonstração e contratação de estabelecimento distintos de solicitação de mídia por anunciante, com consentimento LGPD, antispam, UTM/origem, validações, deduplicação e encaminhamento comercial ao fluxo correto; exibir estados de envio e fallback, nunca simular lead salvo quando não estiver.
-- [ ] **Catálogo seguro de mídia/solicitação de proposta.** Página comercial de formatos, regiões e oportunidades de anúncio alimentada por dados autorizados/curados do inventário e política de preços, com filtro/briefing e pedido de orçamento; não revelar taxas confidenciais, ocupação em tempo real ou dados identificáveis de estabelecimentos sem autorização. Evoluir para reserva/checkout apenas depois do backend de booking e das aprovações.
+- [x] **Catálogo seguro de mídia/solicitação de proposta.** `/anunciar` mostra ofertas públicas curadas e autorizadas, filtro regional/meio, paginação SQL e CTA consentido com referência `offer_id`/UTM. Não revela preços privados, lotação nem dados de estabelecimentos. Sem reserva/checkout. API #94 deve ser mesclada antes do Site #45.
 
 **Aceite da frente:** caminhos comerciais separados, rastreamento válido, leads registrados no CRM/API com finalidade/papel, LGPD revisada, dados reais e segurança do inventário; testes de conversão/SEO/mobile.
 ## Fase 8: Homologação, Refatoração e Deploy

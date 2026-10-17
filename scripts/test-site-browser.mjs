@@ -41,8 +41,14 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
       const offer={data:[{offer_id:31,title:'Spot autorizado em Aracaju',region:'Aracaju - SE',
         description:'Consultar espaços autorizados por período e contrato.',
         medium:'radio',availability:'consultation_required'}],
-        evidence:'curated_authorized_offer_not_realtime_capacity'}
+        evidence:'curated_authorized_offer_not_realtime_capacity',
+        pagination:{page:1,per_page:12,total:1,last_page:1}}
       const plans=req.url.includes('/plans')
+      const query=new URL(req.url,'https://localhost').searchParams
+      if(!plans && (query.get('medium')==='tv' || query.get('page')==='2' || query.get('region')==='Recife')){
+        offer.data=[]
+        offer.pagination={page:Number(query.get('page')||1),per_page:12,total:0,last_page:1}
+      }
       res.writeHead(200,{'Content-Type':'application/json'})
       res.end(JSON.stringify(plans?plan:offer))
       return
@@ -178,6 +184,26 @@ test('real Chromium E2E: TV preview, lead, radio page, templates and failure rec
         assert.ok((await page.locator('#lead-details').inputValue()).includes('Rádio Indoor'))
         assert.equal(new URL(page.url()).searchParams.get('utm_medium'),'social')
         assert.equal(new URL(page.url()).searchParams.has('action'),false)
+      }finally{await page.close()}
+    })
+
+    await t.test('curated inventory search and a reviewed offer carry a consented lead reference',async()=>{
+      const page=await browser.newPage({viewport:{width:375,height:812}})
+      try{
+        await page.goto(origin+'/anunciar?utm_source=meta',{waitUntil:'domcontentloaded'})
+        await page.getByRole('button',{name:/Spot em Rádio Indoor/}).click()
+        await page.getByText('Spot autorizado em Aracaju').waitFor()
+        await page.locator('#offers-region').fill('Recife')
+        await page.getByRole('button',{name:'Pesquisar',exact:true}).click()
+        await page.getByText('Nenhuma oportunidade foi aprovada').waitFor()
+        await page.getByRole('button',{name:'Limpar filtro'}).click()
+        await page.getByText('Spot autorizado em Aracaju').waitFor()
+        await page.getByRole('link',{name:'Solicitar análise'}).first().click()
+        const dialog=page.getByRole('dialog')
+        await dialog.waitFor()
+        assert.equal(await dialog.locator('#lead-kind').inputValue(),'advertiser')
+        assert.ok((await dialog.locator('#lead-details').inputValue()).includes('Oferta pública de interesse: #31'))
+        assert.equal(new URL(page.url()).searchParams.get('utm_source'),'meta')
       }finally{await page.close()}
     })
 

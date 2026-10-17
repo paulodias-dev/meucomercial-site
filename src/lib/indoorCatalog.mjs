@@ -6,7 +6,12 @@ export function verifyIndoorCatalog(v){
  return obj(v)&&v.evidence==='curated_authorized_offer_not_realtime_capacity'&&
  Array.isArray(v.data)&&v.data.length<=24&&v.data.every(o=>obj(o)&&id(o.offer_id)&&
  text(o.title,100)&&text(o.region,80)&&text(o.description,450)&&
- ['tv','radio'].includes(o.medium)&&o.availability==='consultation_required')
+ ['tv','radio'].includes(o.medium)&&o.availability==='consultation_required')&&
+ obj(v.pagination)&&Number.isSafeInteger(v.pagination.page)&&v.pagination.page>0&&
+ Number.isSafeInteger(v.pagination.per_page)&&v.pagination.per_page>=1&&v.pagination.per_page<=24&&
+ Number.isSafeInteger(v.pagination.total)&&v.pagination.total>=0&&
+ Number.isSafeInteger(v.pagination.last_page)&&v.pagination.last_page>=1&&
+ v.data.length<=v.pagination.per_page
 }
 export function verifyIndoorPlans(v){
  return obj(v)&&v.evidence==='approved_active_plan_not_purchase'&&

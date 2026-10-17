@@ -47,7 +47,9 @@ test('compiled Express site: SEO, private portal and real lead/error contracts o
       const offer={data:[{offer_id:31,title:'Spot autorizado em Aracaju',region:'Aracaju - SE',
         description:'Consultar espaços autorizados por período e contrato.',
         medium:'radio',availability:'consultation_required'}],
-        evidence:'curated_authorized_offer_not_realtime_capacity'}
+        evidence:'curated_authorized_offer_not_realtime_capacity',
+        pagination:{page:1,per_page:12,total:1,last_page:1}}
+      if(req.url.includes('page=2')){offer.data=[];offer.pagination={page:2,per_page:12,total:1,last_page:1}}
       const plans=req.url.includes('/plans')
       res.writeHead(200,{'Content-Type':'application/json'})
       res.end(JSON.stringify(plans?plan:offer))
@@ -152,6 +154,18 @@ test('compiled Express site: SEO, private portal and real lead/error contracts o
       j=await r.json()
       assert.equal(j.evidence,'curated_authorized_offer_not_realtime_capacity')
       assert.equal(j.data[0].availability,'consultation_required')
+      assert.equal(j.pagination.total,1)
+      r=await fetch(origin+'/api/indoor-catalog?medium=radio&region=Aracaju&page=2&per_page=12')
+      assert.equal(r.status,200)
+      j=await r.json()
+      assert.equal(j.pagination.page,2)
+      assert.equal(j.data.length,0)
+      r=await fetch(origin+'/api/indoor-catalog?region=https://invalid.example')
+      assert.equal(r.status,422)
+      r=await fetch(origin+'/api/indoor-catalog?per_page=999')
+      assert.equal(r.status,422)
+      r=await fetch(origin+'/api/indoor-catalog?page=0')
+      assert.equal(r.status,422)
       assert.ok(!JSON.stringify(j).includes('authorization_reference'))
       r=await fetch(origin+'/api/indoor-catalog?medium=private')
       assert.equal(r.status,422)
