@@ -47,6 +47,17 @@ export default function ClientPublicationTargets({
       .finally(()=>{if(!abort.signal.aborted)setLoading(false)})
     return ()=>abort.abort()
   },[token,batchId,page,delivery,reload])
+  // Read-only refresh while a published batch awaits first reports or
+  // sync acknowledgements. Do not poll a hidden tab or withdrawn publication.
+  useEffect(()=>{
+    if(!data || data.summary.publication_status!=='published' ||
+      (data.summary.awaiting_player_ack===0 && data.summary.awaiting_own_playback_report===0))return
+    const timer=window.setInterval(()=>{
+      if(document.visibilityState==='visible')setReload(v=>v+1)
+    },45000)
+    return ()=>window.clearInterval(timer)
+  },[batchId,token,data?.summary.publication_status,
+    data?.summary.awaiting_player_ack,data?.summary.awaiting_own_playback_report])
   return <div className='mt-5 border border-blue-100 rounded-2xl bg-white overflow-hidden' aria-label='Situação dos Players'>
     <div className='p-4 flex flex-wrap justify-between items-center gap-2 border-b border-black/10'>
       <div>
