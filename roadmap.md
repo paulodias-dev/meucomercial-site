@@ -1,3 +1,13 @@
+## Sprint integrada — proposta de plano público vinculada ao lead (17/10/2026)
+
+- [x] Capturar o identificador de plano público selecionado como campo estruturado `plan_id` no formulário oficial, apenas para estabelecimento, preservando UTM, consentimento e idempotência.
+- [x] Testar via Chromium o clique no plano publicado, preenchimento/aceite e confirmação HTTPS da solicitação contendo `plan_id` exato; rejeitar atribuição de compra automática.
+- [x] Acrescentar guarda Node contra regressão na serialização estruturada do plano e na retenção da atribuição.
+- [ ] Homologar integração com API Laravel/MySQL8 **após migrations e PR API do funil**, conferindo plano despublicado, preço alterado e isolamento.
+- [ ] Validar CI completo do Site nesta branch e experiência mobile em ambiente integrado.
+
+**Roadmap global de referência:** **75/150 = 50,0%** (API 29/59, Admin 25/57, Site 21/34); meta 60%=90/150. Não contabilizar os quinze macromarcos necessários sem aceite documentado. **Rollout:** API → Site → Admin. Nenhuma alteração de cobrança, contrato, reserva ou Player acontece a partir do lead.
+
 ## Sprint ampliada — preços e inventário revisados (17/10/2026)
 
 - [x] Opt-in comercial consultado pela BFF sem expor URL da API ou JWT
