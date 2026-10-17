@@ -7,6 +7,7 @@ import {commercialContactUrl,commercialMessage,readCommercialIntent} from '../sr
 const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 const plan={plan_id:11,name:'Indoor Empresarial',description:'Plano autorizado',price:'199.90',currency:'BRL',
  interval:'monthly',max_devices:5,storage_mb:2048,trial_days:0,checkout_available:false}
+const pagination={page:1,per_page:12,total:1,last_page:1}
 const offer={offer_id:22,title:'Spots em Região Centro',region:'Aracaju - SE',
  description:'Disponibilidade e preços mediante proposta.',medium:'radio',availability:'consultation_required'}
 
@@ -21,10 +22,10 @@ test('only explicitly approved active Indoor plan DTO is accepted',()=>{
  assert.equal(moneyExact('1.50'),'R$ 1,50')
 })
 test('public media offer cannot masquerade as a confirmed booking or disclose private metadata',()=>{
- assert.equal(verifyIndoorCatalog({data:[offer],evidence:'curated_authorized_offer_not_realtime_capacity'}),true)
- assert.equal(verifyIndoorCatalog({data:[{...offer,availability:'guaranteed'}],evidence:'curated_authorized_offer_not_realtime_capacity'}),false)
- assert.equal(verifyIndoorCatalog({data:[{...offer,medium:'unknown'}],evidence:'curated_authorized_offer_not_realtime_capacity'}),false)
- assert.equal(verifyIndoorCatalog({data:[{...offer,offer_id:-1}],evidence:'curated_authorized_offer_not_realtime_capacity'}),false)
+ assert.equal(verifyIndoorCatalog({pagination,data:[offer],evidence:'curated_authorized_offer_not_realtime_capacity'}),true)
+ assert.equal(verifyIndoorCatalog({pagination,data:[{...offer,availability:'guaranteed'}],evidence:'curated_authorized_offer_not_realtime_capacity'}),false)
+ assert.equal(verifyIndoorCatalog({pagination,data:[{...offer,medium:'unknown'}],evidence:'curated_authorized_offer_not_realtime_capacity'}),false)
+ assert.equal(verifyIndoorCatalog({pagination,data:[{...offer,offer_id:-1}],evidence:'curated_authorized_offer_not_realtime_capacity'}),false)
  const ui=read('src/components/PublishedAdOffers.tsx')
  assert.ok(ui.includes('não consulta')===false || ui.includes('confirmação'))
  assert.ok(ui.includes('sem compromisso') || ui.includes('sem compromisso')===false)
@@ -51,4 +52,24 @@ test('fixed public BFF endpoints cannot become arbitrary proxy or forward bearer
  assert.ok(server.includes("upstream.status===422"))
  assert.ok(!read('src/components/PublicIndoorPricing.tsx').includes('Authorization:'))
  assert.ok(!read('src/components/PublishedAdOffers.tsx').includes('Authorization:'))
+})
+
+test('curated inventory pages are bounded, with filters and no made-up capacity',()=>{
+ const valid={data:[offer],pagination,evidence:'curated_authorized_offer_not_realtime_capacity'}
+ assert.equal(verifyIndoorCatalog(valid),true)
+ assert.equal(verifyIndoorCatalog({...valid,pagination:{...pagination,per_page:25}}),false)
+ assert.equal(verifyIndoorCatalog({...valid,pagination:{...pagination,total:-1}}),false)
+ assert.equal(verifyIndoorCatalog({...valid,pagination:{...pagination,page:0}}),false)
+ assert.equal(verifyIndoorCatalog({...valid,pagination:{...pagination,per_page:0}}),false)
+ assert.equal(verifyIndoorCatalog({...valid,pagination:{...pagination,per_page:1},data:[offer,offer]}),false)
+ const ui=read('src/components/PublishedAdOffers.tsx')
+ assert.ok(ui.includes("params.set('region',region)"))
+ assert.ok(ui.includes("params.set('medium',medium)"))
+ assert.ok(ui.includes("setPagination(json.pagination)"))
+ assert.ok(ui.includes('Paginação das ofertas'))
+ assert.ok(ui.includes('Nenhuma oportunidade'))
+ const server=read('server.ts')
+ assert.ok(server.includes('endpoint.searchParams.set(\'region\',region.trim())'))
+ assert.ok(server.includes("key==='per_page'?24:10000"))
+ assert.ok(!ui.includes('price_per_insertion'))
 })
