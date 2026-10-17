@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {csvCell,buildPlaybackOverviewCsv,isPlaybackOverviewResponse} from '../src/lib/playbackOverview.mjs'
 import {isPublicationDeliveryResponse,deliveryFilters} from '../src/lib/publicationDelivery.mjs'
+const publicationDeliveryModule={isPublicationDeliveryResponse,deliveryFilters}
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const server=read('server.ts')
 const portal=read('src/components/ClientPortal.tsx')
@@ -532,9 +533,12 @@ test('publication delivery counts are validated across the full fleet, not only 
   const row={device_id:3,name:'TV recepção',connected_recently:true,needs_sync:false,
     last_seen_at:'2026-10-16T12:00:00Z',last_sync_at:null,requested_manifest_version:7,
     current_manifest_version:7,operational_state:'no_pending_sync_reported',playback_confirmed:false,
-    sync_acknowledged:true,sync_acknowledged_at:'2026-10-16T12:05:00Z',sync_evidence:'player_reported_protocol_v2'}
+    sync_acknowledged:true,sync_acknowledged_at:'2026-10-16T12:05:00Z',sync_evidence:'player_reported_protocol_v2',
+    own_playback_reported:true,first_own_playback_reported_at:'2026-10-16T12:06:00Z',
+    own_playback_evidence:'authenticated_player_report_not_independent_audience'}
   const response={data:[row],
     summary:{targets:21,sync_acknowledged_total:4,awaiting_player_ack:17,
+      own_playback_reported_devices:3,awaiting_own_playback_report:18,
       recently_connected:5,unavailable:3,sync_pending_flagged:9,
       delivery:'acknowledged',publication_status:'published',playback_confirmed:false},
     pagination:{page:1,per_page:20,last_page:1,total:4},
@@ -546,16 +550,18 @@ test('publication delivery counts are validated across the full fleet, not only 
   assert.equal(isPublicationDeliveryResponse({...response,summary:{...response.summary,playback_confirmed:true}},'acknowledged'),false)
   assert.equal(isPublicationDeliveryResponse({...response,data:[{...row,sync_acknowledged:true,sync_evidence:'not_reported'}]},'acknowledged'),false)
   assert.equal(isPublicationDeliveryResponse({...response,data:[{...row,playback_confirmed:true}]},'acknowledged'),false)
-  assert.deepEqual(deliveryFilters,['all','acknowledged','awaiting_ack','offline','sync_pending'])
+  assert.deepEqual(deliveryFilters,['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report'])
 })
 test('delivery UI sends an allowlisted filter via authenticated BFF and does not infer playback from ACK',()=>{
   assert.ok(server.includes("'publication-targets': {method: 'GET'"))
-  assert.ok(server.includes("['all','acknowledged','awaiting_ack','offline','sync_pending'].includes"))
+  assert.ok(server.includes("['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report'].includes"))
   assert.ok(server.includes("endpoint.searchParams.set('delivery', String(req.query.delivery ?? 'all'))"))
   assert.ok(!server.includes('req.query.client_id'))
   assert.ok(targets.includes("url.searchParams.set('delivery',delivery)"))
   assert.ok(targets.includes('isPublicationDeliveryResponse(payload,delivery)'))
   assert.ok(targets.includes('sync_acknowledged_total'))
+  assert.ok(targets.includes('own_playback_reported_devices'))
+  assert.ok(targets.includes('first_own_playback_reported_at'))
   assert.ok(targets.includes('awaiting_player_ack'))
   assert.ok(targets.includes('recently_connected'))
   assert.ok(targets.includes('data.pagination.total'))
@@ -563,4 +569,29 @@ test('delivery UI sends an allowlisted filter via authenticated BFF and does not
   assert.ok(targets.includes('ACK v2 confirma somente a sincronização'))
   assert.ok(!targets.includes('device_token'))
   assert.ok(!targets.includes('localStorage'))
+})
+
+test('own playback first-report contract is separate from manifest ACK and counterfeit audience',()=>{
+  const {isPublicationDeliveryResponse:isValid}=publicationDeliveryModule
+  const row={device_id:4,name:'TV caixa',connected_recently:true,needs_sync:false,
+    sync_acknowledged:false,sync_acknowledged_at:null,sync_evidence:'not_reported',
+    requested_manifest_version:5,current_manifest_version:5,
+    own_playback_reported:true,first_own_playback_reported_at:'2026-10-16T12:00:00Z',
+    own_playback_evidence:'authenticated_player_report_not_independent_audience',
+    operational_state:'no_pending_sync_reported',playback_confirmed:false}
+  const sample={data:[row],summary:{targets:5,sync_acknowledged_total:0,awaiting_player_ack:5,
+    own_playback_reported_devices:1,awaiting_own_playback_report:4,
+    sync_pending_flagged:0,recently_connected:1,unavailable:0,
+    delivery:'playback_reported',publication_status:'published',playback_confirmed:false},
+    pagination:{page:1,per_page:20,last_page:1,total:1},
+    evidence:'device_reported_sync_v2_not_independent_playback'}
+  assert.equal(isValid(sample,'playback_reported'),true)
+  assert.equal(isValid({...sample,summary:{...sample.summary,own_playback_reported_devices:6}},'playback_reported'),false)
+  assert.equal(isValid({...sample,summary:{...sample.summary,awaiting_own_playback_report:2}},'playback_reported'),false)
+  assert.equal(isValid({...sample,data:[{...row,first_own_playback_reported_at:null}]},'playback_reported'),false)
+  assert.equal(isValid({...sample,data:[{...row,own_playback_evidence:'verified_real_audience'}]},'playback_reported'),false)
+  assert.equal(isValid({...sample,data:[{...row,playback_confirmed:true}]},'playback_reported'),false)
+  assert.equal(isValid({...sample,summary:{...sample.summary,delivery:'awaiting_playback_report'}},'playback_reported'),false)
+  assert.ok(server.includes("'playback_reported','awaiting_playback_report'"))
+  assert.ok(targets.includes('Relato autenticado de conclusão de conteúdo próprio'))
 })
