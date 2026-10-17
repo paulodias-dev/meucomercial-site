@@ -64,7 +64,7 @@ test('spoken radio samples are local, accessible, opt-in and never billed or sen
   assert.ok(audio.includes("message.lang = 'pt-BR'"))
   assert.ok(audio.includes("aria-live='polite'"))
   assert.ok(audio.includes("aria-pressed={active === item.id}"))
-  assert.ok(audio.includes('não contabilizamos veiculações'))
+  assert.ok(audio.includes('nem contabilizamos veiculações'))
   assert.ok(!audio.includes('fetch('))
   assert.ok(!audio.includes('localStorage'))
   assert.ok(!audio.includes('<audio'))
