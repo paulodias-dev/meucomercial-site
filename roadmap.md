@@ -1,3 +1,32 @@
+## REGRA OPERACIONAL PERMANENTE — SEM GITHUB ACTIONS AUTOMÁTICO (17/10/2026)
+
+**Restrição declarada pelo responsável do projeto:** não há cota/pacote disponível de GitHub Actions. É proibido desperdiçar tempo com reexecução, tentativa de desbloqueio ou disparo de workflows na plataforma sem autorização expressa posterior.
+
+- Todos os seis workflows existentes nos três repositórios devem ficar sem eventos `push` e `pull_request`; manter apenas `workflow_dispatch` para eventual acionamento futuro **somente quando o responsável autorizar e houver cota**. Não disparar execuções manuais agora.
+- **Plano de teste sem Actions:** executar localmente, sempre que o ambiente estiver disponível: API Laravel/PHPUnit, sintaxe PHP, Swagger L5 e MySQL 8 isolado; Site npm/TypeScript/Vite/testes Node/Chromium; Admin Metronic TypeScript/Vite/testes Node e Player Web. Preferir testes seletivos de regressão ligados ao bloco antes da suíte integral. Para QA integrado, levantar serviços localmente e exercitar jornadas de ponta a ponta.
+- **Evidência em PR:** registrar comandos, ambiente, resultados, falhas e limitações. Se não houver acesso aos runtimes, dependências, MySQL 8, navegador ou hardware, marcar o gate como **PENDENTE** e oferecer comandos reproduzíveis; jamais chamar verificações estáticas de homologação.
+- **Progresso:** ausência de Actions não impede escrever código e abrir PRs, mas também não autoriza afirmar que os testes passaram. Prosseguir com grandes blocos funcionais, sem inflar os 77/150 = 51,3% até aceite real.
+- **Reativação futura:** somente por nova decisão explícita do responsável, em PR revisado; não reintroduzir gatilhos automáticos silenciosamente.
+
+---
+
+## POLÍTICA PERMANENTE DE ENTREGA — SPRINTS MACRO E AVANÇO REAL (17/10/2026)
+
+**Decisão do produto (válida nos três repositórios):** priorizar **blocos grandes e integrados**, capazes de alterar o progresso real do MVP. Não usar uma sequência de PRs cosméticos ou subtarefas isoladas como substituto de uma entrega considerável.
+
+- **Meta de planejamento por entrega macro:** **pelo menos +5 pontos percentuais** no progresso GLOBAL do MVP, contados somente após aceite verificável. A meta mede pontos percentuais, não crescimento relativo de 5% nem número de commits, arquivos ou PRs.
+- **Critério de nomenclatura:** chamar de **marco gerencial** somente um resultado funcional de negócio com peso de **ao menos 1 ponto percentual** na medição global; os 150 itens históricos são **unidades de referência/aceite**, cada qual correspondendo a 1/150 = 0,6667 ponto percentual. Agrupar pelo menos duas unidades históricas relacionadas ao declarar um marco gerencial, sem mudar arbitrariamente o denominador.
+- **Contabilidade da meta:** ponto de partida auditável **77/150 = 51,3%** (API 29/59, Admin/Player 25/57, Site 23/34). Entrega mínima de +5 p.p. exige ao menos **8 unidades antigas adicionais aceitas**: 85/150 = **56,7%** (+5,3 p.p.). **Próxima meta prioritária: 90/150 = 60,0%** (+13 unidades antigas, +8,7 p.p.), com demonstração das jornadas e aceites — não inflar porcentagem pela simples publicação dos PRs.
+- **Formato da sprint:** escolher um fluxo vertical de valor (Site → API Laravel/MySQL → Admin/Player, conforme o domínio), decompor em histórias funcionais, implementar contratos/testes/migrations/UX/documentação necessários e entregar PRs coordenados, não draft, com dependências e ordem de merge. Corrigir bloqueios de teste/integração antes de multiplicar alterações pequenas.
+- **Portas de aceite:** testes realmente executados e registrados (incluindo PHPUnit + MySQL 8 + Swagger para API alterada; build/TypeScript/QA nas interfaces; RBAC, multi-tenant e fluxos reais pertinentes); validar deploy/hardware apenas se de fato testados. Nunca classificar testes pendentes como aprovados ou confundir branch, merge, PR aberto e funcionalidade homologada.
+- **Exceções justificáveis:** correções urgentes de segurança, dados ou quebra de produção podem ser pequenas e independentes, mas **não substituem** a meta da entrega macro. Se o avanço de +5 p.p. não for possível por impedimento real, explicar quais aceites faltam, evidências e trabalho necessário, sem inventar porcentagem.
+- **Relatório de cada entrega:** antes/depois (numerador e denominador globais e por repo), variação **em pontos percentuais**, funcionalidades utilizáveis, testes com provas, pendências, risco/rollback, links dos PRs definitivos e plano do próximo bloco.
+- **Prioridade imediata:** eliminar pendências de validação da API/Admin e homologar os contratos dos PRs já mesclados. Só após os aceites confirmar a evolução até **90/150 (60%)**; não contar novamente trabalho anterior.
+
+Esta política prevalece, para **dimensionamento de sprint e apuração do avanço**, sobre referências históricas a entregas pequenas e a “13 macromarcos”; os 13 são **unidades históricas de aceite**, não 13 entregas independentes. O conteúdo técnico e as regras de segurança de cada repositório permanecem inalterados.
+
+---
+
 ## Sprint integrada — proposta atribuída a anúncio revisado (17/10/2026)
 
 **Jornada:** vitrine /anunciar → escolha de oferta pública #ID → formulário com consentimento → campo estruturado `offer_id` → validação Laravel → contexto histórico no Master. Não há checkout, reserva ou previsão de audiência.

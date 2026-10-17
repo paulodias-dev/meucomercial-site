@@ -58,3 +58,17 @@ Escopo: todo o repositório `meucomercial-site`. Site público de aquisição de
 5. Antes de marcar produção concluída, validar deploy, SSL, proxy da API, emails/config e plano de rollback. A entrega de código **não equivale** a site publicado e homologado.
 
 **Prioridade:** credibilidade comercial, aquisição real de leads, segurança dos dados e experiência mobile limpa.
+
+## Política permanente de sprints macro (decisão do produto — 17/10/2026)
+
+**Instrução obrigatória em toda retomada do Meu Comercial:** ler primeiro `roadmap.md`, esta seção e os PRs ativos dos três repositórios. O usuário rejeitou entregas pequenas em sequência; preferir **blocos verticais completos e consideráveis**, integrando API, Site, Admin e Player quando fizer sentido. Objetivo de **pelo menos +5 pontos percentuais globais por sprint macro aceita**; não prometer esse ganho antes de executar os testes e aceitar os critérios.
+
+**Medição:** baseline registrado 77/150 = 51,3%; cada unidade histórica é 0,6667 p.p. e NÃO é, isoladamente, um marco gerencial >=1 p.p.; ao menos 8 novas unidades antigas aceitas levam a 85/150 = 56,7%. Próxima meta conjunta **90/150 = 60,0%** (+13 unidades antigas); são unidades de aceite, não PRs nem 13 entregas. “5%” nesta política significa **5 pontos percentuais**, e não 5% relativo.
+
+Criar PRs **não draft** coerentes por repositório, preservar `main`, registrar vínculos, rollback, evidências de PHPUnit/MySQL/Swagger e builds/QA onde aplicável. Não pontuar código apenas implementado, mocks isolados, CI sem steps, merge ou deploy como se fosse homologação. Uma correção crítica menor é admitida sem anular a meta macro. Ao reportar, explicitar valor entregue, progresso antes/depois, bloqueios objetivos e próximo pacote substancial. As regras de domínio, autorização e segurança acima continuam mandatórias.
+
+## Regra obrigatória — GitHub Actions sem cota (17/10/2026)
+
+O responsável informou **ausência de pacote/cota disponível de GitHub Actions**. Não usar, acionar, retentar ou depender de Actions para esta entrega nem para as seguintes, salvo autorização expressa futura. Os workflows devem permanecer somente com `workflow_dispatch` (sem eventos automáticos de PR/push), e **nem mesmo o despacho manual** pode ser feito agora.
+
+Priorizar validação fora do GitHub Actions: comandos locais de build, lint, testes pertinentes e execução integrada com MySQL/serviços descartáveis, quando o ambiente suportar. No PR, discriminar `executado e aprovado`, `executado e falhou` e `não executado/pendente`, com comandos de reprodução; nunca classificar CI sem steps, testes mockados isolados ou mera revisão estática como homologação completa. Continuar priorizando sprints macro com meta de +5 pontos percentuais reais somente após critérios aceitos, conforme `roadmap.md`.
