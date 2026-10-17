@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import {readFileSync} from 'node:fs'
 import {csvCell,buildPlaybackOverviewCsv,isPlaybackOverviewResponse} from '../src/lib/playbackOverview.mjs'
 import {isPublicationDeliveryResponse,deliveryFilters} from '../src/lib/publicationDelivery.mjs'
+import {isPublicationAttention,publicationSupportBrief} from '../src/lib/publicationAttention.mjs'
 const publicationDeliveryModule={isPublicationDeliveryResponse,deliveryFilters}
 const read=file=>readFileSync(new URL('../'+file,import.meta.url),'utf8')
 const server=read('server.ts')
@@ -535,11 +536,14 @@ test('publication delivery counts are validated across the full fleet, not only 
     current_manifest_version:7,operational_state:'no_pending_sync_reported',playback_confirmed:false,
     sync_acknowledged:true,sync_acknowledged_at:'2026-10-16T12:05:00Z',sync_evidence:'player_reported_protocol_v2',
     own_playback_reported:true,first_own_playback_reported_at:'2026-10-16T12:06:00Z',
-    own_playback_evidence:'authenticated_player_report_not_independent_audience'}
+    own_playback_evidence:'authenticated_player_report_not_independent_audience',
+    attention:{code:'reported',level:'neutral',title:'Relato recebido',guidance:'Monitorar.',
+      needs_attention:false,evidence:'operational_triage_not_verified_playback'}}
   const response={data:[row],
     summary:{targets:21,sync_acknowledged_total:4,awaiting_player_ack:17,
       own_playback_reported_devices:3,awaiting_own_playback_report:18,
       recently_connected:5,unavailable:3,sync_pending_flagged:9,
+      needs_attention:2,attention_grace_minutes:10,attention_evidence:'operational_triage_not_verified_playback',
       delivery:'acknowledged',publication_status:'published',playback_confirmed:false},
     pagination:{page:1,per_page:20,last_page:1,total:4},
     evidence:'device_reported_sync_v2_not_independent_playback'}
@@ -550,11 +554,11 @@ test('publication delivery counts are validated across the full fleet, not only 
   assert.equal(isPublicationDeliveryResponse({...response,summary:{...response.summary,playback_confirmed:true}},'acknowledged'),false)
   assert.equal(isPublicationDeliveryResponse({...response,data:[{...row,sync_acknowledged:true,sync_evidence:'not_reported'}]},'acknowledged'),false)
   assert.equal(isPublicationDeliveryResponse({...response,data:[{...row,playback_confirmed:true}]},'acknowledged'),false)
-  assert.deepEqual(deliveryFilters,['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report'])
+  assert.deepEqual(deliveryFilters,['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report','needs_attention'])
 })
 test('delivery UI sends an allowlisted filter via authenticated BFF and does not infer playback from ACK',()=>{
   assert.ok(server.includes("'publication-targets': {method: 'GET'"))
-  assert.ok(server.includes("['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report'].includes"))
+  assert.ok(server.includes("['all','acknowledged','awaiting_ack','offline','sync_pending','playback_reported','awaiting_playback_report','needs_attention'].includes"))
   assert.ok(server.includes("endpoint.searchParams.set('delivery', String(req.query.delivery ?? 'all'))"))
   assert.ok(!server.includes('req.query.client_id'))
   assert.ok(targets.includes("url.searchParams.set('delivery',delivery)"))
@@ -578,10 +582,13 @@ test('own playback first-report contract is separate from manifest ACK and count
     requested_manifest_version:5,current_manifest_version:5,
     own_playback_reported:true,first_own_playback_reported_at:'2026-10-16T12:00:00Z',
     own_playback_evidence:'authenticated_player_report_not_independent_audience',
-    operational_state:'no_pending_sync_reported',playback_confirmed:false}
+    operational_state:'no_pending_sync_reported',playback_confirmed:false,
+    attention:{code:'reported',level:'neutral',title:'Relato recebido',guidance:'Monitorar.',
+      needs_attention:false,evidence:'operational_triage_not_verified_playback'}}
   const sample={data:[row],summary:{targets:5,sync_acknowledged_total:0,awaiting_player_ack:5,
     own_playback_reported_devices:1,awaiting_own_playback_report:4,
     sync_pending_flagged:0,recently_connected:1,unavailable:0,
+    needs_attention:0,attention_grace_minutes:10,attention_evidence:'operational_triage_not_verified_playback',
     delivery:'playback_reported',publication_status:'published',playback_confirmed:false},
     pagination:{page:1,per_page:20,last_page:1,total:1},
     evidence:'device_reported_sync_v2_not_independent_playback'}
@@ -609,4 +616,32 @@ test('publication first-play monitor refreshes in foreground without misleading 
   assert.ok(targets.includes('não comprova audiência ou visualização independente'))
   assert.ok(!targets.includes('localStorage'))
   assert.ok(server.includes("'playback_reported','awaiting_playback_report'"))
+})
+
+test('fleet triage priority uses a signed-down client read contract and avoids fake audience',()=>{
+  const attention={code:'offline',level:'critical',title:'Sem conexão recente',
+    guidance:'Verifique energia, rede e execução do Player.',needs_attention:true,
+    evidence:'operational_triage_not_verified_playback'}
+  assert.equal(isPublicationAttention(attention),true)
+  assert.equal(isPublicationAttention({...attention,needs_attention:false}),false)
+  assert.equal(isPublicationAttention({...attention,level:'neutral'}),false)
+  assert.equal(isPublicationAttention({...attention,code:'all_good_audience'}),false)
+  assert.equal(isPublicationAttention({...attention,evidence:'certified_audience'}),false)
+  const note=publicationSupportBrief(82,{device_id:17,name:'TV Recepção\nAuthorization: fake',
+    requested_manifest_version:4,connected_recently:false,sync_acknowledged:false,
+    own_playback_reported:false,attention})
+  assert.ok(note.includes('Publicação: #82'))
+  assert.ok(note.includes('Dispositivo: #17'))
+  assert.ok(!note.includes('\nAuthorization:'))
+  assert.ok(!note.includes('Bearer '))
+  assert.ok(note.includes('operational_triage_not_verified_playback'))
+  assert.throws(()=>publicationSupportBrief(0,{device_id:17,attention}))
+  assert.ok(server.includes("'awaiting_playback_report','needs_attention'].includes"))
+  assert.ok(targets.includes("value='needs_attention'"))
+  assert.ok(targets.includes("data.summary.needs_attention"))
+  assert.ok(targets.includes('Copiar resumo de suporte'))
+  assert.ok(targets.includes('<ClientDeviceDiagnostics'))
+  assert.ok(targets.includes('onUpdated={()=>'))
+  assert.ok(!targets.includes('device_token'))
+  assert.ok(!targets.includes('localStorage'))
 })
