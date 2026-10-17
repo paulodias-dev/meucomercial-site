@@ -7,7 +7,8 @@
 - [x] Portal apresenta bloqueados, sem pareamento, offline, sincronização pendente e ausência de relatos sem confundir categorias.
 - [x] Seleção de prioridade reseta paginação e diagnóstico expandido; exportação CSV e filtros de mídia/período preservados.
 - [x] Validação JS dos estados, contadores e linhas recebidos da API, além de novos testes funcionais Node e contrato de segurança.
-- [ ] CI verde, compatibilidade de versões API/Site e E2E mobile, autenticação e Player físico.
+- [x] CI [Site #38985065323](https://github.com/paulodias-dev/meucomercial-site/actions/runs/38985065323) verde em npm ci, TypeScript, testes Node e build Vite/Express.
+- [ ] Compatibilidade API/Site em ambiente integrado e E2E mobile, autenticação e Player físico.
 
 **Progresso de referência:** API 29/59, Admin 25/57, Site 14/34; total 68/150 = **45,3%**, sem encerrar marcos incompletos. **Ordem:** API antes de Site. Sem merge/deploy automático. Próximo bloco: recuperação assistida e homologação física.
 
