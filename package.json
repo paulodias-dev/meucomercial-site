@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "npm run test:radio && npm run test:journeys && npm run test:portal && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "npm run test:radio && npm run test:journeys && npm run test:portal && npm run test:showcase && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
@@ -13,7 +13,8 @@
     "test:journeys": "node --test scripts/test-audience-journeys.mjs",
     "test:portal": "node --test scripts/test-client-portal.mjs",
     "test:http": "node --test scripts/test-site-http.mjs",
-    "test:browser": "node --test scripts/test-site-browser.mjs"
+    "test:browser": "node --test scripts/test-site-browser.mjs",
+    "test:showcase": "node --test scripts/test-showcase-contracts.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
