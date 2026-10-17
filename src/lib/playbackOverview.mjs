@@ -9,7 +9,11 @@ export function isPlaybackOverviewResponse(value) {
       !record(value.pagination) || value.data.length > 12) return false
   const summary = value.summary
   const pagination = value.pagination
+  const attentionKeys = ['blocked','unpaired','offline','sync_pending','no_reports']
   if (![1,7,30].includes(summary.days) || !['all','tv','radio'].includes(summary.kind) ||
+      !['all',...attentionKeys].includes(summary.attention) ||
+      !record(summary.attention_counts) ||
+      !attentionKeys.every(key => nonnegative(summary.attention_counts[key])) ||
       summary.bucket_timezone !== 'UTC' ||
       summary.evidence !== 'authenticated_player_report_not_independent_audience' ||
       !nonnegative(summary.devices_total) || !nonnegative(summary.devices_with_reports) ||
@@ -23,6 +27,8 @@ export function isPlaybackOverviewResponse(value) {
     Number.isSafeInteger(row.device_id) && row.device_id > 0 &&
     typeof row.name === 'string' && typeof row.device_type === 'string' &&
     nonnegative(row.reports_total) && byType(row.by_type) &&
+    ['blocked','unpaired','offline','sync_pending','online'].includes(row.operational_status) &&
+    (row.last_seen_at === null || typeof row.last_seen_at === 'string') &&
     (row.last_reported_at === null || typeof row.last_reported_at === 'string'))
 }
 
@@ -35,10 +41,11 @@ export function csvCell(value) {
 }
 
 export function buildPlaybackOverviewCsv(rows) {
-  const headers = ['Dispositivo','Tipo','Relatos','Imagens','Vídeos','Áudios','Último relato (UTC)']
+  const headers = ['Dispositivo','Tipo','Situação','Relatos','Imagens','Vídeos','Áudios','Última conexão (UTC)','Último relato (UTC)']
   const lines = rows.map(row => [
-    row.name, row.device_type, row.reports_total, row.by_type.image,
-    row.by_type.video, row.by_type.audio, row.last_reported_at ?? '',
+    row.name, row.device_type, row.operational_status, row.reports_total,
+    row.by_type.image, row.by_type.video, row.by_type.audio,
+    row.last_seen_at ?? '', row.last_reported_at ?? '',
   ].map(csvCell).join(';'))
   return '\uFEFF' + [headers.map(csvCell).join(';'),...lines].join('\r\n') + '\r\n'
 }

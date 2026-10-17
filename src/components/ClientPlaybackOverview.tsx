@@ -7,15 +7,18 @@ import {buildPlaybackOverviewCsv,isPlaybackOverviewResponse} from '../lib/playba
 // Player-reported completion is not independent audience or billing proof.
 type Day = 1|7|30
 type Kind = 'all'|'tv'|'radio'
+type Attention = 'all'|'blocked'|'unpaired'|'offline'|'sync_pending'|'no_reports'
 type Row = {
   device_id:number;name:string;device_type:string;reports_total:number
-  last_reported_at:string|null
+  last_reported_at:string|null;last_seen_at:string|null
+  operational_status:'blocked'|'unpaired'|'offline'|'sync_pending'|'online'
   by_type:{image:number;video:number;audio:number}
 }
 type Response = {
   data:Row[]
   summary:{
-    days:Day;kind:Kind;bucket_timezone:'UTC';devices_total:number
+    days:Day;kind:Kind;attention:Attention;bucket_timezone:'UTC';devices_total:number
+    attention_counts:{blocked:number;unpaired:number;offline:number;sync_pending:number;no_reports:number}
     devices_with_reports:number;reports_total:number
     by_type:{image:number;video:number;audio:number}
     by_day:Array<{date:string;total:number}>
@@ -35,6 +38,7 @@ const readableDate=(value:string|null)=>{
 export default function ClientPlaybackOverview({token}:{token:string}){
   const [days,setDays]=useState<Day>(7)
   const [kind,setKind]=useState<Kind>('all')
+  const [attention,setAttention]=useState<Attention>('all')
   const [page,setPage]=useState(1)
   const [refresh,setRefresh]=useState(0)
   const [selectedDeviceId,setSelectedDeviceId]=useState<number|null>(null)
@@ -48,6 +52,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
     const url=new URL('/api/portal/playback-overview',window.location.origin)
     url.searchParams.set('days',String(days))
     url.searchParams.set('kind',kind)
+    url.searchParams.set('attention',attention)
     url.searchParams.set('page',String(page))
     fetch(url,{method:'GET',headers:{Authorization:'Bearer '+token,Accept:'application/json'},
       credentials:'omit',cache:'no-store',signal:controller.signal})
@@ -63,7 +68,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
       .catch(reason=>{if(!controller.signal.aborted)setError(reason instanceof Error?reason.message:'Consulta indisponível.')})
       .finally(()=>{if(!controller.signal.aborted)setLoading(false)})
     return ()=>controller.abort()
-  },[token,days,kind,page,refresh])
+  },[token,days,kind,attention,page,refresh])
 
   const summary=data?.summary
   const maxDaily=Math.max(1,...(summary?.by_day.map(day=>day.total)??[0]))
@@ -82,7 +87,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
     try{
       const link=document.createElement('a')
       link.href=url
-      link.download='meucomercial-resumo-players-'+kind+'-'+days+'dias-p'+page+'.csv'
+      link.download='meucomercial-resumo-players-'+kind+'-'+attention+'-'+days+'dias-p'+page+'.csv'
       document.body.appendChild(link)
       link.click()
       link.remove()
@@ -100,7 +105,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         <RefreshCcw size={15} aria-hidden/>Atualizar
       </button>
     </div>
-    <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5'>
+    <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5'>
       <label className='block text-xs font-semibold' htmlFor='playback-days'>Período
         <select id='playback-days' value={days} onChange={event=>{setDays(Number(event.target.value) as Day);setPage(1);setSelectedDeviceId(null)}}
           className='mt-1 w-full min-h-11 border border-black/20 rounded-xl px-3 bg-white text-sm'>
@@ -111,6 +116,18 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         <select id='playback-kind' value={kind} onChange={event=>{setKind(event.target.value as Kind);setPage(1);setSelectedDeviceId(null)}}
           className='mt-1 w-full min-h-11 border border-black/20 rounded-xl px-3 bg-white text-sm'>
           <option value='all'>TV e Rádio</option><option value='tv'>TV (imagens e vídeos)</option><option value='radio'>Rádio (spots próprios)</option>
+        </select>
+      </label>
+      <label className='block text-xs font-semibold' htmlFor='playback-attention'>Situação operacional
+        <select id='playback-attention' value={attention}
+          onChange={event=>{setAttention(event.target.value as Attention);setPage(1);setSelectedDeviceId(null)}}
+          className='mt-1 w-full min-h-11 border border-black/20 rounded-xl px-3 bg-white text-sm'>
+          <option value='all'>Todos os Players</option>
+          <option value='blocked'>Bloqueados</option>
+          <option value='unpaired'>Aguardando pareamento</option>
+          <option value='offline'>Sem conexão recente</option>
+          <option value='sync_pending'>Sincronização pendente</option>
+          <option value='no_reports'>Sem relatos neste filtro</option>
         </select>
       </label>
     </div>
@@ -124,6 +141,23 @@ export default function ClientPlaybackOverview({token}:{token:string}){
           <span className='block text-xs text-black/65'>{label}</span>
           <strong className='block text-lg sm:text-xl mt-2'>{typeof value==='number'?value.toLocaleString('pt-BR'):value}</strong>
         </div>)}
+      </div>
+      <div className='mb-5'>
+        <h3 className='font-semibold text-sm mb-2'>Prioridades operacionais na rede</h3>
+        <div className='grid grid-cols-2 lg:grid-cols-5 gap-2'>
+          {([
+            ['blocked','Bloqueados'],['unpaired','Sem pareamento'],['offline','Offline'],
+            ['sync_pending','Aguardando sync'],['no_reports','Sem relatos'],
+          ] as const).map(([key,label])=><button key={key} type='button'
+            onClick={()=>{setAttention(key);setPage(1);setSelectedDeviceId(null)}}
+            aria-pressed={attention===key}
+            className={'text-left rounded-xl border p-3 min-h-16 '+(attention===key
+              ?'border-blue-700 bg-blue-50':'border-black/10 bg-slate-50')}>
+              <span className='block text-[11px] text-black/65'>{label}</span>
+              <strong className='text-xl tabular-nums'>{summary.attention_counts[key].toLocaleString('pt-BR')}</strong>
+            </button>)}
+        </div>
+        <p className='text-xs text-black/60 mt-2'>Indicadores de toda a rede autorizada, não apenas desta página. Um Player sem relato não está necessariamente desligado.</p>
       </div>
       <div className='mb-5'>
         <h3 className='font-semibold text-sm mb-2'>Evolução diária (UTC)</h3>
@@ -140,14 +174,17 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         {summary.reports_total===0&&<p className='text-xs text-black/60 mt-2'>Nenhum relato no período. Isso não significa necessariamente que o aparelho esteve desligado.</p>}
       </div>
       <div className='overflow-x-auto'>
-        <table className='min-w-[600px] w-full text-left text-xs'>
+        <table className='min-w-[780px] w-full text-left text-xs'>
           <caption className='sr-only'>Players do próprio estabelecimento e quantidades de relatos no período</caption>
           <thead><tr className='border-b border-black/10'>
-            <th scope='col' className='p-2'>Dispositivo</th><th scope='col' className='p-2'>Relatos</th>
+            <th scope='col' className='p-2'>Dispositivo</th><th scope='col' className='p-2'>Situação</th><th scope='col' className='p-2'>Relatos</th>
             <th scope='col' className='p-2'>Imagem / Vídeo / Áudio</th><th scope='col' className='p-2'>Último relato</th><th scope='col' className='p-2'>Ações</th>
           </tr></thead>
           <tbody>{data.data.map(device=><tr key={device.device_id} className='border-b border-black/5'>
             <td className='p-2 font-semibold'>{device.name}</td>
+            <td className='p-2'><span className='block font-semibold'>{({blocked:'Bloqueado',unpaired:'Sem parear',offline:'Offline',sync_pending:'Sincronização pendente',online:'Conectado'} as const)[device.operational_status]}</span>
+              <span className='text-[11px] text-black/50'>Último contato: {readableDate(device.last_seen_at)}</span>
+            </td>
             <td className='p-2'>{device.reports_total.toLocaleString('pt-BR')}</td>
             <td className='p-2'>{device.by_type.image} / {device.by_type.video} / {device.by_type.audio}</td>
             <td className='p-2'>{readableDate(device.last_reported_at)}</td>
@@ -162,7 +199,7 @@ export default function ClientPlaybackOverview({token}:{token:string}){
       {selectedDeviceId!==null&&data.data.some(device=>device.device_id===selectedDeviceId)&&<div id='playback-selected-diagnostics' className='mt-4'>
         <ClientDeviceDiagnostics key={selectedDeviceId} token={token} deviceId={selectedDeviceId}/>
       </div>}
-      {data.data.length===0&&<p className='text-xs text-black/60 py-4'>Nenhum Player cadastrado neste estabelecimento.</p>}
+      {data.data.length===0&&<p className='text-xs text-black/60 py-4'>Nenhum Player encontrado para a situação selecionada.</p>}
       <div className='flex justify-between items-center gap-3 mt-4 text-xs'>
         <span>Página {data.pagination.page} de {data.pagination.last_page} · {data.pagination.total} Players</span>
         <div className='flex flex-wrap gap-2 justify-end'>
