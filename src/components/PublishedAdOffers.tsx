@@ -63,7 +63,7 @@ export default function PublishedAdOffers({medium}:{medium:'tv'|'radio'|'mixed'}
       <span className='text-xs text-slate-700'>{x.region} · {x.medium==='tv'?'TV Indoor':'Rádio Indoor'}</span>
       <p className='text-sm leading-6 text-slate-600'>{x.description}</p>
       <p className='text-xs text-amber-900'>Disponibilidade, veiculação e preço sujeitos à confirmação.</p>
-      <a href={commercialContactUrl({kind:'advertiser',medium:x.medium,source:'media-catalog'},window.location.search)}
+      <a href={commercialContactUrl({kind:'advertiser',medium:x.medium,source:'media-catalog',offerId:x.offer_id},window.location.search)}
          className='mt-auto min-h-11 bg-blue-700 text-white rounded-lg px-4 py-3 text-sm font-semibold inline-flex justify-center items-center gap-2'>Solicitar análise <ArrowRight size={16} aria-hidden/></a>
     </article>)}
    </div>
