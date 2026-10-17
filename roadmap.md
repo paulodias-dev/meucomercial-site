@@ -1,4 +1,18 @@
 # Roadmap de Desenvolvimento — Plataforma SaaS Mídia Indoor
+## Sprint integrada — triagem operacional da rede e Player resiliente (17/10/2026)
+
+**Objetivo:** transformar estados de publicação/ACK/relatos em suporte operacional seguro, sem falsos alarmes, mantendo reprodução sob lease; integração Laravel → Portal React/Metronic → Player Web.
+
+- [x] Adicionar filtro e contador de Players que precisam de atenção na tela de publicações (API, BFF e UI).
+- [x] Renderizar recomendação contextual por aparelho e diferenciar incidentes de estados informativos.
+- [x] Abrir diagnóstico real com JWT do cliente, ação de sync já protegida por confirmação explícita, sem comandos automáticos.
+- [x] Exportar somente por interação manual resumo de suporte sanitizado e sem credenciais.
+- [x] Validar tipo, nível, código, semântica da triagem e totais do conjunto em runtime e testes Node.
+- [ ] Executar TypeScript/contratos/build, validar mobile e concluir QA integrado com API e Player TV/Rádio.
+
+**Progresso baseado em macromarcos aceitos (gates de CI/hardware ainda pendentes):** API 29/59 + Admin 25/57 + Site 14/34 = **68/150 (45,3%)**. Não contar subtarefas escritas como conclusões de macromarcos não homologados. Prioridade API → Portal; Admin/Player independente. Sem merge/deploy automático ou alterações destrutivas.
+
+
 ## Sprint integrada — primeiro relato de execução por publicação (16–17/10/2026)
 
 **Objetivo:** completar a rastreabilidade de cada publicação do agendamento até o relato autenticado do Player, mantendo ACK, relato de mídia própria e audiência em domínios distintos.
