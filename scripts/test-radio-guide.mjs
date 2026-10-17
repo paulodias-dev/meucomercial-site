@@ -69,3 +69,14 @@ test('spoken radio samples are local, accessible, opt-in and never billed or sen
   assert.ok(!audio.includes('localStorage'))
   assert.ok(!audio.includes('<audio'))
 })
+
+test('radio showcase has its own public route, canonical metadata and honest scope',()=>{
+ const showcase=read('src/components/RadioShowcasePage.tsx')
+ const server=read('server.ts')
+ assert.ok(app.includes('<RadioShowcasePage />'))
+ assert.ok(component.includes("href='/radio-indoor'"))
+ assert.ok(showcase.includes("url='/radio-indoor'"))
+ assert.ok(showcase.includes('não executa um Player contratado'))
+ assert.ok(server.includes("app.get(['/radio-indoor', '/radio-indoor/']"))
+ assert.ok(server.includes("const canonical = 'https://meucomercial.com.br/radio-indoor'"))
+})
