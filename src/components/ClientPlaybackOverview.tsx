@@ -197,7 +197,8 @@ export default function ClientPlaybackOverview({token}:{token:string}){
         </table>
       </div>
       {selectedDeviceId!==null&&data.data.some(device=>device.device_id===selectedDeviceId)&&<div id='playback-selected-diagnostics' className='mt-4'>
-        <ClientDeviceDiagnostics key={selectedDeviceId} token={token} deviceId={selectedDeviceId}/>
+        <ClientDeviceDiagnostics key={selectedDeviceId} token={token} deviceId={selectedDeviceId}
+          onUpdated={()=>setRefresh(n=>n+1)}/>
       </div>}
       {data.data.length===0&&<p className='text-xs text-black/60 py-4'>Nenhum Player encontrado para a situação selecionada.</p>}
       <div className='flex justify-between items-center gap-3 mt-4 text-xs'>
