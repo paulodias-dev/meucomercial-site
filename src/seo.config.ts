@@ -74,7 +74,7 @@ export const seoConfig: SeoConfig = {
     "TV para ponto de venda",
     "mural digital"
   ],
-  author: "Meu Comercial LTDA",
+  author: "Meu Comercial",
   publisher: "Meu Comercial",
   language: "pt-BR",
   locale: "pt_BR",
@@ -113,7 +113,6 @@ export const seoConfig: SeoConfig = {
         "@type": "Organization",
         "@id": organizationId,
         name: "Meu Comercial",
-        legalName: "Meu Comercial LTDA",
         url: siteUrl,
         logo: `${siteUrl}android-chrome-512x512.png`,
         image: defaultOgImage,

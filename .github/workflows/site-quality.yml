@@ -18,7 +18,7 @@ jobs:
   build:
     name: TypeScript, contratos e build
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -38,3 +38,11 @@ jobs:
           npm run test:portal
       - name: Compile Vite and Express
         run: npm run build
+      - name: Exercise compiled production server over HTTP/TLS
+        run: npm run test:http
+      - name: Install pinned Playwright Chromium for browser E2E
+        run: |
+          npm install --no-save --no-package-lock playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Verify mobile TV, forms, SEO and radio in Chromium
+        run: npm run test:browser
