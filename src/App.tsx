@@ -222,6 +222,10 @@ export default function App() {
           // state and snapshots the exact DECIMAL as non-binding interest.
           plan_id: leadKind === 'establishment'
             ? readCommercialIntent(window.location.search).planId : null,
+          // Only the public curated offer ID travels with an advertiser lead;
+          // the API rechecks eligibility and stores its public editorial snapshot.
+          offer_id: leadKind === 'advertiser'
+            ? readCommercialIntent(window.location.search).offerId : null,
           name: formData.nome.trim(),
           company: formData.empresa.trim(),
           email: formData.email.trim(),
