@@ -250,6 +250,13 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
       (body.subscription_created===true&&
         (!body.checkout||body.checkout.subscription_created!==true||
         typeof body.checkout.provisioning?.status!=='string'))||
+      (body.checkout?.provisioning?.status==='disputed'&&
+        !['awaiting_financial_reconciliation','under_financial_review',
+          'manual_financial_review_required'].includes(
+            body.checkout.provisioning.financial_resolution))||
+      (body.checkout?.provisioning?.status==='active'&&
+        body.checkout.provisioning.financial_resolution!==null&&
+        body.checkout.provisioning.financial_resolution!==undefined)||
       (body.checkout?.provisioning?.operation&&
         (typeof body.checkout.provisioning.operation.units_registered!=='number'||
          typeof body.checkout.provisioning.operation.players_registered!=='number'||

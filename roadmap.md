@@ -1,3 +1,16 @@
+## MACROENTREGA SITE — ORIENTAÇÃO FINANCEIRA PÓS-ESTORNO (28/10/2026)
+
+- [x] Checkout privado distingue contestação aguardando conciliação, contrapartida registrada e revisão obrigatória.
+- [x] Informa suspensão de assinatura e mídia sem publicar detalhes financeiros internos.
+- [x] Orienta cliente a procurar suporte e a NÃO gerar novo PIX ou reativar Players.
+- [x] BFF valida enum permitido e impede campo financeiro inconsistente em assinatura ativa.
+- [x] Teste Node de contrato e cenário Playwright de contestação/chargeback versionados.
+- [ ] Browser, Vite, Gateway sandbox e hardware somente após MVP.
+
+Guia: docs/SITE_INDOOR_FINANCIAL_GUIDANCE_20261028.md
+
+---
+
 ## MACROENTREGA SITE — RELATOS DE EXECUÇÃO PLAYER V2 (28/10/2026)
 
 - [x] Na jornada privada, após publicação, exibir relatos autenticados de conclusão nas últimas 24 horas.
