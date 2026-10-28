@@ -268,7 +268,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
        disputed_at:null,subscription_created:true,service_activated:true,
        automatic_device_pairing:false,
        operation:{units_registered:1,players_registered:2,players_paired:0,
-        next_step:'pair_players',playback_verified:false}}}}
+        next_step:'pair_players',editorial_publications_active:0,playback_verified:false}}}}
     await page.getByRole('button',{name:'Consultar status'}).click()
     await page.getByText('Assinatura Indoor ativada!').waitFor()
     await page.getByRole('heading',{name:'Preparação da sua TV e Rádio Indoor'}).waitFor()

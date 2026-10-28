@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "npm run test:radio && npm run test:journeys && npm run test:portal && npm run test:showcase && npm run test:compliance && npm run test:indoor-catalog && npm run test:acquisition && npm run test:contracts && npm run test:indoor-proposal-response && npm run test:indoor-checkout && npm run test:indoor-provision-status && npm run test:indoor-operation-progress && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
+    "build": "npm run test:radio && npm run test:journeys && npm run test:portal && npm run test:showcase && npm run test:compliance && npm run test:indoor-catalog && npm run test:acquisition && npm run test:contracts && npm run test:indoor-proposal-response && npm run test:indoor-checkout && npm run test:indoor-provision-status && npm run test:indoor-operation-progress && npm run test:indoor-editorial-progress && vite build && esbuild server.ts --bundle --platform=node --format=cjs --packages=external --sourcemap --outfile=dist/server.cjs",
     "start": "node dist/server.cjs",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
@@ -23,7 +23,8 @@
     "test:indoor-proposal-response": "node --test scripts/test-indoor-proposal-response.mjs",
     "test:indoor-checkout": "node --test scripts/test-indoor-checkout.mjs",
     "test:indoor-provision-status": "node --test scripts/test-indoor-provision-status.mjs",
-    "test:indoor-operation-progress": "node --test scripts/test-indoor-operation-progress.mjs"
+    "test:indoor-operation-progress": "node --test scripts/test-indoor-operation-progress.mjs",
+    "test:indoor-editorial-progress": "node --test scripts/test-indoor-editorial-progress.mjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",

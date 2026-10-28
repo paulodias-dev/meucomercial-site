@@ -254,6 +254,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
         (typeof body.checkout.provisioning.operation.units_registered!=='number'||
          typeof body.checkout.provisioning.operation.players_registered!=='number'||
          typeof body.checkout.provisioning.operation.players_paired!=='number'||
+         typeof body.checkout.provisioning.operation.editorial_publications_active!=='number'||
          body.checkout.provisioning.operation.playback_verified!==false))||
       (body.payment_created===true&&
         (typeof body.checkout?.pix_status!=='string'||typeof body.checkout?.status!=='string')))

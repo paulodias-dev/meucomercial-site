@@ -1,3 +1,17 @@
+## MACROENTREGA SITE — PUBLICAÇÃO EDITORIAL VS PLAYBACK COMPROVADO (28/10/2026)
+
+- [x] Jornadas privadas exibem lotes editoriais vigentes e prontos para sincronização.
+- [x] Estado real da API diferencia "publicado/agenda criada" de Player ACK e reprodução.
+- [x] Em estorno, a progressão fica suspensa, ainda que lote histórico permaneça.
+- [x] Apenas contadores, sem IDs, mídia, credenciais, local ou nome do estabelecimento.
+- [x] BFF valida o contrato de contadores e mantém private no-store.
+- [x] Testes de contrato integrados ao build + cenário browser mockado atualizado.
+- [ ] QA e telemetria de reprodução real no fim do MVP.
+
+Guia: docs/SITE_INDOOR_EDITORIAL_PROGRESS_20261028.md
+
+---
+
 ## MACROENTREGA SITE — STATUS OPERACIONAL INDOOR PÓS-CONTRATAÇÃO (28/10/2026)
 
 - [x] Jornada privada /acompanhar ganha etapas de unidade, registro de TV/Rádio e pareamento.
