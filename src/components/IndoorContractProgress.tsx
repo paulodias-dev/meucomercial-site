@@ -7,7 +7,7 @@ type Status='pending'|'approved_for_proposal'|'proposal_presented'|'proposal_ack
 type Contract={reference:string;status:Status;version:number;plan:{
  name:string;display_price_brl:string;interval:'monthly'|'yearly';
  price_is_contractually_binding:false
-};payment_created:boolean;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null;checkout?:CheckoutView|null}
+};payment_created:boolean;subscription_created:boolean;contract_signed:false;proposal?:IndoorQuote|null;checkout?:CheckoutView|null}
 type Credentials={requestId:string;accessKey:string;cancelId:string}
 const states:Record<Status,string>={
  pending:'Aguardando análise comercial do Master',
@@ -71,7 +71,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.reference!==current.requestId||typeof body.payment_created!=='boolean'||
-     body.subscription_created!==false||body.contract_signed!==false)
+     typeof body.subscription_created!=='boolean'||body.contract_signed!==false)
     throw Error(requestError(response.status))
    setRecord(body as Contract)
   }catch(ex){setError(ex instanceof Error?ex.message:'Não foi possível consultar o status.')}

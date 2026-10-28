@@ -9,7 +9,7 @@ type State='pending'|'approved_for_proposal'|'proposal_presented'|'proposal_ackn
 type Status={reference:string;status:State;version:number;plan:{
  name:string;display_price_brl:string;interval:'monthly'|'yearly';
  price_is_contractually_binding:false};
- payment_created:boolean;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null;checkout?:CheckoutView|null}
+ payment_created:boolean;subscription_created:boolean;contract_signed:false;proposal?:IndoorQuote|null;checkout?:CheckoutView|null}
 const validRef=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const validKey=/^[a-f0-9]{64}$/i
 const labels:Record<State,string>={
@@ -43,7 +43,7 @@ export default function ContractTrackingPage(){
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.reference!==reference.trim()||
-      typeof body.payment_created!=='boolean'||body.subscription_created!==false||
+      typeof body.payment_created!=='boolean'||typeof body.subscription_created!=='boolean'||
       body.contract_signed!==false||typeof body.version!=='number'||
       typeof body.plan?.name!=='string'||
       !['pending','approved_for_proposal','proposal_presented','proposal_acknowledged','proposal_declined','declined','cancelled'].includes(body.status))
