@@ -49,6 +49,22 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     res.writeHead(404,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Não encontrado'}))
     return
    }
+   if(req.method==='POST'&&req.url.endsWith('/proposal-response')){
+    let raw='';for await(const chunk of req)raw+=chunk.toString()
+    const body=JSON.parse(raw)
+    if(prior.record.status!=='proposal_presented'||body.expected_version!==3||
+      body.proposal_version!==2||
+      (body.decision==='acknowledge'&&body.acknowledge_nonbinding!==true)){
+     res.writeHead(409,{'Content-Type':'application/json'})
+      .end(JSON.stringify({message:'Proposta inválida ou desatualizada'}))
+     return
+    }
+    prior.record={...prior.record,
+     status:body.decision==='acknowledge'?'proposal_acknowledged':'proposal_declined',
+     version:4}
+    res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(prior.record))
+    return
+   }
    if(req.method==='POST'&&req.url.endsWith('/cancel')){
     prior.record={...prior.record,status:'cancelled',version:2}
    }
@@ -141,6 +157,40 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     assert.equal(contractRequests.size,1)
     const scrollWidth=await page.evaluate(()=>document.documentElement.scrollWidth)
     assert.ok(scrollWidth<=377,'Overflow horizontal em 375px: '+scrollWidth)
+   }finally{await page.close()}
+  })
+  await t.test('proposta CRM: manifestação consciente e acompanhamento privado sem assinatura',async()=>{
+   const page=await newPage('/contratar?kind=establishment&plan_id=21',{width:390,height:844})
+   try{
+    await complete(page,'Interessado Modelo')
+    await page.getByRole('button',{name:'Enviar pedido para análise'}).click()
+    await page.getByRole('heading',{name:'Solicitação recebida pela API!'}).waitFor()
+    await page.getByLabel(/Confirmo que desejo submeter/).check()
+    await page.getByRole('button',{name:'Solicitar análise pré-contratual'}).click()
+    await page.getByRole('heading',{name:'Aguardando análise comercial do Master'}).waitFor()
+    const [reference,entry]=[...contractRequests.entries()].at(-1)
+    entry.record={...entry.record,status:'proposal_presented',version:3,proposal:{
+     title:'Plano Indoor demonstrativo',scope:'Serviço mensal de TV/Rádio, sujeito a contrato.',
+     amount_brl:'249.90',valid_until:'2099-01-01',version:2,items:[],
+     available_for_acknowledgement:true,acknowledged_at:null,nonbinding_quotation:true
+    }}
+    await page.getByRole('button',{name:'Atualizar situação'}).click()
+    await page.getByRole('heading',{name:'Proposta disponível para manifestação'}).waitFor()
+    await page.getByLabel(/Li as condições e tenho interesse/).check()
+    page.once('dialog',dialog=>dialog.accept())
+    await page.getByRole('button',{name:'Confirmar interesse na proposta'}).click()
+    await page.getByRole('heading',{name:'Interesse registrado; o Master poderá preparar contrato'}).waitFor()
+    assert.equal(entry.record.status,'proposal_acknowledged')
+    assert.equal(entry.record.payment_created,false)
+    const tracker=await newPage('/acompanhar')
+    try{
+     await tracker.getByLabel('Referência UUID').fill(reference)
+     await tracker.getByLabel('Código privado de acompanhamento').fill(entry.key)
+     await tracker.getByRole('button',{name:'Consultar situação'}).click()
+     await tracker.getByRole('heading',{name:'Interesse confirmado, aguardando contrato'}).waitFor()
+     const width=await tracker.evaluate(()=>document.documentElement.scrollWidth)
+     assert.ok(width<=377,'overflow em acompanhamento 375px: '+width)
+    }finally{await tracker.close()}
    }finally{await page.close()}
   })
   await t.test('anunciante: seleciona apenas oferta verificada, sem assinatura',async()=>{
