@@ -132,6 +132,7 @@ app.post("/api/commercial-leads", async (req, res) => {
       method: "POST",
       headers: {"Content-Type": "application/json", "Accept": "application/json"},
       body: JSON.stringify(req.body),
+      redirect: "error", // Never forward lead PII to a redirected upstream host.
       signal: AbortSignal.timeout(12000),
     });
     const payload = await upstream.json().catch(() => ({}));
@@ -506,6 +507,9 @@ async function startServer() {
       {route: ['/demonstracao-tv', '/demonstracao-tv/'], slug: 'demonstracao-tv',
        title: 'Prévia interativa de TV Indoor | Meu Comercial',
        description: 'Experimente modelos visuais ilustrativos de TV Indoor, sem publicar nem transmitir conteúdo.'},
+      {route: ['/contratar', '/contratar/'], slug: 'contratar',
+        title: 'Solicitar proposta de TV e Rádio Indoor | Meu Comercial',
+        description: 'Consulte planos e oportunidades oficiais Indoor e envie solicitação comercial com segurança, sem checkout ou reserva automática.'},
       {route: ['/anunciar', '/anunciar/'], slug: 'anunciar',
        title: 'Publicidade em Rádio e TV Indoor | Meu Comercial',
        description: 'Conheça formatos de publicidade Indoor e solicite análise de disponibilidade com autorização e contrato.'},

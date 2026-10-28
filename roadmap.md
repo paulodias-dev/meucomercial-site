@@ -1,3 +1,24 @@
+## MACROENTREGA SITE — JORNADA DE AQUISIÇÃO GUIADA (28/10/2026)
+
+- [x] Criar /contratar para estabelecimento, agência e anunciante com etapas mobile-first.
+- [x] Consultar preços e limites apenas do catálogo oficial de Serviço; nunca assumir checkout_available.
+- [x] Selecionar ofertas públicas revisadas com filtros server-side e paginação real.
+- [x] Invalidar seleção quando audiência, formato, região ou publicação mudar.
+- [x] Enviar interesse por BFF same-origin ao cadastro canônico de leads com kind, plan_id/offer_id e consentimento.
+- [x] Utilizar UUID idempotente por corpo e confirmação estrita received:true, exibindo erros 409/422/429/503.
+- [x] Manter UTM e bloquear PII, JWT, IDs internos e preços inventados na URL.
+- [x] Integrar CTAs dos planos e ofertas, navegação, SEO por rota e sitemap.
+- [x] Versionar teste Node e guia de QA sem disparar GitHub Actions.
+- [ ] Pendência de negócio: checkout público Indoor/assinatura após contratos e gateway autorizados na API.
+- [ ] Executar QA e testes integrados quando houver ambiente; não bloquear novas macroentregas.
+
+**Progresso global após esta entrega: estimativa documental ~79,1%, sem homologação**,
+partindo de 79,0% em Admin PR #75. Indicador sujeito à reconciliação de
+roadmaps com tarefas heterogêneas e duplicadas. Testes não executados nesta
+sessão. Guia: docs/SITE_GUIDED_ACQUISITION_MVP_20261028.md.
+
+---
+
 ## REGRA OPERACIONAL PERMANENTE — SEM GITHUB ACTIONS AUTOMÁTICO (17/10/2026)
 
 **Restrição declarada pelo responsável do projeto:** não há cota/pacote disponível de GitHub Actions. É proibido desperdiçar tempo com reexecução, tentativa de desbloqueio ou disparo de workflows na plataforma sem autorização expressa posterior.

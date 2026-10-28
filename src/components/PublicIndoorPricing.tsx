@@ -1,6 +1,7 @@
 import {useEffect,useState} from 'react'
 import {ArrowRight, RefreshCcw, ShieldCheck} from 'lucide-react'
 import {commercialContactUrl} from '../lib/commercialIntent.mjs'
+import {acquisitionUrl} from '../lib/acquisitionRequest.mjs'
 import {verifyIndoorPlans,moneyExact} from '../lib/indoorCatalog.mjs'
 
 type Plan={plan_id:number;name:string;description:string|null;price:string;currency:'BRL';interval:'monthly'|'yearly';max_devices:number|null;storage_mb:number|null;trial_days:number;checkout_available:false}
@@ -43,6 +44,9 @@ export default function PublicIndoorPricing(){
           {plan.max_devices!==null?'Até '+plan.max_devices+' dispositivos incluídos na configuração do plano.':'Quantidade de aparelhos a confirmar.'}
         </p>
         <p className='text-xs text-slate-600 flex gap-2 items-start'><ShieldCheck size={17} className='shrink-0' aria-hidden/> Informações de cadastro comercial; não constituem oferta vinculante nem checkout automático.</p>
+        <a href={acquisitionUrl({kind:'establishment',planId:plan.plan_id},window.location.search)}
+          className='min-h-11 bg-slate-900 text-white rounded-lg px-4 py-3 inline-flex gap-2 items-center justify-center text-sm font-bold'>
+          Iniciar pedido guiado <ArrowRight size={16} aria-hidden/></a>
         <a href={commercialContactUrl({kind:'establishment',medium:'mixed',source:'homepage',planId:plan.plan_id},window.location.search)}
           className='mt-auto min-h-11 bg-blue-700 text-white rounded-lg px-4 py-3 inline-flex gap-2 items-center justify-center text-sm font-bold'>
           Solicitar proposta deste plano <ArrowRight size={16} aria-hidden/></a>

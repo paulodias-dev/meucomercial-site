@@ -7,6 +7,7 @@ import CommercialTrust from "./components/CommercialTrust";
 const RadioShowcasePage = React.lazy(() => import("./components/RadioShowcasePage"));
 const TvDemoPage = React.lazy(() => import("./components/TvDemoPage"));
 const AdvertisingPage = React.lazy(() => import("./components/AdvertisingPage"));
+const AcquisitionPage = React.lazy(() => import("./components/AcquisitionPage"));
 import {readCommercialIntent, commercialMessage} from "./lib/commercialIntent.mjs";
 import PublicIndoorPricing from './components/PublicIndoorPricing';
 import HeroSimulator from './components/HeroSimulator';
@@ -332,6 +333,9 @@ export default function App() {
   if (window.location.pathname === '/demonstracao-tv' || window.location.pathname === '/demonstracao-tv/') {
     return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center text-sm text-slate-600">Carregando módulo…</main>}><TvDemoPage /></React.Suspense>;
   }
+  if (window.location.pathname === '/contratar' || window.location.pathname === '/contratar/') {
+    return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center">Carregando…</main>}><AcquisitionPage /></React.Suspense>;
+  }
   if (window.location.pathname === '/anunciar' || window.location.pathname === '/anunciar/') {
     return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center text-sm text-slate-600">Carregando módulo…</main>}><AdvertisingPage /></React.Suspense>;
   }
@@ -377,6 +381,7 @@ export default function App() {
 
           {/* CTA Button (Desktop) */}
           <div className="hidden lg:flex items-center gap-4">
+            <a href="/contratar" className="min-h-11 inline-flex items-center text-sm font-semibold text-blue-800">Solicitar proposta guiada</a>
             <button 
               onClick={() => openLeadModal("Header")}
               className="px-5 h-10 rounded-full text-xs font-semibold text-white bg-black hover:bg-black/80 transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"

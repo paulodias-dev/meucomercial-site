@@ -1,4 +1,5 @@
 import {useState} from 'react'
+import {acquisitionUrl} from '../lib/acquisitionRequest.mjs'
 import {ArrowRight, Building2, Megaphone, Network, ShieldCheck, MonitorPlay, CheckCircle2} from 'lucide-react'
 
 export type CommercialAudience = 'establishment' | 'agency' | 'advertiser'
@@ -124,6 +125,10 @@ export default function AudienceJourneys({onContact}:{
               className='mt-7 min-h-11 w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-full px-6 py-3 bg-blue-700 text-white text-sm font-bold hover:bg-blue-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700'>
               {journey.cta}<ArrowRight size={17} aria-hidden/>
             </button>
+            <a href={acquisitionUrl({kind:journey.id},window.location.search)}
+              className='mt-3 min-h-11 inline-flex items-center justify-center border border-blue-700 text-blue-800 rounded-full px-6 py-3 text-sm font-semibold'>
+              Montar pedido guiado <ArrowRight size={17} className='ml-2' aria-hidden/>
+            </a>
             <p className='text-xs text-black/50 mt-3'>
               Solicitação de contato, sem contratação ou publicação automática.
             </p>
