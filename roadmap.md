@@ -1,3 +1,17 @@
+## MACROENTREGA SITE — RELATOS DE EXECUÇÃO PLAYER V2 (28/10/2026)
+
+- [x] Na jornada privada, após publicação, exibir relatos autenticados de conclusão nas últimas 24 horas.
+- [x] Diferenciar dispositivos que reportaram, quantidade de relatos e playback auditado (não disponível).
+- [x] Nova etapa de prontidão operacional e orientação sem prometer audiência.
+- [x] Em disputa financeira, não marcar avanços como ativos apesar do histórico.
+- [x] BFF valida inteiros, valores não negativos e evidence_level explícito; zero dados de Player expostos.
+- [x] Teste Node integrado ao build e cenários Playwright com dados simulados.
+- [ ] Executar navegador/Player físico e auditar telemetria somente na homologação ao final do MVP.
+
+Guia: docs/SITE_INDOOR_PLAYER_REPORTS_20261028.md
+
+---
+
 ## MACROENTREGA SITE — PUBLICAÇÃO EDITORIAL VS PLAYBACK COMPROVADO (28/10/2026)
 
 - [x] Jornadas privadas exibem lotes editoriais vigentes e prontos para sincronização.
