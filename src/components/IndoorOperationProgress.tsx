@@ -3,8 +3,11 @@ import {CheckCircle2,Clock3,Monitor,Radio,ShieldCheck} from 'lucide-react'
 export type IndoorOperationProgressData={
  units_registered:number;players_registered:number;players_paired:number;
  editorial_publications_active:number;
+ player_completion_reports_24h:number;reporting_devices_24h:number;
+ completion_evidence:'authenticated_player_self_report_not_audience';
  next_step:'configure_unit'|'register_players'|'pair_players'|
- 'configure_authorized_playlist_and_schedule'|'monitor_player_sync'|'resolve_financial_dispute';
+ 'configure_authorized_playlist_and_schedule'|'monitor_player_sync'|
+ 'monitor_player_reports'|'resolve_financial_dispute';
  playback_verified:false
 }
 const next:Record<IndoorOperationProgressData['next_step'],string>={
@@ -13,6 +16,7 @@ const next:Record<IndoorOperationProgressData['next_step'],string>={
  pair_players:'Players cadastrados. O administrador deve concluir o pareamento seguro dos aparelhos.',
  configure_authorized_playlist_and_schedule:'Players pareados. O administrador prepara as mídias autorizadas e os horários.',
  monitor_player_sync:'Programação autorizada e agendada. Aguardando contato válido dos Players; a reprodução ainda não foi comprovada.',
+ monitor_player_reports:'O Player enviou relatos autenticados de conclusão de mídia. Continue acompanhando a operação; não é medição independente de audiência.',
  resolve_financial_dispute:'A preparação está suspensa enquanto o financeiro resolve a contestação.',
 }
 export default function IndoorOperationProgress({progress,status}:{
@@ -28,6 +32,10 @@ export default function IndoorOperationProgress({progress,status}:{
   {name:'Conteúdo e programação',
    done:progress.editorial_publications_active>0,
    note:String(progress.editorial_publications_active)+' lote(s) editorial(is) publicado(s); reprodução não comprovada'},
+  {name:'Relatos de execução dos Players (24h)',
+   done:progress.player_completion_reports_24h>0,
+   note:String(progress.player_completion_reports_24h)+' conclusão(ões) relatada(s) por '+
+    String(progress.reporting_devices_24h)+' Player(s); sem validação independente de audiência'},
  ]
  return <section className="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5 mt-4"
   aria-label="Etapas da preparação operacional do Indoor">
@@ -55,7 +63,8 @@ export default function IndoorOperationProgress({progress,status}:{
    </p>
    <p className="flex items-start gap-2 mt-3 text-xs text-slate-600">
     <ShieldCheck size={17} className="shrink-0" aria-hidden/>
-    O cadastro, o pareamento e a sincronização não são comprovantes de reprodução nem de audiência.
+    Cadastro, pareamento e sincronização não provam exibição; os relatos de conclusão são
+    autodeclarações autenticadas do Player, não medições independentes de audiência.
    </p>
   </div>
  </section>

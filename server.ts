@@ -255,6 +255,11 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
          typeof body.checkout.provisioning.operation.players_registered!=='number'||
          typeof body.checkout.provisioning.operation.players_paired!=='number'||
          typeof body.checkout.provisioning.operation.editorial_publications_active!=='number'||
+         !Number.isSafeInteger(body.checkout.provisioning.operation.player_completion_reports_24h)||
+         body.checkout.provisioning.operation.player_completion_reports_24h<0||
+         !Number.isSafeInteger(body.checkout.provisioning.operation.reporting_devices_24h)||
+         body.checkout.provisioning.operation.reporting_devices_24h<0||
+         body.checkout.provisioning.operation.completion_evidence!=='authenticated_player_self_report_not_audience'||
          body.checkout.provisioning.operation.playback_verified!==false))||
       (body.payment_created===true&&
         (typeof body.checkout?.pix_status!=='string'||typeof body.checkout?.status!=='string')))
