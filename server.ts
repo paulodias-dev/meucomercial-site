@@ -146,6 +146,72 @@ app.post("/api/commercial-leads", async (req, res) => {
   }
 });
 
+// Fixed public pre-contract BFF. A request key is a client-generated 256-bit
+// capability, never an operator/Client JWT. No credentials in URL or cookies.
+const contractReference=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const contractSecret=/^[0-9a-f]{64}$/i
+const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
+  res.setHeader('Cache-Control','private, no-store')
+  res.setHeader('Referrer-Policy','no-referrer')
+  const create=req.path==='/api/indoor-contract-requests'
+  const cancel=req.path.endsWith('/cancel')
+  const reference=req.params.reference
+  if(!create&&(!reference||!contractReference.test(reference)))
+    return res.status(422).json({message:'Referência inválida.'})
+  const bearer=req.get('authorization')??''
+  if(!create&&(!bearer.startsWith('Bearer ')||!contractSecret.test(bearer.slice(7))))
+    return res.status(401).json({message:'Código de acompanhamento obrigatório.'})
+  if(create&&(!contractReference.test(String(req.body?.request_id??''))||
+    !contractReference.test(String(req.body?.lead_reference??''))||
+    !Number.isSafeInteger(req.body?.plan_id)||req.body?.plan_id<=0||
+    !contractSecret.test(String(req.body?.access_key??''))||
+    req.body?.terms_accepted!==true))
+    return res.status(422).json({message:'Revise a referência e os dados da solicitação.'})
+  if(cancel&&(!contractReference.test(String(req.body?.request_id??''))||
+    !Number.isSafeInteger(req.body?.expected_version)||req.body.expected_version<1))
+    return res.status(422).json({message:'Dados do cancelamento inválidos.'})
+  const configured=process.env.MEUCOMERCIAL_API_URL?.trim()
+  if(!configured)return res.status(503).json({message:'Análise comercial temporariamente indisponível.'})
+  try{
+    const base=new URL(configured.endsWith('/')?configured:configured+'/')
+    if(base.protocol!=='https:' &&
+      !(process.env.NODE_ENV!=='production'&&['localhost','127.0.0.1'].includes(base.hostname)))
+      throw Error('unsafe')
+    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':''))
+    const endpoint=new URL(target,base)
+    const payload=create?{
+      request_id:req.body.request_id,lead_reference:req.body.lead_reference,
+      plan_id:req.body.plan_id,email:req.body.email,
+      access_key:req.body.access_key,terms_accepted:req.body.terms_accepted,
+    }:cancel?{
+      request_id:req.body.request_id,expected_version:req.body.expected_version,
+    }:undefined
+    const upstream=await fetch(endpoint,{
+      method:req.method,redirect:'error',credentials:'omit',
+      headers:{Accept:'application/json',
+        ...(req.method==='POST'?{'Content-Type':'application/json'}:{}),
+        ...(!create?{Authorization:bearer}:{}),
+      },
+      ...(req.method==='POST'?{body:JSON.stringify(payload)}:{}),
+      signal:AbortSignal.timeout(12000)
+    })
+    const body=await upstream.json().catch(()=>({}))
+    if(upstream.status>=500)return res.status(503).json({message:'Serviço indisponível.'})
+    if(!upstream.ok)return res.status(upstream.status).json({
+      message:typeof body.message==='string'&&body.message.length<=250?
+        body.message:'Não foi possível registrar a análise.',
+    })
+    if(typeof body.reference!=='string'||!contractReference.test(body.reference)||
+      body.payment_created!==false||body.subscription_created!==false||
+      body.contract_signed!==false||typeof body.status!=='string')
+      return res.status(502).json({message:'Resposta de análise inválida.'})
+    return res.status(upstream.status).json(body)
+  }catch{return res.status(503).json({message:'Análise comercial indisponível.'})}
+}
+app.post('/api/indoor-contract-requests',proxyIndoorContract)
+app.get('/api/indoor-contract-requests/:reference',proxyIndoorContract)
+app.post('/api/indoor-contract-requests/:reference/cancel',proxyIndoorContract)
+
 // Two fixed, public read-only contracts; never expose MEUCOMERCIAL_API_URL,
 // forward cookies/JWT or allow a query parameter to become an upstream path.
 app.get(['/api/indoor-catalog','/api/indoor-plans'],async(req,res)=>{

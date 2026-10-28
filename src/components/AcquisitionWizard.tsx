@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react'
 import type {FormEvent} from 'react'
 import {ArrowLeft,ArrowRight,ShieldCheck} from 'lucide-react'
+import IndoorContractProgress from './IndoorContractProgress'
 import {verifyIndoorCatalog,verifyIndoorPlans,moneyExact} from '../lib/indoorCatalog.mjs'
 import {readAcquisitionIntent,buildAcquisitionPayload,acquisitionError} from '../lib/acquisitionRequest.mjs'
 
@@ -101,6 +102,7 @@ export default function AcquisitionWizard(){
     A equipe comercial poderá verificar condições, direitos e disponibilidade.
     Nenhum pagamento ou reserva foi realizado.</p>
    <p className="text-xs text-slate-600 mt-3">Protocolo: <span className="break-all font-mono">{receipt}</span></p>
+   {kind==='establishment'&&activePlan&&<IndoorContractProgress leadReference={receipt} planId={activePlan.plan_id} email={form.email}/>}
    <a href="/" className="inline-flex mt-6 min-h-11 items-center text-blue-800 font-semibold">Voltar ao início</a>
   </section>:<>
    <ol className="mt-8 grid grid-cols-3 max-w-2xl gap-2" aria-label="Etapas da jornada">
