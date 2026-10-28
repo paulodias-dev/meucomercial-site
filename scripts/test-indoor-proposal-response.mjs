@@ -19,7 +19,7 @@ test('API pública usa BFF allowlisted e code Bearer privado sem armazenamento l
  const server=read('server.ts')
  const preview=read('src/components/IndoorProposalResponsePanel.tsx')
  assert.ok(server.includes("app.post('/api/indoor-contract-requests/:reference/proposal-response',proxyIndoorContract)"))
- assert.ok(server.includes("respond?'proposal-response'"))
+ assert.ok(server.includes("respond?'/proposal-response'"))
  assert.ok(server.includes("body.acknowledge_nonbinding"))
  assert.ok(preview.includes("Authorization:'Bearer '+secret"))
  assert.ok(!preview.includes('localStorage')&&!preview.includes('sessionStorage'))
