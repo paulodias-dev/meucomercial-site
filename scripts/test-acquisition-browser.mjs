@@ -266,9 +266,13 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
       paid_verified_at:'2026-10-28 12:00:00',
       provisioning:{status:'active',activated_at:'2026-10-28 12:05:00',
        disputed_at:null,subscription_created:true,service_activated:true,
-       automatic_device_pairing:false}}}
+       automatic_device_pairing:false,
+       operation:{units_registered:1,players_registered:2,players_paired:0,
+        next_step:'pair_players',playback_verified:false}}}}
     await page.getByRole('button',{name:'Consultar status'}).click()
     await page.getByText('Assinatura Indoor ativada!').waitFor()
+    await page.getByRole('heading',{name:'Preparação da sua TV e Rádio Indoor'}).waitFor()
+    await page.getByText('2 cadastrado(s)').waitFor()
     assert.equal(await page.getByText(/O primeiro período já está quitado/).count()>0,true)
     contract.record={...contract.record,
      checkout:{...contract.record.checkout,status:'payment_disputed',
