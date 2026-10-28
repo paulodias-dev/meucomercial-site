@@ -86,6 +86,23 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
   }catch(e){setError(e instanceof Error?e.message:'Falha ao gerar PIX.')}
   finally{setBusy(false)}
  }
+ const retryUncertain=async()=>{
+  if(busy||checkout.pix_status!=='creating')return
+  setBusy(true);setError('');setNotice('')
+  try{
+   const response=await fetch(api+'/pix/retry',{
+    method:'POST',credentials:'omit',cache:'no-store',
+    headers:{...auth,'Content-Type':'application/json'},body:'{}',
+   })
+   const body=await response.json().catch(()=>({}))
+   if(!response.ok||body.data?.payment_method!=='pix'||body.data?.remote_get_verified!==true||
+    !body.pix)throw Error(message(response.status))
+   setPix(body as PixResult)
+   setNotice('Tentativa anterior recuperada com a mesma chave; não foi solicitado um segundo PIX.')
+   await onChanged()
+  }catch(e){setError(e instanceof Error?e.message:'Falha ao recuperar pagamento anterior.')}
+  finally{setBusy(false)}
+ }
  const recoverPix=async()=>{
   if(busy)return
   setBusy(true);setError('');setNotice('')
@@ -148,7 +165,10 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
     {checkout.pix_status===null&&<button type="button" disabled={busy||expired}
      onClick={issuePix} className="min-h-12 bg-blue-700 text-white rounded-xl px-5 font-semibold text-sm disabled:opacity-40">
      {busy?'Gerando…':'Gerar PIX de contratação'}</button>}
-    {checkout.pix_status!==null&&<button type="button" disabled={busy}
+    {checkout.pix_status==='creating'&&<button type="button" disabled={busy}
+     onClick={retryUncertain} className="min-h-12 rounded-xl border px-5 font-semibold text-sm">
+     Retomar a tentativa anterior com segurança</button>}
+    {checkout.pix_status!==null&&checkout.pix_status!=='creating'&&<button type="button" disabled={busy}
      onClick={recoverPix} className="min-h-12 rounded-xl border px-5 font-semibold text-sm">
      Recuperar QR Code no gateway</button>}
     <button type="button" disabled={busy} onClick={()=>onChanged()}
@@ -164,6 +184,9 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
    {pix.pix.qr_base64&&<img className="mt-4 max-w-60 w-full" alt="QR Code PIX fornecido pelo Mercado Pago"
     src={'data:image/png;base64,'+pix.pix.qr_base64}/>}
   </div>}
+  {checkout.pix_status==='creating'&&<p role="status" className="mt-5 text-sm text-amber-900">
+   Houve uma tentativa cujo resultado remoto é incerto. Recupere-a com a mesma chave,
+   sem iniciar um pagamento novo.</p>}
   {checkout.status==='pix_pending'&&<p className="mt-5 text-sm text-amber-900">
    PIX emitido, aguardando confirmação pelo Mercado Pago. Não envie novo pagamento antes de verificar o anterior.</p>}
   {checkout.status==='paid_verified'&&<p role="status" className="mt-5 flex gap-2 text-sm text-emerald-800">

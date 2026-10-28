@@ -158,6 +158,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
   const respond=req.path.endsWith('/proposal-response')
   const acceptCheckout=req.path.endsWith('/checkout-accept')
   const pix=req.path.endsWith('/pix')
+  const pixRetry=req.path.endsWith('/pix/retry')
   const reference=req.params.reference
   if(!create&&(!reference||!contractReference.test(reference)))
     return res.status(422).json({message:'Referência inválida.'})
@@ -193,7 +194,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
     if(base.protocol!=='https:' &&
       !(process.env.NODE_ENV!=='production'&&['localhost','127.0.0.1'].includes(base.hostname)))
       throw Error('unsafe')
-    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':respond?'/proposal-response':acceptCheckout?'/checkout-accept':pix?'/pix':''))
+    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':respond?'/proposal-response':acceptCheckout?'/checkout-accept':pixRetry?'/pix/retry':pix?'/pix':''))
     const endpoint=new URL(target,base)
     const payload=create?{
       request_id:req.body.request_id,lead_reference:req.body.lead_reference,
@@ -234,7 +235,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
         return res.status(502).json({message:'Resposta de aceite financeiro inválida.'})
       return res.status(upstream.status).json(body)
     }
-    if(pix){
+    if(pix||pixRetry){
       if(body.data?.payment_method!=='pix'||!body.pix||
         !['string','object'].includes(typeof body.pix.copy_paste)||
         (body.pix.copy_paste!==null&&String(body.pix.copy_paste).length>4096)||
@@ -259,6 +260,7 @@ app.post('/api/indoor-contract-requests/:reference/proposal-response',proxyIndoo
 app.post('/api/indoor-contract-requests/:reference/checkout-accept',proxyIndoorContract)
 app.post('/api/indoor-contract-requests/:reference/pix',proxyIndoorContract)
 app.get('/api/indoor-contract-requests/:reference/pix',proxyIndoorContract)
+app.post('/api/indoor-contract-requests/:reference/pix/retry',proxyIndoorContract)
 
 // Two fixed, public read-only contracts; never expose MEUCOMERCIAL_API_URL,
 // forward cookies/JWT or allow a query parameter to become an upstream path.

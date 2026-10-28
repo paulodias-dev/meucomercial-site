@@ -26,6 +26,7 @@ test('consulta pública aceita payment_created true somente com checkout e não 
  assert.ok(bff.includes("app.post('/api/indoor-contract-requests/:reference/checkout-accept'"))
  assert.ok(bff.includes("app.post('/api/indoor-contract-requests/:reference/pix'"))
  assert.ok(bff.includes("app.get('/api/indoor-contract-requests/:reference/pix'"))
+ assert.ok(bff.includes("app.post('/api/indoor-contract-requests/:reference/pix/retry'"))
  assert.ok(tracking.includes('<IndoorCheckoutPanel'))
  assert.ok(progress.includes('<IndoorCheckoutPanel'))
  assert.ok(bff.includes("body.payment_created===true&&"))

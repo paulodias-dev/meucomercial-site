@@ -32,3 +32,7 @@ npm run test:acquisition:browser
 Testar mobile e desktop, teclado, recusa de oferta expirada, termos com
 hash alterado, falhas 429/409/422, PIX pendente, pago, refund/chargeback,
 mesma chave após timeout, recuperação de QR e privacidade de token.
+
+Em caso de tentativa 'creating' sem ID remoto, o botão de recuperação
+POST /pix/retry reutiliza o UUID persistido na API, não cria uma segunda
+chave nem exige que o navegador tenha preservado esse UUID em storage.
