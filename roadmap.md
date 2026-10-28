@@ -1,3 +1,17 @@
+## MACROENTREGA SITE — STATUS PRIVADO DE ASSINATURA PROVISIONADA (28/10/2026)
+
+- [x] Estado público verdadeiro para assinatura gerada após PIX conciliado: flags subscription_created e service_activated.
+- [x] Mostrar assinatura ativa, primeiro período quitado e dispositivos ainda sem pareamento.
+- [x] Em caso de estorno/chargeback, informar suspensão e suporte.
+- [x] BFF same-origin valida contrato de resposta sem expor IDs internos ou dados do cliente.
+- [x] Continuidade da rota /acompanhar, segredo em memória, sem credenciais Mercado Pago no navegador.
+- [x] Testes de regressão e documentação, sem GitHub Actions.
+- [ ] QA em ambiente real, hardware e gateway sandbox: posterior ao MVP.
+
+Referência: docs/SITE_INDOOR_PROVISIONED_STATUS_20261028.md
+
+---
+
 ## MACROENTREGA SITE — CHECKOUT FINANCEIRO E PIX INDOOR (28/10/2026)
 
 - [x] Exibir condições financeiras finais e hash assinável emitidos pelo Master.

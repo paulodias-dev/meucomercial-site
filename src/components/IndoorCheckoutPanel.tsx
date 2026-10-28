@@ -6,11 +6,14 @@ export type CheckoutView={
  version:number;terms_version:string;terms_sha256:string;terms_text:string
  amount_brl:string;interval:'monthly'|'yearly';expires_at:string
  accepted_at:string|null;paid_verified_at:string|null;pix_status:string|null
- payment_verified_by_gateway_read:boolean;subscription_created:false;service_activated:false;next_step:string
+ payment_verified_by_gateway_read:boolean;subscription_created:boolean;service_activated:boolean;next_step:string;
+ provisioning:null|{status:'active'|'disputed';activated_at:string|null;
+ disputed_at:string|null;subscription_created:true;service_activated:boolean;
+ automatic_device_pairing:false}
 }
 export type CheckoutStatusShape={
  reference:string;checkout?:CheckoutView|null;payment_created:boolean;
- subscription_created:false;contract_signed:false
+ subscription_created:boolean;contract_signed:false
 }
 type PixResult={
  data:{request_id:string;payment_status:string;payment_id:string|null;
@@ -189,8 +192,18 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
    sem iniciar um pagamento novo.</p>}
   {checkout.status==='pix_pending'&&<p className="mt-5 text-sm text-amber-900">
    PIX emitido, aguardando confirmação pelo Mercado Pago. Não envie novo pagamento antes de verificar o anterior.</p>}
-  {checkout.status==='paid_verified'&&<p role="status" className="mt-5 flex gap-2 text-sm text-emerald-800">
-   <CheckCircle2 size={21} aria-hidden/>Pagamento verificado no gateway. A ativação dos serviços ainda depende de provisionamento do Master.</p>}
+  {checkout.status==='paid_verified'&&checkout.provisioning===null&&<p role="status" className="mt-5 flex gap-2 text-sm text-emerald-800">
+   <CheckCircle2 size={21} aria-hidden/>Pagamento verificado no gateway. A assinatura ainda depende do vínculo ao estabelecimento pelo Master.</p>}
+  {checkout.provisioning?.status==='active'&&<div role="status"
+   className="mt-5 border border-emerald-200 bg-emerald-50 rounded-xl p-4 text-emerald-900">
+   <p className="flex gap-2 font-semibold"><CheckCircle2 size={22} aria-hidden/>
+    Assinatura Indoor ativada!</p>
+   <p className="text-sm mt-2">O primeiro período já está quitado com seu PIX.
+    O próximo ciclo segue a recorrência prevista nas condições contratuais.
+    O cadastro de telas, Players e mídias é realizado separadamente pelo administrador.</p>
+  </div>}
+  {checkout.provisioning?.status==='disputed'&&<p role="alert" className="mt-5 text-red-800 text-sm">
+   A assinatura foi suspensa após contestação ou estorno financeiro. Entre em contato com o suporte.</p>}
   {checkout.status==='payment_disputed'&&<p role="alert" className="mt-5 text-red-800 text-sm">
    Pagamento contestado ou estornado; ativação bloqueada. Procure o suporte.</p>}
   <p className="mt-5 flex gap-2 text-xs text-slate-600"><ShieldCheck size={18} aria-hidden/>

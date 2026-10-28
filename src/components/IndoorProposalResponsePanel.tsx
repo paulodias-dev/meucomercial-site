@@ -8,7 +8,7 @@ export type IndoorQuote={
 }
 export type IndoorContractStatus={
  reference:string;status:string;version:number;proposal?:IndoorQuote|null;
- payment_created:boolean;subscription_created:false;contract_signed:false;
+ payment_created:boolean;subscription_created:boolean;contract_signed:false;
 }
 const statuses:Record<string,string>={
  proposal_presented:'Proposta comercial disponível para manifestação',

@@ -245,8 +245,11 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
       return res.status(upstream.status).json(body)
     }
     if(typeof body.reference!=='string'||!contractReference.test(body.reference)||
-      typeof body.payment_created!=='boolean'||body.subscription_created!==false||
+      typeof body.payment_created!=='boolean'||typeof body.subscription_created!=='boolean'||
       body.contract_signed!==false||typeof body.status!=='string'||
+      (body.subscription_created===true&&
+        (!body.checkout||body.checkout.subscription_created!==true||
+        typeof body.checkout.provisioning?.status!=='string'))||
       (body.payment_created===true&&
         (typeof body.checkout?.pix_status!=='string'||typeof body.checkout?.status!=='string')))
       return res.status(502).json({message:'Resposta de análise inválida.'})
