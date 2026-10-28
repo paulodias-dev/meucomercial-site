@@ -1,3 +1,18 @@
+## MACROENTREGA SITE — STATUS OPERACIONAL INDOOR PÓS-CONTRATAÇÃO (28/10/2026)
+
+- [x] Jornada privada /acompanhar ganha etapas de unidade, registro de TV/Rádio e pareamento.
+- [x] Contadores do backend sem expor IDs, credenciais de Player, localidades ou dados do cliente.
+- [x] Somente backend confirma serviço ativado, nunca browser ou registro de Player.
+- [x] Mensagem de programação editorial pendente e playback/audiência não comprovados.
+- [x] Chargeback suspende progresso e orienta o cliente a procurar suporte.
+- [x] BFF allowlisted valida tipos e preserva referrer/no-store existentes.
+- [x] Testes Node integrados ao build e documentação.
+- [ ] QA em browser com fixtures e hardware quando MVP estiver completo.
+
+Guia: docs/SITE_INDOOR_OPERATION_PROGRESS_20261028.md
+
+---
+
 ## MACROENTREGA SITE — STATUS PRIVADO DE ASSINATURA PROVISIONADA (28/10/2026)
 
 - [x] Estado público verdadeiro para assinatura gerada após PIX conciliado: flags subscription_created e service_activated.
