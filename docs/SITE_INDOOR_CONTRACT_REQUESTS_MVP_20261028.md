@@ -33,3 +33,5 @@ npm run test:acquisition:browser
 QA: mobile 320–1440px, status sem token, segredo errado, 422, 409, 429,
 reenvio por timeout com mesmo UUID e segredo, cancellation CAS, refresh,
 contexto trocado, plano despublicado, sem efeitos financeiros.
+
+Chromium HTTPS com mock API também cobre criação, consulta privada e cancelamento em npm run test:acquisition:browser.
