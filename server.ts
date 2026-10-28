@@ -156,6 +156,8 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
   const create=req.path==='/api/indoor-contract-requests'
   const cancel=req.path.endsWith('/cancel')
   const respond=req.path.endsWith('/proposal-response')
+  const acceptCheckout=req.path.endsWith('/checkout-accept')
+  const pix=req.path.endsWith('/pix')
   const reference=req.params.reference
   if(!create&&(!reference||!contractReference.test(reference)))
     return res.status(422).json({message:'Referência inválida.'})
@@ -177,6 +179,13 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
     !['acknowledge','decline'].includes(req.body?.decision)||
     (req.body.decision==='acknowledge'&&req.body.acknowledge_nonbinding!==true)))
     return res.status(422).json({message:'Manifestação ou versão inválida.'})
+  if(acceptCheckout&&(!contractReference.test(String(req.body?.request_id??''))||
+    !Number.isSafeInteger(req.body?.expected_version)||req.body.expected_version<1||
+    !contractSecret.test(String(req.body?.terms_sha256??''))||
+    req.body?.accept_contract_terms!==true||req.body?.accept_recurring_billing!==true))
+    return res.status(422).json({message:'Termos ou aceite inválidos.'})
+  if(pix&&req.method==='POST'&&!contractReference.test(String(req.body?.request_id??'')))
+    return res.status(422).json({message:'Chave de pagamento inválida.'})
   const configured=process.env.MEUCOMERCIAL_API_URL?.trim()
   if(!configured)return res.status(503).json({message:'Análise comercial temporariamente indisponível.'})
   try{
@@ -184,7 +193,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
     if(base.protocol!=='https:' &&
       !(process.env.NODE_ENV!=='production'&&['localhost','127.0.0.1'].includes(base.hostname)))
       throw Error('unsafe')
-    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':respond?'/proposal-response':''))
+    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':respond?'/proposal-response':acceptCheckout?'/checkout-accept':pix?'/pix':''))
     const endpoint=new URL(target,base)
     const payload=create?{
       request_id:req.body.request_id,lead_reference:req.body.lead_reference,
@@ -196,6 +205,12 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
       request_id:req.body.request_id,expected_version:req.body.expected_version,
       proposal_version:req.body.proposal_version,decision:req.body.decision,
       acknowledge_nonbinding:req.body.acknowledge_nonbinding===true,
+    }:acceptCheckout?{
+      request_id:req.body.request_id,expected_version:req.body.expected_version,
+      terms_sha256:req.body.terms_sha256,accept_contract_terms:true,
+      accept_recurring_billing:true,
+    }:pix&&req.method==='POST'?{
+      request_id:req.body.request_id,
     }:undefined
     const upstream=await fetch(endpoint,{
       method:req.method,redirect:'error',credentials:'omit',
@@ -212,9 +227,27 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
       message:typeof body.message==='string'&&body.message.length<=250?
         body.message:'Não foi possível registrar a análise.',
     })
+    if(acceptCheckout){
+      if(!['accepted','offered'].includes(body.status)||
+        !contractSecret.test(String(body.terms_sha256??''))||
+        body.subscription_created!==false||body.service_activated!==false)
+        return res.status(502).json({message:'Resposta de aceite financeiro inválida.'})
+      return res.status(upstream.status).json(body)
+    }
+    if(pix){
+      if(body.data?.payment_method!=='pix'||!body.pix||
+        !['string','object'].includes(typeof body.pix.copy_paste)||
+        (body.pix.copy_paste!==null&&String(body.pix.copy_paste).length>4096)||
+        (body.pix.qr_base64!==null&&body.pix.qr_base64!==undefined&&
+          (typeof body.pix.qr_base64!=='string'||body.pix.qr_base64.length>160000)))
+        return res.status(502).json({message:'Resposta PIX inválida.'})
+      return res.status(upstream.status).json(body)
+    }
     if(typeof body.reference!=='string'||!contractReference.test(body.reference)||
-      body.payment_created!==false||body.subscription_created!==false||
-      body.contract_signed!==false||typeof body.status!=='string')
+      typeof body.payment_created!=='boolean'||body.subscription_created!==false||
+      body.contract_signed!==false||typeof body.status!=='string'||
+      (body.payment_created===true&&
+        (typeof body.checkout?.pix_status!=='string'||typeof body.checkout?.status!=='string')))
       return res.status(502).json({message:'Resposta de análise inválida.'})
     return res.status(upstream.status).json(body)
   }catch{return res.status(503).json({message:'Análise comercial indisponível.'})}
@@ -223,6 +256,9 @@ app.post('/api/indoor-contract-requests',proxyIndoorContract)
 app.get('/api/indoor-contract-requests/:reference',proxyIndoorContract)
 app.post('/api/indoor-contract-requests/:reference/cancel',proxyIndoorContract)
 app.post('/api/indoor-contract-requests/:reference/proposal-response',proxyIndoorContract)
+app.post('/api/indoor-contract-requests/:reference/checkout-accept',proxyIndoorContract)
+app.post('/api/indoor-contract-requests/:reference/pix',proxyIndoorContract)
+app.get('/api/indoor-contract-requests/:reference/pix',proxyIndoorContract)
 
 // Two fixed, public read-only contracts; never expose MEUCOMERCIAL_API_URL,
 // forward cookies/JWT or allow a query parameter to become an upstream path.

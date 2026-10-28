@@ -3,12 +3,13 @@ import type {FormEvent} from 'react'
 import {ArrowLeft,RefreshCcw,ShieldCheck} from 'lucide-react'
 import SEO from './SEO'
 import IndoorProposalResponsePanel, {type IndoorContractStatus,type IndoorQuote} from './IndoorProposalResponsePanel'
+import IndoorCheckoutPanel, {type CheckoutView,type CheckoutStatusShape} from './IndoorCheckoutPanel'
 
 type State='pending'|'approved_for_proposal'|'proposal_presented'|'proposal_acknowledged'|'proposal_declined'|'declined'|'cancelled'
 type Status={reference:string;status:State;version:number;plan:{
  name:string;display_price_brl:string;interval:'monthly'|'yearly';
  price_is_contractually_binding:false};
- payment_created:false;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null}
+ payment_created:boolean;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null;checkout?:CheckoutView|null}
 const validRef=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const validKey=/^[a-f0-9]{64}$/i
 const labels:Record<State,string>={
@@ -34,7 +35,7 @@ export default function ContractTrackingPage(){
   if(!validRef.test(reference.trim())||!validKey.test(code.trim())){
    setError('Informe o UUID da solicitação e o código privado de 64 caracteres.');return
   }
-  setBusy(true);setStatus(null);cancelOperation.current=null
+  setBusy(true);cancelOperation.current=null
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(reference.trim()),{
     credentials:'omit',cache:'no-store',
@@ -42,7 +43,7 @@ export default function ContractTrackingPage(){
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.reference!==reference.trim()||
-      body.payment_created!==false||body.subscription_created!==false||
+      typeof body.payment_created!=='boolean'||body.subscription_created!==false||
       body.contract_signed!==false||typeof body.version!=='number'||
       typeof body.plan?.name!=='string'||
       !['pending','approved_for_proposal','proposal_presented','proposal_acknowledged','proposal_declined','declined','cancelled'].includes(body.status))
@@ -115,13 +116,14 @@ export default function ContractTrackingPage(){
     <h2 className="text-xl font-bold mt-3">{labels[status.status]}</h2>
     <p className="text-sm text-slate-700 mt-4">{status.plan.name} · R$ {status.plan.display_price_brl.replace('.',',')}
      /{status.plan.interval==='monthly'?'mês':'ano'} (condição comercial não vinculante).</p>
-    <p className="text-xs text-slate-600 mt-2">Nenhuma assinatura, contrato assinado ou cobrança foi criada por esta análise.</p>
+    <p className="text-xs text-slate-600 mt-2">A análise comercial não ativa assinatura nem dispositivos. {status.payment_created?"Existe PIX associado ao checkout; confira o status financeiro abaixo.":"Nenhuma cobrança PIX foi gerada neste momento."}</p>
     {status.status==='pending'&&<button type="button" disabled={busy} onClick={cancel}
      className="mt-5 border border-red-200 text-red-800 rounded-xl min-h-11 px-5 text-sm font-semibold">
      Cancelar pedido pendente</button>}
    </section>}
    {status&&<IndoorProposalResponsePanel status={status as IndoorContractStatus} secret={code.trim()}
      onUpdated={updated=>setStatus(updated as Status)}/>}
+   {status?.checkout&&<IndoorCheckoutPanel data={status as CheckoutStatusShape} secret={code.trim()} onChanged={refresh}/>}
   </div>
  </main>
 }

@@ -1,3 +1,21 @@
+## MACROENTREGA SITE — CHECKOUT FINANCEIRO E PIX INDOOR (28/10/2026)
+
+- [x] Exibir condições financeiras finais e hash assinável emitidos pelo Master.
+- [x] Aceite distinto de contrato e recorrência, com UUID e versão CAS.
+- [x] Emitir PIX via API pública por token 256 bits, com mesmo UUID em retries.
+- [x] Visualizar copia-e-cola e QR Code recuperável por leitura MP autenticada.
+- [x] Não declarar pago a partir de QR/POST ou de resposta de navegador.
+- [x] Acompanhar paid_verified, pix_pending e payment_disputed sem ativar Player.
+- [x] Proteger BFF Express por payload allowlisted, HTTPS, Bearer e no redirects.
+- [x] Atualizar tipos e status públicos, preservar rota /acompanhar privada.
+- [x] Testes estáticos no build e documentação operacional.
+- [ ] Provisionamento e recebíveis de assinatura pós-PIX são próxima macro.
+- [ ] QA real de API/React, smartphone, sandbox MP e worker pendentes até MVP.
+
+Guia: docs/SITE_INDOOR_CHECKOUT_PIX_20261028.md
+
+---
+
 ## MACROENTREGA SITE — MANIFESTAÇÃO DE PROPOSTA CRM INDOOR (28/10/2026)
 
 - [x] Suportar status proposal_presented, proposal_acknowledged e proposal_declined no acompanhamento.
