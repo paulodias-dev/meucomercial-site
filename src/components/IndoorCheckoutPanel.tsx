@@ -1,5 +1,6 @@
 import {useRef,useState} from 'react'
 import {CheckCircle2,Copy,FileText,RefreshCcw,ShieldCheck,Wallet} from 'lucide-react'
+import IndoorOperationProgress,{type IndoorOperationProgressData} from './IndoorOperationProgress'
 
 export type CheckoutView={
  status:'offered'|'accepted'|'pix_pending'|'paid_verified'|'payment_disputed'
@@ -9,7 +10,7 @@ export type CheckoutView={
  payment_verified_by_gateway_read:boolean;subscription_created:boolean;service_activated:boolean;next_step:string;
  provisioning:null|{status:'active'|'disputed';activated_at:string|null;
  disputed_at:string|null;subscription_created:true;service_activated:boolean;
- automatic_device_pairing:false}
+ automatic_device_pairing:false;operation?:IndoorOperationProgressData}
 }
 export type CheckoutStatusShape={
  reference:string;checkout?:CheckoutView|null;payment_created:boolean;
@@ -202,6 +203,8 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
     O próximo ciclo segue a recorrência prevista nas condições contratuais.
     O cadastro de telas, Players e mídias é realizado separadamente pelo administrador.</p>
   </div>}
+  {checkout.provisioning?.operation&&<IndoorOperationProgress
+   progress={checkout.provisioning.operation} status={checkout.provisioning.status}/>}
   {checkout.provisioning?.status==='disputed'&&<p role="alert" className="mt-5 text-red-800 text-sm">
    A assinatura foi suspensa após contestação ou estorno financeiro. Entre em contato com o suporte.</p>}
   {checkout.status==='payment_disputed'&&<p role="alert" className="mt-5 text-red-800 text-sm">
