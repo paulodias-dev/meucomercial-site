@@ -64,6 +64,42 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(prior.record))
     return
    }
+   if(req.method==='POST'&&req.url.endsWith('/checkout-accept')){
+    let raw='';for await(const chunk of req)raw+=chunk.toString()
+    const body=JSON.parse(raw)
+    if(prior.record.checkout?.status!=='offered'||
+       body.terms_sha256!==prior.record.checkout.terms_sha256||
+       body.accept_contract_terms!==true||body.accept_recurring_billing!==true){
+     res.writeHead(409,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Checkout inválido'}))
+     return
+    }
+    prior.record.checkout={...prior.record.checkout,status:'accepted',version:2,
+     accepted_at:'2026-10-28 12:00:00'}
+    res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(prior.record.checkout))
+    return
+   }
+   if(req.method==='POST'&&req.url.endsWith('/pix')){
+    prior.record={...prior.record,payment_created:true,checkout:{
+     ...prior.record.checkout,status:'pix_pending',version:3,pix_status:'pending',
+     pix_remote_id_registered:true,
+    }}
+    res.writeHead(201,{'Content-Type':'application/json'}).end(JSON.stringify({
+     data:{request_id:'67361cf9-5d0e-4d2a-a6e3-aae44c202620',payment_status:'pending',
+      payment_id:'4321001',remote_get_verified:true,amount_brl:'249.90',payment_method:'pix'},
+     pix:{copy_paste:'PIX-MOCK-COPIA-E-COLA',qr_base64:null,gateway_status:'pending',
+      gateway_status_is_payment_confirmation:false},
+    }))
+    return
+   }
+   if(req.method==='GET'&&req.url.endsWith('/pix')){
+    res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify({
+     data:{request_id:'67361cf9-5d0e-4d2a-a6e3-aae44c202620',payment_status:'pending',
+      payment_id:'4321001',remote_get_verified:true,amount_brl:'249.90',payment_method:'pix'},
+     pix:{copy_paste:'PIX-MOCK-COPIA-E-COLA',qr_base64:null,gateway_status:'pending',
+      gateway_status_is_payment_confirmation:false},
+    }))
+    return
+   }
    if(req.method==='POST'&&req.url.endsWith('/cancel')){
     prior.record={...prior.record,status:'cancelled',version:2}
    }
@@ -184,6 +220,43 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     await page.getByRole('heading',{name:'Interesse comercial registrado'}).waitFor()
     assert.equal(contractRequests.get(uuid).record.status,'proposal_acknowledged')
     assert.equal(contractRequests.get(uuid).record.payment_created,false)
+   }finally{await page.close()}
+  })
+  await t.test('termos financeiros, aceite explícito e PIX de teste sem reconhecer pagamento',async()=>{
+   const uuid='9c2ad0d7-f51b-4aa2-af88-a45e0faee0ab',access='c'.repeat(64)
+   contractRequests.set(uuid,{key:access,record:{
+    reference:uuid,status:'proposal_acknowledged',version:4,
+    plan:{name:'Plano A',display_price_brl:'249.90',interval:'monthly',
+     price_is_contractually_binding:false},
+    proposal:null,
+    checkout:{
+     status:'offered',version:1,terms_version:'indoor_2026_v1',
+     terms_sha256:'b'.repeat(64),
+     terms_text:'Condições de prestação de serviço de software Indoor, mensalidade e responsabilidade da empresa. '.repeat(3),
+     amount_brl:'249.90',interval:'monthly',expires_at:'2027-10-30 23:59:00',
+     accepted_at:null,paid_verified_at:null,pix_status:null,pix_remote_id_registered:false,
+     payment_verified_by_gateway_read:false,subscription_created:false,service_activated:false,
+     next_step:'accept_checkout_terms',
+    },
+    payment_created:false,subscription_created:false,contract_signed:false,
+   }})
+   const page=await newPage('/acompanhar')
+   try{
+    await page.getByLabel('Referência UUID').fill(uuid)
+    await page.getByLabel('Código privado de acompanhamento').fill(access)
+    await page.getByRole('button',{name:'Consultar situação'}).click()
+    await page.getByRole('heading',{name:'Condições finais da contratação Indoor'}).waitFor()
+    await page.getByLabel(/Li as condições integrais/).check()
+    await page.getByLabel(/Estou ciente das condições de recorrência/).check()
+    await page.getByRole('button',{name:'Aceitar as condições financeiras'}).click()
+    await page.getByRole('button',{name:'Gerar PIX de contratação'}).waitFor()
+    await page.getByRole('button',{name:'Gerar PIX de contratação'}).click()
+    await page.getByRole('heading',{name:'PIX copia e cola'}).waitFor()
+    assert.equal(contractRequests.get(uuid).record.checkout.status,'pix_pending')
+    assert.equal(contractRequests.get(uuid).record.payment_created,true)
+    assert.equal(contractRequests.get(uuid).record.subscription_created,false)
+    assert.equal(contractRequests.get(uuid).record.checkout.service_activated,false)
+    assert.equal(await page.getByText(/aguardando confirmação pelo Mercado Pago/i).count()>0,true)
    }finally{await page.close()}
   })
   await t.test('anunciante: seleciona apenas oferta verificada, sem assinatura',async()=>{
