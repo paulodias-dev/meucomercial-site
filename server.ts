@@ -155,6 +155,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
   res.setHeader('Referrer-Policy','no-referrer')
   const create=req.path==='/api/indoor-contract-requests'
   const cancel=req.path.endsWith('/cancel')
+  const respond=req.path.endsWith('/proposal-response')
   const reference=req.params.reference
   if(!create&&(!reference||!contractReference.test(reference)))
     return res.status(422).json({message:'Referência inválida.'})
@@ -170,6 +171,12 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
   if(cancel&&(!contractReference.test(String(req.body?.request_id??''))||
     !Number.isSafeInteger(req.body?.expected_version)||req.body.expected_version<1))
     return res.status(422).json({message:'Dados do cancelamento inválidos.'})
+  if(respond&&(!contractReference.test(String(req.body?.request_id??''))||
+    !Number.isSafeInteger(req.body?.expected_version)||req.body.expected_version<1||
+    !Number.isSafeInteger(req.body?.proposal_version)||req.body.proposal_version<1||
+    !['acknowledge','decline'].includes(req.body?.decision)||
+    (req.body.decision==='acknowledge'&&req.body.acknowledge_nonbinding!==true)))
+    return res.status(422).json({message:'Manifestação ou versão inválida.'})
   const configured=process.env.MEUCOMERCIAL_API_URL?.trim()
   if(!configured)return res.status(503).json({message:'Análise comercial temporariamente indisponível.'})
   try{
@@ -177,7 +184,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
     if(base.protocol!=='https:' &&
       !(process.env.NODE_ENV!=='production'&&['localhost','127.0.0.1'].includes(base.hostname)))
       throw Error('unsafe')
-    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':''))
+    const target='site/indoor/contract-requests'+(create?'':'/'+reference+(cancel?'/cancel':respond?'/proposal-response':''))
     const endpoint=new URL(target,base)
     const payload=create?{
       request_id:req.body.request_id,lead_reference:req.body.lead_reference,
@@ -185,6 +192,10 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
       access_key:req.body.access_key,terms_accepted:req.body.terms_accepted,
     }:cancel?{
       request_id:req.body.request_id,expected_version:req.body.expected_version,
+    }:respond?{
+      request_id:req.body.request_id,expected_version:req.body.expected_version,
+      proposal_version:req.body.proposal_version,decision:req.body.decision,
+      acknowledge_nonbinding:req.body.acknowledge_nonbinding===true,
     }:undefined
     const upstream=await fetch(endpoint,{
       method:req.method,redirect:'error',credentials:'omit',
@@ -211,6 +222,7 @@ const proxyIndoorContract=async(req:express.Request,res:express.Response)=>{
 app.post('/api/indoor-contract-requests',proxyIndoorContract)
 app.get('/api/indoor-contract-requests/:reference',proxyIndoorContract)
 app.post('/api/indoor-contract-requests/:reference/cancel',proxyIndoorContract)
+app.post('/api/indoor-contract-requests/:reference/proposal-response',proxyIndoorContract)
 
 // Two fixed, public read-only contracts; never expose MEUCOMERCIAL_API_URL,
 // forward cookies/JWT or allow a query parameter to become an upstream path.
@@ -547,6 +559,18 @@ async function startServer() {
         .set('Cache-Control', 'private, no-store')
         .set('Referrer-Policy', 'no-referrer')
         .type('html').send(html);
+    });
+    // The private tracking form must not be indexed or expose canonical URLs.
+    app.get(['/acompanhar', '/acompanhar/'], (_req, res) => {
+      const html = readFileSync(path.join(distPath, 'index.html'), 'utf8')
+        .replace(/<title>[^<]*<\/title>/,
+          '<title>Acompanhar pedido | Meu Comercial</title>')
+        .replace(/<meta name="robots"[^>]*>/,
+          '<meta name="robots" content="noindex, nofollow, noarchive" />')
+        .replace(/<link rel="canonical"[^>]*>/, '');
+      return res.status(200).set('Cache-Control','private, no-store')
+        .set('X-Robots-Tag','noindex, nofollow, noarchive')
+        .set('Referrer-Policy','no-referrer').type('html').send(html);
     });
     app.get(['/radio-indoor', '/radio-indoor/'], (_req, res) => {
       // Public social previews cannot rely on React hydration.

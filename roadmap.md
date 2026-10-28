@@ -1,3 +1,20 @@
+## MACROENTREGA SITE — MANIFESTAÇÃO DE PROPOSTA CRM INDOOR (28/10/2026)
+
+- [x] Suportar status proposal_presented, proposal_acknowledged e proposal_declined no acompanhamento.
+- [x] Renderizar escopo, itens, preço BRL, validade e versão a partir da proposta da API.
+- [x] Permitir ciência/interesse explícito e recusa, sem assinatura ou pagamento.
+- [x] Usar UUID por corpo, expected_version e proposal_version na operação CAS.
+- [x] Não aceitar ciência quando proposta retirada, alterada ou expirada.
+- [x] Enviar manifestação apenas via BFF allowlisted same-origin com código privado Bearer.
+- [x] Corrigir /acompanhar ausente na roteirização React/Express e aplicar noindex HTTP.
+- [x] Permitir retomar consulta com UUID e código guardados fora do site; sem storage/URL com segredo.
+- [x] Teste Node de UI e contratos no build. QA real/homologação permanecem para MVP.
+- [ ] Pagamento real de assinatura Indoor exige etapa financeira separada com confirmação de gateway.
+
+Documento: docs/SITE_INDOOR_CRM_PROPOSAL_BRIDGE_20261028.md.
+
+---
+
 ## MACROENTREGA SITE — PRÉ-CONTRATAÇÃO INDOOR E ACOMPANHAMENTO PRIVADO (28/10/2026)
 
 - [x] Após lead confirmado e plano real selecionado, permitir uma segunda etapa pré-contratual opcional.

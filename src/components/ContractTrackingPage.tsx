@@ -1,18 +1,22 @@
-import {useState} from 'react'
+import {useRef,useState} from 'react'
 import type {FormEvent} from 'react'
 import {ArrowLeft,RefreshCcw,ShieldCheck} from 'lucide-react'
 import SEO from './SEO'
+import IndoorProposalResponsePanel, {type IndoorContractStatus,type IndoorQuote} from './IndoorProposalResponsePanel'
 
-type State='pending'|'approved_for_proposal'|'declined'|'cancelled'
+type State='pending'|'approved_for_proposal'|'proposal_presented'|'proposal_acknowledged'|'proposal_declined'|'declined'|'cancelled'
 type Status={reference:string;status:State;version:number;plan:{
  name:string;display_price_brl:string;interval:'monthly'|'yearly';
  price_is_contractually_binding:false};
- payment_created:false;subscription_created:false;contract_signed:false}
+ payment_created:false;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null}
 const validRef=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const validKey=/^[a-f0-9]{64}$/i
 const labels:Record<State,string>={
  pending:'Em análise pelo Master',
  approved_for_proposal:'Aprovado para proposta manual',
+ proposal_presented:'Proposta disponível para manifestação',
+ proposal_acknowledged:'Interesse registrado na proposta',
+ proposal_declined:'Proposta recusada',
  declined:'Pedido recusado',
  cancelled:'Pedido cancelado',
 }
@@ -21,6 +25,7 @@ export default function ContractTrackingPage(){
  const [code,setCode]=useState('')
  const [status,setStatus]=useState<Status|null>(null)
  const [busy,setBusy]=useState(false)
+ const cancelOperation=useRef<string|null>(null)
  const [error,setError]=useState(''),[notice,setNotice]=useState('')
  const refresh=async(event?:FormEvent)=>{
   event?.preventDefault()
@@ -29,7 +34,7 @@ export default function ContractTrackingPage(){
   if(!validRef.test(reference.trim())||!validKey.test(code.trim())){
    setError('Informe o UUID da solicitação e o código privado de 64 caracteres.');return
   }
-  setBusy(true);setStatus(null)
+  setBusy(true);setStatus(null);cancelOperation.current=null
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(reference.trim()),{
     credentials:'omit',cache:'no-store',
@@ -40,7 +45,7 @@ export default function ContractTrackingPage(){
       body.payment_created!==false||body.subscription_created!==false||
       body.contract_signed!==false||typeof body.version!=='number'||
       typeof body.plan?.name!=='string'||
-      !['pending','approved_for_proposal','declined','cancelled'].includes(body.status))
+      !['pending','approved_for_proposal','proposal_presented','proposal_acknowledged','proposal_declined','declined','cancelled'].includes(body.status))
     throw Error(response.status===401||response.status===404?
      'Referência ou código não localizado. Confira os dados.':
      'Não foi possível confirmar o estado do pedido.')
@@ -52,12 +57,13 @@ export default function ContractTrackingPage(){
   if(busy||status?.status!=='pending')return
   if(!window.confirm('Cancelar esta análise pendente? Não houve pagamento.'))return
   setBusy(true);setError('');setNotice('')
+  if(!cancelOperation.current)cancelOperation.current=crypto.randomUUID()
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(status.reference)+'/cancel',{
     method:'POST',credentials:'omit',cache:'no-store',
     headers:{Authorization:'Bearer '+code.trim(),
      Accept:'application/json','Content-Type':'application/json'},
-    body:JSON.stringify({request_id:crypto.randomUUID(),expected_version:status.version}),
+    body:JSON.stringify({request_id:cancelOperation.current,expected_version:status.version}),
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.status!=='cancelled'||body.payment_created!==false)
@@ -114,6 +120,8 @@ export default function ContractTrackingPage(){
      className="mt-5 border border-red-200 text-red-800 rounded-xl min-h-11 px-5 text-sm font-semibold">
      Cancelar pedido pendente</button>}
    </section>}
+   {status&&<IndoorProposalResponsePanel status={status as IndoorContractStatus} secret={code.trim()}
+     onUpdated={updated=>setStatus(updated as Status)}/>}
   </div>
  </main>
 }
