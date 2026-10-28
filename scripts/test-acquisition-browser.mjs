@@ -257,6 +257,27 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     assert.equal(contractRequests.get(uuid).record.subscription_created,false)
     assert.equal(contractRequests.get(uuid).record.checkout.service_activated,false)
     assert.equal(await page.getByText(/aguardando confirmação pelo Mercado Pago/i).count()>0,true)
+    // Payment alone does not activate; Master provisioning changes only
+    // public-safe status, never exposing Client/Subscription internal IDs.
+    const contract=contractRequests.get(uuid)
+    contract.record={...contract.record,subscription_created:true,
+     checkout:{...contract.record.checkout,status:'paid_verified',
+      service_activated:true,subscription_created:true,
+      paid_verified_at:'2026-10-28 12:00:00',
+      provisioning:{status:'active',activated_at:'2026-10-28 12:05:00',
+       disputed_at:null,subscription_created:true,service_activated:true,
+       automatic_device_pairing:false}}}
+    await page.getByRole('button',{name:'Consultar status'}).click()
+    await page.getByText('Assinatura Indoor ativada!').waitFor()
+    assert.equal(await page.getByText(/O primeiro período já está quitado/).count()>0,true)
+    contract.record={...contract.record,
+     checkout:{...contract.record.checkout,status:'payment_disputed',
+      service_activated:false,payment_verified_by_gateway_read:false,
+      provisioning:{...contract.record.checkout.provisioning,
+       status:'disputed',service_activated:false,
+       disputed_at:'2026-10-28 13:00:00'}}}
+    await page.getByRole('button',{name:'Consultar status'}).click()
+    await page.getByText(/assinatura foi suspensa após contestação/i).waitFor()
    }finally{await page.close()}
   })
   await t.test('anunciante: seleciona apenas oferta verificada, sem assinatura',async()=>{
