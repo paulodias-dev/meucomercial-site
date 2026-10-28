@@ -43,3 +43,5 @@ permanecem pendentes e não bloqueiam nova macroentrega.
 Checkout Indoor real após aprovação de política contratual e financeira:
 API de intenção de compra vinculada ao snapshot, consentimento de termos,
 Mercado Pago verificado, idempotência e webhooks; depois UI correspondente.
+
+Teste e2e opcional após build e dependência Playwright instalada: npm run test:acquisition:browser.

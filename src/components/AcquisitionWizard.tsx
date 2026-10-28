@@ -188,7 +188,7 @@ export default function AcquisitionWizard(){
        <input type="number" min={1} max={10000} required className={inputStyle}
         value={form.screensCount} onChange={e=>change('screensCount',e.target.value)}/>
       </label>:<label className="text-sm font-semibold">Meio de interesse
-       <select className={inputStyle} value={medium} onChange={e=>setMedium(e.target.value as Medium)}>
+       <select className={inputStyle} value={medium} onChange={e=>{setMedium(e.target.value as Medium);setSelected(null)}}>
         <option value="mixed">TV e Rádio</option><option value="tv">TV</option><option value="radio">Rádio</option>
        </select></label>}
      </div>

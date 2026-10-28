@@ -132,6 +132,7 @@ app.post("/api/commercial-leads", async (req, res) => {
       method: "POST",
       headers: {"Content-Type": "application/json", "Accept": "application/json"},
       body: JSON.stringify(req.body),
+      redirect: "error", // Never forward lead PII to a redirected upstream host.
       signal: AbortSignal.timeout(12000),
     });
     const payload = await upstream.json().catch(() => ({}));

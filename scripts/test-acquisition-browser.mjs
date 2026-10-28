@@ -64,7 +64,10 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
   return page
  }
  async function complete(page,name='Ana Teste'){
-  for(let i=0;i<2;i++)await page.getByRole('button',{name:'Continuar'}).click()
+  await page.getByRole('button',{name:'Continuar'}).click()
+  if(page.url().includes('kind=establishment'))await page.getByRole('button',{name:/Plano A/}).waitFor()
+  if(page.url().includes('kind=advertiser'))await page.getByRole('button',{name:/Oferta Rádio/}).waitFor()
+  await page.getByRole('button',{name:'Continuar'}).click()
   await page.getByLabel('Nome completo').fill(name)
   await page.getByLabel('Empresa').fill('Empresa Teste')
   await page.getByLabel('E-mail').fill('teste@example.org')
