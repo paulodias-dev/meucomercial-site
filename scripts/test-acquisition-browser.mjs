@@ -268,12 +268,22 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
        disputed_at:null,subscription_created:true,service_activated:true,
        automatic_device_pairing:false,
        operation:{units_registered:1,players_registered:2,players_paired:0,
-        next_step:'pair_players',playback_verified:false}}}}
+        next_step:'pair_players',editorial_publications_active:0,playback_verified:false}}}}
     await page.getByRole('button',{name:'Consultar status'}).click()
     await page.getByText('Assinatura Indoor ativada!').waitFor()
     await page.getByRole('heading',{name:'Preparação da sua TV e Rádio Indoor'}).waitFor()
     await page.getByText('2 cadastrado(s)').waitFor()
     assert.equal(await page.getByText(/O primeiro período já está quitado/).count()>0,true)
+    // Publication is a DB ledger and sync request; not playback proof.
+    contract.record={...contract.record,
+     checkout:{...contract.record.checkout,
+      provisioning:{...contract.record.checkout.provisioning,
+       operation:{units_registered:1,players_registered:2,players_paired:2,
+        editorial_publications_active:1,next_step:'monitor_player_sync',
+        playback_verified:false}}}}
+    await page.getByRole('button',{name:'Consultar status'}).click()
+    await page.getByText(/1 lote\(s\) editorial\(is\) publicado\(s\)/).waitFor()
+    await page.getByText(/Aguardando contato válido dos Players/).waitFor()
     contract.record={...contract.record,
      checkout:{...contract.record.checkout,status:'payment_disputed',
       service_activated:false,payment_verified_by_gateway_read:false,

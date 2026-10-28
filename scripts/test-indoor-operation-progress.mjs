@@ -17,5 +17,5 @@ test('preparação não é sinônimo de media delivery ou audiência auditada',(
  assert.ok(progress.includes('não são comprovantes de reprodução'))
  assert.ok(progress.includes('resolve_financial_dispute'))
  assert.ok(progress.includes('Conteúdo e programação'))
- assert.ok(progress.includes('done:false'))
+ assert.ok(progress.includes('editorial_publications_active>0'))
 })
