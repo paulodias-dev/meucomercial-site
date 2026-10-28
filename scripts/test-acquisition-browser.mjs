@@ -299,12 +299,14 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     await page.getByRole('button',{name:'Consultar status'}).click()
     await page.getByText(/2 conclusão\(ões\) relatada\(s\) por 1 Player\(s\)/).waitFor()
     await page.getByText(/O Player enviou relatos autenticados/).waitFor()
+    // A subsequent chargeback uses only coarse financial guidance.
     contract.record={...contract.record,
      checkout:{...contract.record.checkout,status:'payment_disputed',
       service_activated:false,payment_verified_by_gateway_read:false,
       provisioning:{...contract.record.checkout.provisioning,
        status:'disputed',service_activated:false,
-       disputed_at:'2026-10-28 13:00:00'}}}
+       disputed_at:'2026-10-28 13:00:00',
+       financial_resolution:'manual_financial_review_required'}}}
     await page.getByRole('button',{name:'Consultar status'}).click()
     await page.getByText(/assinatura foi suspensa após contestação/i).waitFor()
    }finally{await page.close()}

@@ -10,6 +10,8 @@ export type CheckoutView={
  payment_verified_by_gateway_read:boolean;subscription_created:boolean;service_activated:boolean;next_step:string;
  provisioning:null|{status:'active'|'disputed';activated_at:string|null;
  disputed_at:string|null;subscription_created:true;service_activated:boolean;
+ financial_resolution?:null|'awaiting_financial_reconciliation'|
+  'under_financial_review'|'manual_financial_review_required';
  automatic_device_pairing:false;operation?:IndoorOperationProgressData}
 }
 export type CheckoutStatusShape={
@@ -205,8 +207,19 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
   </div>}
   {checkout.provisioning?.operation&&<IndoorOperationProgress
    progress={checkout.provisioning.operation} status={checkout.provisioning.status}/>}
-  {checkout.provisioning?.status==='disputed'&&<p role="alert" className="mt-5 text-red-800 text-sm">
-   A assinatura foi suspensa após contestação ou estorno financeiro. Entre em contato com o suporte.</p>}
+  {checkout.provisioning?.status==='disputed'&&<section role="alert"
+   className="mt-5 border border-red-200 bg-red-50 rounded-xl p-4 text-red-900">
+   <h4 className="font-semibold">Assinatura temporariamente suspensa</h4>
+   <p className="mt-2 text-sm">O pagamento original foi contestado ou estornado.
+    A assinatura e a veiculação de mídia permanecem suspensas.</p>
+   {checkout.provisioning.financial_resolution==='manual_financial_review_required'?
+    <p className="mt-2 text-sm font-semibold">O financeiro precisa revisar os lançamentos antes de qualquer regularização.</p>:
+    checkout.provisioning.financial_resolution==='under_financial_review'?
+    <p className="mt-2 text-sm">A contrapartida financeira foi registrada, mas o caso ainda exige análise antes da reativação.</p>:
+    <p className="mt-2 text-sm">A conciliação financeira está em andamento.</p>}
+   <p className="mt-2 text-sm">Entre em contato com o suporte e informe a referência da sua contratação.
+    Não realize outro PIX nem tente reativar seus Players por conta própria.</p>
+  </section>}
   {checkout.status==='payment_disputed'&&<p role="alert" className="mt-5 text-red-800 text-sm">
    Pagamento contestado ou estornado; ativação bloqueada. Procure o suporte.</p>}
   <p className="mt-5 flex gap-2 text-xs text-slate-600"><ShieldCheck size={18} aria-hidden/>
