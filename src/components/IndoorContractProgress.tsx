@@ -1,12 +1,13 @@
 import {useRef,useState} from 'react'
 import {CheckCircle2,RefreshCcw,ShieldCheck,XCircle} from 'lucide-react'
 import IndoorProposalResponsePanel, {type IndoorContractStatus,type IndoorQuote} from './IndoorProposalResponsePanel'
+import IndoorCheckoutPanel, {type CheckoutView,type CheckoutStatusShape} from './IndoorCheckoutPanel'
 
 type Status='pending'|'approved_for_proposal'|'proposal_presented'|'proposal_acknowledged'|'proposal_declined'|'declined'|'cancelled'
 type Contract={reference:string;status:Status;version:number;plan:{
  name:string;display_price_brl:string;interval:'monthly'|'yearly';
  price_is_contractually_binding:false
-};payment_created:false;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null}
+};payment_created:boolean;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null;checkout?:CheckoutView|null}
 type Credentials={requestId:string;accessKey:string;cancelId:string}
 const states:Record<Status,string>={
  pending:'Aguardando análise comercial do Master',
@@ -69,7 +70,8 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
     credentials:'omit',cache:'no-store',headers:tokenHeaders(current.accessKey)
    })
    const body=await response.json().catch(()=>({}))
-   if(!response.ok||body.reference!==current.requestId||body.payment_created!==false)
+   if(!response.ok||body.reference!==current.requestId||typeof body.payment_created!=='boolean'||
+     body.subscription_created!==false||body.contract_signed!==false)
     throw Error(requestError(response.status))
    setRecord(body as Contract)
   }catch(ex){setError(ex instanceof Error?ex.message:'Não foi possível consultar o status.')}
@@ -149,6 +151,8 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
   </div>}
   {record&&creds.current&&<IndoorProposalResponsePanel status={record as IndoorContractStatus}
    secret={creds.current.accessKey} onUpdated={updated=>setRecord(updated as Contract)}/>}
+  {record?.checkout&&creds.current&&<IndoorCheckoutPanel data={record as CheckoutStatusShape}
+   secret={creds.current.accessKey} onChanged={refresh}/>}
   {notice&&<p role="status" className="text-sm text-blue-800 mt-4">{notice}</p>}
   {error&&<p role="alert" className="text-sm text-red-800 mt-4">{error}</p>}
  </section>
