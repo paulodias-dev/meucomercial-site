@@ -63,8 +63,8 @@ export default function IndoorOperationProgress({progress,status}:{
    </p>
    <p className="flex items-start gap-2 mt-3 text-xs text-slate-600">
     <ShieldCheck size={17} className="shrink-0" aria-hidden/>
-    Cadastro, pareamento e sincronização não provam exibição; os relatos de conclusão são
-    autodeclarações autenticadas do Player, não medições independentes de audiência.
+    O cadastro, o pareamento e a sincronização não são comprovantes de reprodução nem de audiência.
+    Os relatos de conclusão são autodeclarações autenticadas do Player, não medições independentes.
    </p>
   </div>
  </section>
