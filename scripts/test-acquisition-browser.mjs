@@ -21,7 +21,40 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
   '-out',certfile,'-subj','/CN=localhost','-addext','subjectAltName=DNS:localhost'],{stdio:'ignore'})
  const options={key:readFileSync(keyfile),cert:readFileSync(certfile)}
  const receipts=[]
+ const contractRequests=new Map()
  const api=httpsServer(options,async(req,res)=>{
+  if(req.url?.startsWith('/api/site/indoor/contract-requests')){
+   const ref=req.url.split('/')[5]
+   const key=(req.headers.authorization||'').replace(/^Bearer /,'')
+   const prior=ref?contractRequests.get(ref):null
+   if(req.method==='POST'&&req.url==='/api/site/indoor/contract-requests'){
+    let raw='';for await(const chunk of req)raw+=chunk.toString()
+    const body=JSON.parse(raw)
+    if(body.plan_id!==21||body.email!=='teste@example.org'||
+      body.terms_accepted!==true||!/^[a-f0-9]{64}$/.test(body.access_key)){
+     res.writeHead(422,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Dados inválidos'}))
+     return
+    }
+    const record={
+     reference:body.request_id,status:'pending',version:1,
+     plan:{name:'Plano A',display_price_brl:'249.90',interval:'monthly',
+      price_is_contractually_binding:false},
+     payment_created:false,subscription_created:false,contract_signed:false
+    }
+    contractRequests.set(body.request_id,{record,key:body.access_key})
+    res.writeHead(201,{'Content-Type':'application/json'}).end(JSON.stringify(record))
+    return
+   }
+   if(!prior||key!==prior.key){
+    res.writeHead(404,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Não encontrado'}))
+    return
+   }
+   if(req.method==='POST'&&req.url.endsWith('/cancel')){
+    prior.record={...prior.record,status:'cancelled',version:2}
+   }
+   res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(prior.record))
+   return
+  }
   if(req.method==='GET'&&req.url?.startsWith('/api/site/indoor/plans')){
    res.writeHead(200,{'Content-Type':'application/json'})
    res.end(JSON.stringify({evidence:'approved_active_plan_not_purchase',
@@ -96,6 +129,16 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     assert.equal(lead.kind,'establishment')
     assert.equal(lead.consent,true)
     assert.equal(lead.utm_source,'campanha')
+    // Lead persistido não é pré-contratação. Segundo opt-in explícito.
+    await page.getByLabel(/Confirmo que desejo submeter/).check()
+    await page.getByRole('button',{name:'Solicitar análise pré-contratual'}).click()
+    await page.getByRole('heading',{name:'Aguardando análise comercial do Master'}).waitFor()
+    await page.getByRole('button',{name:'Atualizar situação'}).click()
+    await page.getByRole('heading',{name:'Aguardando análise comercial do Master'}).waitFor()
+    page.once('dialog',dialog=>dialog.accept())
+    await page.getByRole('button',{name:'Cancelar pedido'}).click()
+    await page.getByRole('heading',{name:'Solicitação cancelada sem cobrança'}).waitFor()
+    assert.equal(contractRequests.size,1)
     const scrollWidth=await page.evaluate(()=>document.documentElement.scrollWidth)
     assert.ok(scrollWidth<=377,'Overflow horizontal em 375px: '+scrollWidth)
    }finally{await page.close()}

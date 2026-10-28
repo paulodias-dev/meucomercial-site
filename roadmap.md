@@ -1,3 +1,22 @@
+## MACROENTREGA SITE — PRÉ-CONTRATAÇÃO INDOOR E ACOMPANHAMENTO PRIVADO (28/10/2026)
+
+- [x] Após lead confirmado e plano real selecionado, permitir uma segunda etapa pré-contratual opcional.
+- [x] Gerar código secreto de 256 bits em memória do navegador, não armazenar em URL/cookies/storage.
+- [x] BFF Express allowlisted com HTTPS, validação de método, UUID e segredo, sem redirects ou cookies.
+- [x] Criar solicitação com UUID idempotente, lead_reference e novo aceite expresso de análise.
+- [x] Exibir somente estado comprovado pela API; consultar status privado e cancelar pendente com CAS.
+- [x] Copiar dados privados de acompanhamento somente por ação explícita; alertar sobre perda após recarga.
+- [x] Preservar fluxo agência/anunciante sem simular contrato SaaS ou compra de mídia.
+- [x] Testes Node de contrato incluídos no build e runbook separado.
+- [ ] Checkout financeiro Indoor e ativação real de assinatura dependem de contrato e gateway específicos.
+
+**Dependência:** mesclar API #193 antes de integrar esta branch. Baseline
+documental de MVP: 79,1%, sem homologação; avaliação de avanço conjunto
+deve ser feita após Site e Admin. Testes Node/TS/Vite/Chromium não executados.
+Guia: docs/SITE_INDOOR_CONTRACT_REQUESTS_MVP_20261028.md
+
+---
+
 ## MACROENTREGA SITE — JORNADA DE AQUISIÇÃO GUIADA (28/10/2026)
 
 - [x] Criar /contratar para estabelecimento, agência e anunciante com etapas mobile-first.
