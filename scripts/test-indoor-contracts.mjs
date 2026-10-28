@@ -18,6 +18,18 @@ test('secret temporário é aleatório forte e não se torna um identificador de
  assert.ok(!ui.includes('localStorage')&&!ui.includes('sessionStorage'))
  assert.ok(!ui.includes('window.location.assign'))
 })
+test('acompanhamento privado nunca disponibiliza segredo em query string e recusa indexação',()=>{
+ const ui=read('src/components/ContractTrackingPage.tsx')
+ const app=read('src/App.tsx')
+ const server=read('server.ts')
+ assert.ok(app.includes("window.location.pathname === '/acompanhar'"))
+ assert.ok(ui.includes('type="password"'))
+ assert.ok(ui.includes("cancelOperation.current"))
+ assert.ok(ui.includes('noindex, nofollow, noarchive'))
+ assert.ok(!ui.includes('localStorage')&&!ui.includes('sessionStorage'))
+ assert.ok(server.includes("app.get(['/acompanhar', '/acompanhar/']"))
+ assert.ok(server.includes("'X-Robots-Tag','noindex, nofollow, noarchive'"))
+})
 test('BFF não envia cookies/JWT Master, não segue redirecionamentos nem abre path dinâmico',()=>{
  const server=read('server.ts')
  assert.ok(server.includes("app.post('/api/indoor-contract-requests'"))

@@ -8,6 +8,7 @@ const RadioShowcasePage = React.lazy(() => import("./components/RadioShowcasePag
 const TvDemoPage = React.lazy(() => import("./components/TvDemoPage"));
 const AdvertisingPage = React.lazy(() => import("./components/AdvertisingPage"));
 const AcquisitionPage = React.lazy(() => import("./components/AcquisitionPage"));
+const ContractTrackingPage = React.lazy(() => import("./components/ContractTrackingPage"));
 import {readCommercialIntent, commercialMessage} from "./lib/commercialIntent.mjs";
 import PublicIndoorPricing from './components/PublicIndoorPricing';
 import HeroSimulator from './components/HeroSimulator';
@@ -332,6 +333,9 @@ export default function App() {
   }
   if (window.location.pathname === '/demonstracao-tv' || window.location.pathname === '/demonstracao-tv/') {
     return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center text-sm text-slate-600">Carregando módulo…</main>}><TvDemoPage /></React.Suspense>;
+  }
+  if (window.location.pathname === '/acompanhar' || window.location.pathname === '/acompanhar/') {
+    return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center">Carregando…</main>}><ContractTrackingPage /></React.Suspense>;
   }
   if (window.location.pathname === '/contratar' || window.location.pathname === '/contratar/') {
     return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center">Carregando…</main>}><AcquisitionPage /></React.Suspense>;

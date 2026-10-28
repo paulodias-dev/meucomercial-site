@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useRef,useState} from 'react'
 import type {FormEvent} from 'react'
 import {ArrowLeft,RefreshCcw,ShieldCheck} from 'lucide-react'
 import SEO from './SEO'
@@ -21,6 +21,7 @@ export default function ContractTrackingPage(){
  const [code,setCode]=useState('')
  const [status,setStatus]=useState<Status|null>(null)
  const [busy,setBusy]=useState(false)
+ const cancelOperation=useRef<string|null>(null)
  const [error,setError]=useState(''),[notice,setNotice]=useState('')
  const refresh=async(event?:FormEvent)=>{
   event?.preventDefault()
@@ -29,7 +30,7 @@ export default function ContractTrackingPage(){
   if(!validRef.test(reference.trim())||!validKey.test(code.trim())){
    setError('Informe o UUID da solicitação e o código privado de 64 caracteres.');return
   }
-  setBusy(true);setStatus(null)
+  setBusy(true);setStatus(null);cancelOperation.current=null
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(reference.trim()),{
     credentials:'omit',cache:'no-store',
@@ -52,12 +53,13 @@ export default function ContractTrackingPage(){
   if(busy||status?.status!=='pending')return
   if(!window.confirm('Cancelar esta análise pendente? Não houve pagamento.'))return
   setBusy(true);setError('');setNotice('')
+  if(!cancelOperation.current)cancelOperation.current=crypto.randomUUID()
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(status.reference)+'/cancel',{
     method:'POST',credentials:'omit',cache:'no-store',
     headers:{Authorization:'Bearer '+code.trim(),
      Accept:'application/json','Content-Type':'application/json'},
-    body:JSON.stringify({request_id:crypto.randomUUID(),expected_version:status.version}),
+    body:JSON.stringify({request_id:cancelOperation.current,expected_version:status.version}),
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.status!=='cancelled'||body.payment_created!==false)

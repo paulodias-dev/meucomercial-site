@@ -5,7 +5,7 @@
 - [x] BFF Express allowlisted com HTTPS, validação de método, UUID e segredo, sem redirects ou cookies.
 - [x] Criar solicitação com UUID idempotente, lead_reference e novo aceite expresso de análise.
 - [x] Exibir somente estado comprovado pela API; consultar status privado e cancelar pendente com CAS.
-- [x] Copiar dados privados de acompanhamento somente por ação explícita; alertar sobre perda após recarga.
+- [x] Copiar código por ação explícita e oferecer /acompanhar para consulta após recarga sem storage.
 - [x] Preservar fluxo agência/anunciante sem simular contrato SaaS ou compra de mídia.
 - [x] Testes Node de contrato incluídos no build e runbook separado.
 - [ ] Checkout financeiro Indoor e ativação real de assinatura dependem de contrato e gateway específicos.

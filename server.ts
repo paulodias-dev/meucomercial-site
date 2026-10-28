@@ -548,6 +548,22 @@ async function startServer() {
         .set('Referrer-Policy', 'no-referrer')
         .type('html').send(html);
     });
+    // Private status requires a secret entered by the visitor; never index or
+    // give this form the public homepage canonical before React hydration.
+    app.get(['/acompanhar', '/acompanhar/'], (_req, res) => {
+      const html = readFileSync(path.join(distPath, 'index.html'), 'utf8')
+        .replace(/<title>[^<]*<\/title>/, '<title>Acompanhar pedido | Meu Comercial</title>')
+        .replace(/<meta name="robots"[^>]*>/,
+          '<meta name="robots" content="noindex, nofollow, noarchive" />')
+        .replace(/<meta name="googlebot"[^>]*>/,
+          '<meta name="googlebot" content="noindex, nofollow, noarchive" />')
+        .replace(/<link rel="canonical"[^>]*>/, '')
+        .replace(/<link rel="alternate"[^>]*>/g, '');
+      return res.status(200).set('Cache-Control','private, no-store')
+        .set('X-Robots-Tag','noindex, nofollow, noarchive')
+        .set('Referrer-Policy','no-referrer')
+        .type('html').send(html);
+    });
     app.get(['/radio-indoor', '/radio-indoor/'], (_req, res) => {
       // Public social previews cannot rely on React hydration.
       const canonical = 'https://meucomercial.com.br/radio-indoor';

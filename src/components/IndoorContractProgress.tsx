@@ -138,6 +138,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
     {record.status==='pending'&&<button type="button" onClick={cancel} disabled={working}
      className="min-h-11 rounded-lg px-4 border border-red-200 text-red-800 text-sm font-semibold">Cancelar pedido</button>}
    </div>
+   <a href="/acompanhar" className="inline-flex items-center min-h-11 mt-3 text-sm font-semibold text-blue-800 underline">Acompanhar em outra visita</a>
    <p className="text-xs text-slate-600 mt-4">O código só fica em memória neste navegador.
     Guarde-o em local seguro se desejar consultar após fechar a página.
     Nunca divulgue o código publicamente.</p>
