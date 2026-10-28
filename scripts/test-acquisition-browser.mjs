@@ -49,6 +49,21 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     res.writeHead(404,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Não encontrado'}))
     return
    }
+   if(req.method==='POST'&&req.url.endsWith('/proposal-response')){
+    let raw='';for await(const chunk of req)raw+=chunk.toString()
+    const body=JSON.parse(raw)
+    if(prior.record.status!=='proposal_presented'||body.expected_version!==prior.record.version||
+      body.proposal_version!==prior.record.proposal.version||
+      (body.decision==='acknowledge'&&body.acknowledge_nonbinding!==true)){
+     res.writeHead(409,{'Content-Type':'application/json'}).end(JSON.stringify({message:'Conflito'}))
+     return
+    }
+    prior.record={...prior.record,
+      status:body.decision==='acknowledge'?'proposal_acknowledged':'proposal_declined',
+      version:prior.record.version+1}
+    res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(prior.record))
+    return
+   }
    if(req.method==='POST'&&req.url.endsWith('/cancel')){
     prior.record={...prior.record,status:'cancelled',version:2}
    }
@@ -141,6 +156,34 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     assert.equal(contractRequests.size,1)
     const scrollWidth=await page.evaluate(()=>document.documentElement.scrollWidth)
     assert.ok(scrollWidth<=377,'Overflow horizontal em 375px: '+scrollWidth)
+   }finally{await page.close()}
+  })
+  await t.test('consulta privada /acompanhar e manifestação de interesse sobre proposta CRM',async()=>{
+   const uuid='e527a8e9-9fb7-4d0e-8dcb-b075fc97cf85'
+   const access='a'.repeat(64)
+   contractRequests.set(uuid,{key:access,record:{
+    reference:uuid,status:'proposal_presented',version:3,
+    plan:{name:'Plano A',display_price_brl:'249.90',interval:'monthly',
+     price_is_contractually_binding:false},
+    proposal:{title:'Proposta TV Indoor',scope:'Publicidade e serviços internos',
+     amount_brl:'249.90',valid_until:'2027-10-30',version:2,
+     items:[{description:'Pacote',quantity:1,unit:'un',unit_price_brl:'249.90',
+      line_total_brl:'249.90'}],available_for_acknowledgement:true,
+     acknowledged_at:null,nonbinding_quotation:true},
+    payment_created:false,subscription_created:false,contract_signed:false
+   }})
+   const page=await newPage('/acompanhar')
+   try{
+    assert.equal((await page.title()).includes('Acompanhar'),true)
+    await page.getByLabel('Referência UUID').fill(uuid)
+    await page.getByLabel('Código privado de acompanhamento').fill(access)
+    await page.getByRole('button',{name:'Consultar situação'}).click()
+    await page.getByRole('heading',{name:'Proposta TV Indoor'}).waitFor()
+    await page.getByLabel(/Li a proposta e confirmo/).check()
+    await page.getByRole('button',{name:'Registrar interesse na proposta'}).click()
+    await page.getByRole('heading',{name:'Interesse comercial registrado'}).waitFor()
+    assert.equal(contractRequests.get(uuid).record.status,'proposal_acknowledged')
+    assert.equal(contractRequests.get(uuid).record.payment_created,false)
    }finally{await page.close()}
   })
   await t.test('anunciante: seleciona apenas oferta verificada, sem assinatura',async()=>{

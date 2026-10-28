@@ -1,15 +1,19 @@
 import {useRef,useState} from 'react'
 import {CheckCircle2,RefreshCcw,ShieldCheck,XCircle} from 'lucide-react'
+import IndoorProposalResponsePanel, {type IndoorContractStatus,type IndoorQuote} from './IndoorProposalResponsePanel'
 
-type Status='pending'|'approved_for_proposal'|'declined'|'cancelled'
+type Status='pending'|'approved_for_proposal'|'proposal_presented'|'proposal_acknowledged'|'proposal_declined'|'declined'|'cancelled'
 type Contract={reference:string;status:Status;version:number;plan:{
  name:string;display_price_brl:string;interval:'monthly'|'yearly';
  price_is_contractually_binding:false
-};payment_created:false;subscription_created:false;contract_signed:false}
+};payment_created:false;subscription_created:false;contract_signed:false;proposal?:IndoorQuote|null}
 type Credentials={requestId:string;accessKey:string;cancelId:string}
 const states:Record<Status,string>={
  pending:'Aguardando análise comercial do Master',
  approved_for_proposal:'Aprovado para elaboração de proposta contratual',
+ proposal_presented:'Proposta comercial disponível',
+ proposal_acknowledged:'Interesse na proposta registrado',
+ proposal_declined:'Proposta comercial recusada',
  declined:'Solicitação não aprovada; fale com a equipe comercial',
  cancelled:'Solicitação cancelada sem cobrança',
 }
@@ -138,10 +142,13 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
     {record.status==='pending'&&<button type="button" onClick={cancel} disabled={working}
      className="min-h-11 rounded-lg px-4 border border-red-200 text-red-800 text-sm font-semibold">Cancelar pedido</button>}
    </div>
+   <a href="/acompanhar" className="mt-3 min-h-11 inline-flex items-center text-sm font-semibold text-blue-800 underline">Acompanhar em outra visita</a>
    <p className="text-xs text-slate-600 mt-4">O código só fica em memória neste navegador.
     Guarde-o em local seguro se desejar consultar após fechar a página.
     Nunca divulgue o código publicamente.</p>
   </div>}
+  {record&&creds.current&&<IndoorProposalResponsePanel status={record as IndoorContractStatus}
+   secret={creds.current.accessKey} onUpdated={updated=>setRecord(updated as Contract)}/>}
   {notice&&<p role="status" className="text-sm text-blue-800 mt-4">{notice}</p>}
   {error&&<p role="alert" className="text-sm text-red-800 mt-4">{error}</p>}
  </section>

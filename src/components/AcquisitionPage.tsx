@@ -8,7 +8,10 @@ export default function AcquisitionPage(){
   <header className="bg-white border-b">
    <nav aria-label="Navegação" className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap justify-between items-center gap-4">
     <a href="/" className="flex gap-2 items-center font-bold text-lg"><Megaphone size={22} className="text-blue-700" aria-hidden/>Meu Comercial</a>
-    <a href="/" className="flex gap-2 items-center min-h-11 text-sm font-semibold text-blue-800"><ArrowLeft size={18} aria-hidden/>Voltar ao site</a>
+    <div className="flex flex-wrap items-center gap-4">
+      <a href="/acompanhar" className="min-h-11 inline-flex items-center text-sm font-semibold text-blue-800">Acompanhar pedido</a>
+      <a href="/" className="flex gap-2 items-center min-h-11 text-sm font-semibold text-blue-800"><ArrowLeft size={18} aria-hidden/>Voltar ao site</a>
+    </div>
    </nav>
   </header>
   <AcquisitionWizard/>

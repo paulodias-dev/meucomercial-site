@@ -1,0 +1,36 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
+test('proposta é apresentada ao solicitante em duas jornadas e não cria contrato',()=>{
+ const preview=read('src/components/IndoorProposalResponsePanel.tsx')
+ const tracking=read('src/components/ContractTrackingPage.tsx')
+ const progress=read('src/components/IndoorContractProgress.tsx')
+ assert.ok(tracking.includes('<IndoorProposalResponsePanel'))
+ assert.ok(progress.includes('<IndoorProposalResponsePanel'))
+ assert.ok(preview.includes('acknowledge_nonbinding'))
+ assert.ok(preview.includes("decision==='acknowledge'"))
+ assert.ok(preview.includes("proposal_version:quote.version"))
+ assert.ok(preview.includes('crypto.randomUUID()'))
+ assert.ok(preview.includes('fingerprint'))
+ assert.ok(!preview.includes('checkout_url'))
+})
+test('API pública usa BFF allowlisted e code Bearer privado sem armazenamento local',()=>{
+ const server=read('server.ts')
+ const preview=read('src/components/IndoorProposalResponsePanel.tsx')
+ assert.ok(server.includes("app.post('/api/indoor-contract-requests/:reference/proposal-response',proxyIndoorContract)"))
+ assert.ok(server.includes("respond?'/proposal-response'"))
+ assert.ok(server.includes("body.acknowledge_nonbinding"))
+ assert.ok(preview.includes("Authorization:'Bearer '+secret"))
+ assert.ok(!preview.includes('localStorage')&&!preview.includes('sessionStorage'))
+ assert.ok(server.includes("redirect:'error'"))
+})
+test('rota /acompanhar recupera protocolo sem URL secreta e não é indexável',()=>{
+ const app=read('src/App.tsx')
+ const server=read('server.ts')
+ const track=read('src/components/ContractTrackingPage.tsx')
+ assert.ok(app.includes("window.location.pathname === '/acompanhar'"))
+ assert.ok(server.includes("app.get(['/acompanhar', '/acompanhar/']"))
+ assert.ok(server.includes("X-Robots-Tag"))
+ assert.ok(track.includes('type="password"'))
+})
