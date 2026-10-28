@@ -1,26 +1,28 @@
-import {useState} from 'react'
+import {useRef,useState} from 'react'
 import type {FormEvent} from 'react'
 import {ArrowLeft,RefreshCcw,ShieldCheck} from 'lucide-react'
 import SEO from './SEO'
+import IndoorProposalResponse from './IndoorProposalResponse'
+import type {IndoorContractStatus,IndoorContractState} from '../lib/indoorContractTypes'
 
-type State='pending'|'approved_for_proposal'|'declined'|'cancelled'
-type Status={reference:string;status:State;version:number;plan:{
- name:string;display_price_brl:string;interval:'monthly'|'yearly';
- price_is_contractually_binding:false};
- payment_created:false;subscription_created:false;contract_signed:false}
+
 const validRef=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const validKey=/^[a-f0-9]{64}$/i
-const labels:Record<State,string>={
+const labels:Record<IndoorContractState,string>={
  pending:'Em análise pelo Master',
  approved_for_proposal:'Aprovado para proposta manual',
+ proposal_presented:'Proposta apresentada, aguardando manifestação',
+ proposal_acknowledged:'Interesse confirmado, aguardando contrato',
+ proposal_declined:'Proposta recusada pelo solicitante',
  declined:'Pedido recusado',
  cancelled:'Pedido cancelado',
 }
 export default function ContractTrackingPage(){
  const [reference,setReference]=useState('')
  const [code,setCode]=useState('')
- const [status,setStatus]=useState<Status|null>(null)
+ const [status,setStatus]=useState<IndoorContractStatus|null>(null)
  const [busy,setBusy]=useState(false)
+ const cancelOperation=useRef<string|null>(null)
  const [error,setError]=useState(''),[notice,setNotice]=useState('')
  const refresh=async(event?:FormEvent)=>{
   event?.preventDefault()
@@ -29,7 +31,7 @@ export default function ContractTrackingPage(){
   if(!validRef.test(reference.trim())||!validKey.test(code.trim())){
    setError('Informe o UUID da solicitação e o código privado de 64 caracteres.');return
   }
-  setBusy(true);setStatus(null)
+  setBusy(true);setStatus(null);cancelOperation.current=null
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(reference.trim()),{
     credentials:'omit',cache:'no-store',
@@ -40,11 +42,11 @@ export default function ContractTrackingPage(){
       body.payment_created!==false||body.subscription_created!==false||
       body.contract_signed!==false||typeof body.version!=='number'||
       typeof body.plan?.name!=='string'||
-      !['pending','approved_for_proposal','declined','cancelled'].includes(body.status))
+      !['pending','approved_for_proposal','proposal_presented','proposal_acknowledged','proposal_declined','declined','cancelled'].includes(body.status))
     throw Error(response.status===401||response.status===404?
      'Referência ou código não localizado. Confira os dados.':
      'Não foi possível confirmar o estado do pedido.')
-   setStatus(body as Status)
+   setStatus(body as IndoorContractStatus)
   }catch(cause){setError(cause instanceof Error?cause.message:'Falha de consulta.')}
   finally{setBusy(false)}
  }
@@ -52,17 +54,18 @@ export default function ContractTrackingPage(){
   if(busy||status?.status!=='pending')return
   if(!window.confirm('Cancelar esta análise pendente? Não houve pagamento.'))return
   setBusy(true);setError('');setNotice('')
+  if(!cancelOperation.current)cancelOperation.current=crypto.randomUUID()
   try{
    const response=await fetch('/api/indoor-contract-requests/'+encodeURIComponent(status.reference)+'/cancel',{
     method:'POST',credentials:'omit',cache:'no-store',
     headers:{Authorization:'Bearer '+code.trim(),
      Accept:'application/json','Content-Type':'application/json'},
-    body:JSON.stringify({request_id:crypto.randomUUID(),expected_version:status.version}),
+    body:JSON.stringify({request_id:cancelOperation.current,expected_version:status.version}),
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.status!=='cancelled'||body.payment_created!==false)
     throw Error('A API não confirmou o cancelamento. Atualize o pedido antes de tentar novamente.')
-   setStatus(body as Status);setNotice('Cancelamento confirmado. Nenhuma cobrança foi realizada.')
+   setStatus(body as IndoorContractStatus);setNotice('Cancelamento confirmado. Nenhuma cobrança foi realizada.')
   }catch(cause){setError(cause instanceof Error?cause.message:'Não foi possível cancelar.')}
   finally{setBusy(false)}
  }
@@ -110,6 +113,7 @@ export default function ContractTrackingPage(){
     <p className="text-sm text-slate-700 mt-4">{status.plan.name} · R$ {status.plan.display_price_brl.replace('.',',')}
      /{status.plan.interval==='monthly'?'mês':'ano'} (condição comercial não vinculante).</p>
     <p className="text-xs text-slate-600 mt-2">Nenhuma assinatura, contrato assinado ou cobrança foi criada por esta análise.</p>
+    {status.proposal&&<IndoorProposalResponse record={status} accessKey={code.trim()} onUpdate={setStatus}/>}
     {status.status==='pending'&&<button type="button" disabled={busy} onClick={cancel}
      className="mt-5 border border-red-200 text-red-800 rounded-xl min-h-11 px-5 text-sm font-semibold">
      Cancelar pedido pendente</button>}

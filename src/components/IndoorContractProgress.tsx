@@ -1,15 +1,16 @@
 import {useRef,useState} from 'react'
 import {CheckCircle2,RefreshCcw,ShieldCheck,XCircle} from 'lucide-react'
+import IndoorProposalResponse from './IndoorProposalResponse'
+import type {IndoorContractStatus,IndoorContractState} from '../lib/indoorContractTypes'
 
-type Status='pending'|'approved_for_proposal'|'declined'|'cancelled'
-type Contract={reference:string;status:Status;version:number;plan:{
- name:string;display_price_brl:string;interval:'monthly'|'yearly';
- price_is_contractually_binding:false
-};payment_created:false;subscription_created:false;contract_signed:false}
+
 type Credentials={requestId:string;accessKey:string;cancelId:string}
-const states:Record<Status,string>={
+const states:Record<IndoorContractState,string>={
  pending:'Aguardando análise comercial do Master',
  approved_for_proposal:'Aprovado para elaboração de proposta contratual',
+ proposal_presented:'Proposta disponível para manifestação',
+ proposal_acknowledged:'Interesse registrado; o Master poderá preparar contrato',
+ proposal_declined:'Proposta recusada sem cobrança',
  declined:'Solicitação não aprovada; fale com a equipe comercial',
  cancelled:'Solicitação cancelada sem cobrança',
 }
@@ -29,7 +30,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
  const [working,setWorking]=useState(false)
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
- const [record,setRecord]=useState<Contract|null>(null)
+ const [record,setRecord]=useState<IndoorContractStatus|null>(null)
  // Credenciais em memória apenas; nunca em URL, cookie, storage ou logs.
  const creds=useRef<Credentials|null>(null)
  const start=async()=>{
@@ -52,7 +53,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
    if(!response.ok||body.reference!==current.requestId||body.payment_created!==false
      ||body.subscription_created!==false||body.contract_signed!==false)
     throw Error(requestError(response.status))
-   setRecord(body as Contract)
+   setRecord(body as IndoorContractStatus)
   }catch(ex){setError(ex instanceof Error?ex.message:'Falha na operação.')}
   finally{setWorking(false)}
  }
@@ -67,7 +68,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.reference!==current.requestId||body.payment_created!==false)
     throw Error(requestError(response.status))
-   setRecord(body as Contract)
+   setRecord(body as IndoorContractStatus)
   }catch(ex){setError(ex instanceof Error?ex.message:'Não foi possível consultar o status.')}
   finally{setWorking(false)}
  }
@@ -84,7 +85,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
    })
    const body=await response.json().catch(()=>({}))
    if(!response.ok||body.status!=='cancelled')throw Error(requestError(response.status))
-   setRecord(body as Contract)
+   setRecord(body as IndoorContractStatus)
   }catch(ex){setError(ex instanceof Error?ex.message:'Não foi possível cancelar.')}
   finally{setWorking(false)}
  }
@@ -138,6 +139,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
     {record.status==='pending'&&<button type="button" onClick={cancel} disabled={working}
      className="min-h-11 rounded-lg px-4 border border-red-200 text-red-800 text-sm font-semibold">Cancelar pedido</button>}
    </div>
+   {record.proposal&&creds.current&&<IndoorProposalResponse record={record} accessKey={creds.current.accessKey} onUpdate={setRecord}/>}
    <p className="text-xs text-slate-600 mt-4">O código só fica em memória neste navegador.
     Guarde-o em local seguro se desejar consultar após fechar a página.
     Nunca divulgue o código publicamente.</p>

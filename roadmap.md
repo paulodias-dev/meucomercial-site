@@ -1,3 +1,22 @@
+## MACROENTREGA SITE — PROPOSTA INDOOR E MANIFESTAÇÃO DO SOLICITANTE (28/10/2026)
+
+- [x] Apresentar proposta CRM vinculada pela API nos dois contextos: pedido recém-criado e /acompanhar.
+- [x] Mostrar valor, prazo, escopo e itens de proposta, sem dados internos do Master.
+- [x] Exigir opt-in e confirmação humana sobre ciência/interesse não vinculante.
+- [x] Oferecer recusa explícita, sem cobrança ou assinatura.
+- [x] Respeitar bloqueio de proposta retirada/expirada/modificada.
+- [x] Enviar UUID idempotente, expected_version, proposal_version e token privado via BFF fixo.
+- [x] Revalidar resposta canônica da API e atualizar status sem inventar pagamento.
+- [x] Reutilizar código de acompanhamento do pedido, sem segredo em URL/storage.
+- [x] Estender estados e testes Node no build; atualizar runbook.
+- [ ] Checkout financeiro PIX e instrumentos contratuais dependem de próxima macro.
+
+Dependência de merge: API de ponte CRM → Indoor antes deste Site.
+Homologação e testes de execução separados do trabalho do MVP.
+Documento: docs/SITE_INDOOR_PROPOSAL_ACKNOWLEDGEMENT_20261028.md
+
+---
+
 ## MACROENTREGA SITE — PRÉ-CONTRATAÇÃO INDOOR E ACOMPANHAMENTO PRIVADO (28/10/2026)
 
 - [x] Após lead confirmado e plano real selecionado, permitir uma segunda etapa pré-contratual opcional.
