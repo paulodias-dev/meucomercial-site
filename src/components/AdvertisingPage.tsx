@@ -12,6 +12,7 @@ export default function AdvertisingPage(){
        <a href='/' className='inline-flex gap-2 text-sm text-blue-700 font-semibold min-h-11 items-center'><ArrowLeft size={16} aria-hidden/> Voltar ao site</a>
      </div>
    </header>
+   <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-7'><a href='/contratar?kind=advertiser' className='inline-flex items-center justify-center min-h-11 rounded-xl bg-slate-900 text-white px-5 py-3 text-sm font-semibold'>Montar pedido comercial guiado</a></div>
    <AdvertisingCatalogue/>
  </main>
 }
