@@ -197,7 +197,7 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
    PIX emitido, aguardando confirmação pelo Mercado Pago. Não envie novo pagamento antes de verificar o anterior.</p>}
   {checkout.status==='paid_verified'&&checkout.provisioning===null&&<p role="status" className="mt-5 flex gap-2 text-sm text-emerald-800">
    <CheckCircle2 size={21} aria-hidden/>Pagamento verificado no gateway. A assinatura ainda depende do vínculo ao estabelecimento pelo Master.</p>}
-  {checkout.provisioning?.status==='active'&&<div role="status"
+  {checkout.provisioning?.status==='active'&&checkout.provisioning.operation?.media_authorized===true&&<div role="status"
    className="mt-5 border border-emerald-200 bg-emerald-50 rounded-xl p-4 text-emerald-900">
    <p className="flex gap-2 font-semibold"><CheckCircle2 size={22} aria-hidden/>
     Assinatura Indoor ativada!</p>
@@ -205,6 +205,12 @@ export default function IndoorCheckoutPanel({data,secret,onChanged}:{
     O próximo ciclo segue a recorrência prevista nas condições contratuais.
     O cadastro de telas, Players e mídias é realizado separadamente pelo administrador.</p>
   </div>}
+  {checkout.provisioning?.status==='active'&&checkout.provisioning.operation?.media_authorized===false&&<section role="alert"
+   className="mt-5 border border-amber-200 bg-amber-50 rounded-xl p-4 text-amber-950">
+   <h4 className="font-semibold">Veiculação de mídia temporariamente restrita</h4>
+   <p className="mt-2 text-sm">A contratação existe, mas o direito financeiro necessário para reproduzir mídia não está liberado.
+    Entre em contato com o suporte e informe a referência do pedido. Não faça um segundo PIX por conta própria.</p>
+  </section>}
   {checkout.provisioning?.operation&&<IndoorOperationProgress
    progress={checkout.provisioning.operation} status={checkout.provisioning.status}/>}
   {checkout.provisioning?.status==='disputed'&&<section role="alert"
