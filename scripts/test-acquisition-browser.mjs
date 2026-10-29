@@ -268,6 +268,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
        disputed_at:null,subscription_created:true,service_activated:true,
        automatic_device_pairing:false,
        operation:{units_registered:1,players_registered:2,players_paired:0,
+        media_authorized:true,
         next_step:'pair_players',editorial_publications_active:0,
         player_completion_reports_24h:0,reporting_devices_24h:0,
         completion_evidence:'authenticated_player_self_report_not_audience',
@@ -282,6 +283,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
      checkout:{...contract.record.checkout,
       provisioning:{...contract.record.checkout.provisioning,
        operation:{units_registered:1,players_registered:2,players_paired:2,
+        media_authorized:true,
         editorial_publications_active:1,next_step:'monitor_player_sync',
         player_completion_reports_24h:0,reporting_devices_24h:0,
         completion_evidence:'authenticated_player_self_report_not_audience',
@@ -299,6 +301,16 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     await page.getByRole('button',{name:'Consultar status'}).click()
     await page.getByText(/2 conclusão\(ões\) relatada\(s\) por 1 Player\(s\)/).waitFor()
     await page.getByText(/O Player enviou relatos autenticados/).waitFor()
+    // An administratively active contract can lose media entitlement
+    // without a chargeback (e.g. overdue renewal or changed paid plan).
+    contract.record={...contract.record,checkout:{...contract.record.checkout,
+     service_activated:false,
+     provisioning:{...contract.record.checkout.provisioning,
+      service_activated:false,
+      operation:{...contract.record.checkout.provisioning.operation,
+       media_authorized:false,next_step:'contact_support_for_financial_review'}}}}
+    await page.getByRole('button',{name:'Consultar status'}).click()
+    await page.getByText(/Veiculação de mídia temporariamente restrita/i).waitFor()
     // A subsequent chargeback uses only coarse financial guidance.
     contract.record={...contract.record,
      checkout:{...contract.record.checkout,status:'payment_disputed',
