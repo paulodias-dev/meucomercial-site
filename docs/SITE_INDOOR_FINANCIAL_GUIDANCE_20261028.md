@@ -17,3 +17,19 @@ QA versionado, não executado:
 npm run test:indoor-financial-guidance
 npm run test:acquisition:browser
 npm run build
+
+
+## Contratação administrativamente ativa, porém sem autorização de mídia
+
+O acompanhamento recebe `operation.media_authorized` da API Laravel.
+Ele NÃO deduz autorização de `provision.status=active`, pois assinatura
+ativa pode ter mensalidade vencida, plano alterado ou inconsistência do
+recibo PIX. A interface apresenta orientação genérica e suspende os sinais
+de conclusão quando `media_authorized=false`, sem afirmar chargeback
+inexistente. A API mantém exclusivamente a decisão financeira e não
+retorna o motivo contábil ao código privado do solicitante.
+
+O BFF verifica tipo booleano e coerência com `service_activated`.
+Publicar **API primeiro**, em seguida Site; Admin é independente da
+jornada privada. O teste Node de contrato é versionado; browser real,
+TypeScript/Vite, backend/MySQL8 e Player físico continuam para QA final.
