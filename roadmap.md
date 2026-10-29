@@ -1224,3 +1224,15 @@ Esta política prevalece, para **dimensionamento de sprint e apuração do avan�
 
 **Estimativa do MVP de código: 98% sem homologação.** Sem novo marco
 funcional, não inflar percentual por correção de integridade.
+
+
+## Macroentrega — Etapa privada de vínculo da agência Indoor (29/10/2026)
+
+- [x] Acompanhamento do contrato reconhece operation.agency_ready booleano.
+- [x] Orientação segura de vínculo operacional após pareamento e antes de
+      publicar mídia TV/Rádio, sem revelar agência, quotas ou dados privados.
+- [x] BFF valida booleano; UI mobile-first e cenário de navegador atualizados.
+- [ ] Testar Node, Vite/TS, Playwright e contrato com API após MVP.
+
+Guia: docs/SITE_INDOOR_AGENCY_READINESS_20261029.md.
+**MVP de código estimado: 99% sem homologação**, sujeito à integração e QA.

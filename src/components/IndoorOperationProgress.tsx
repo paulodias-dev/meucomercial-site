@@ -2,12 +2,13 @@ import {CheckCircle2,Clock3,Monitor,Radio,ShieldCheck} from 'lucide-react'
 
 export type IndoorOperationProgressData={
  units_registered:number;players_registered:number;players_paired:number;
- editorial_publications_active:number;media_authorized:boolean;
+ editorial_publications_active:number;media_authorized:boolean;agency_ready:boolean;
  player_completion_reports_24h:number;reporting_devices_24h:number;
  completion_evidence:'authenticated_player_self_report_not_audience';
  next_step:'configure_unit'|'register_players'|'pair_players'|
  'configure_authorized_playlist_and_schedule'|'monitor_player_sync'|
  'monitor_player_reports'|'resolve_financial_dispute'|
+ 'assign_agency_for_publication'|
  'contact_support_for_financial_review';
  playback_verified:false
 }
@@ -18,6 +19,7 @@ const next:Record<IndoorOperationProgressData['next_step'],string>={
  configure_authorized_playlist_and_schedule:'Players pareados. O administrador prepara as mídias autorizadas e os horários.',
  monitor_player_sync:'Programação autorizada e agendada. Aguardando contato válido dos Players; a reprodução ainda não foi comprovada.',
  monitor_player_reports:'O Player enviou relatos autenticados de conclusão de mídia. Continue acompanhando a operação; não é medição independente de audiência.',
+ assign_agency_for_publication:'O administrador está vinculando o estabelecimento à agência responsável pela programação Indoor.',
  resolve_financial_dispute:'A preparação está suspensa enquanto o financeiro resolve a contestação.',
  contact_support_for_financial_review:'Direito de mídia restrito. Solicite uma revisão da assinatura ao suporte. Não realize outro PIX por conta própria.',
 }
@@ -31,6 +33,8 @@ export default function IndoorOperationProgress({progress,status}:{
   {name:'Pareamento dos aparelhos',done:progress.players_registered>0&&
    progress.players_paired===progress.players_registered,
    note:String(progress.players_paired)+' de '+String(progress.players_registered)+' pareado(s)'},
+  {name:'Agência responsável pela programação',done:progress.agency_ready,
+   note:progress.agency_ready?'Vínculo operacional cadastrado':'Vínculo operacional em preparação pelo administrador'},
   {name:'Conteúdo e programação',
    done:progress.editorial_publications_active>0,
    note:String(progress.editorial_publications_active)+' lote(s) editorial(is) publicado(s); reprodução não comprovada'},

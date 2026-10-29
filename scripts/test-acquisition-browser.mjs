@@ -268,7 +268,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
        disputed_at:null,subscription_created:true,service_activated:true,
        automatic_device_pairing:false,
        operation:{units_registered:1,players_registered:2,players_paired:0,
-        media_authorized:true,
+        media_authorized:true,agency_ready:false,
         next_step:'pair_players',editorial_publications_active:0,
         player_completion_reports_24h:0,reporting_devices_24h:0,
         completion_evidence:'authenticated_player_self_report_not_audience',
@@ -278,12 +278,20 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     await page.getByRole('heading',{name:'Preparação da sua TV e Rádio Indoor'}).waitFor()
     await page.getByText('2 cadastrado(s)').waitFor()
     assert.equal(await page.getByText(/O primeiro período já está quitado/).count()>0,true)
+    // Paired Players still require a responsible active agency for launch.
+    contract.record={...contract.record,checkout:{...contract.record.checkout,
+     provisioning:{...contract.record.checkout.provisioning,
+      operation:{...contract.record.checkout.provisioning.operation,
+       players_paired:2,agency_ready:false,
+       next_step:'assign_agency_for_publication'}}}}
+    await page.getByRole('button',{name:'Consultar status'}).click()
+    await page.getByText(/agência responsável pela programação Indoor/i).waitFor()
     // Publication is a DB ledger and sync request; not playback proof.
     contract.record={...contract.record,
      checkout:{...contract.record.checkout,
       provisioning:{...contract.record.checkout.provisioning,
        operation:{units_registered:1,players_registered:2,players_paired:2,
-        media_authorized:true,
+        media_authorized:true,agency_ready:true,
         editorial_publications_active:1,next_step:'monitor_player_sync',
         player_completion_reports_24h:0,reporting_devices_24h:0,
         completion_evidence:'authenticated_player_self_report_not_audience',
