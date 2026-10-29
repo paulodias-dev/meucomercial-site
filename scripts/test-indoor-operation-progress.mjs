@@ -19,3 +19,17 @@ test('preparação não é sinônimo de media delivery ou audiência auditada',(
  assert.ok(progress.includes('Conteúdo e programação'))
  assert.ok(progress.includes('editorial_publications_active>0'))
 })
+
+test('entitlement is read from API, never inferred from administrative active status',()=>{
+ const progress=read('src/components/IndoorOperationProgress.tsx')
+ const checkout=read('src/components/IndoorCheckoutPanel.tsx')
+ const bff=read('server.ts')
+ assert.ok(progress.includes('media_authorized:boolean'))
+ assert.ok(progress.includes("status==='disputed'||progress.media_authorized===false"))
+ assert.ok(progress.includes('contact_support_for_financial_review'))
+ assert.ok(checkout.includes("checkout.provisioning.operation?.media_authorized===true"))
+ assert.ok(checkout.includes("checkout.provisioning.operation?.media_authorized===false"))
+ assert.ok(bff.includes("typeof body.checkout.provisioning.operation.media_authorized!=='boolean'"))
+ assert.ok(bff.includes("body.checkout.provisioning.service_activated!==body.checkout.provisioning.operation.media_authorized"))
+ assert.ok(!progress.includes('payment_receipt_id')&&!checkout.includes('provider_payment_id'))
+})

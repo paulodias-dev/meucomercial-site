@@ -1207,3 +1207,20 @@ Esta política prevalece, para **dimensionamento de sprint e apuração do avan�
 - [ ] Homologar TV/Rádio real, discrepâncias de fuso, armazenamento offline e telemetria em aparelhos físicos.
 
 **Macromarcos aceitos de referência:** API 29/59, Admin 25/57, Site 13/34 = **67/150 (44,7%)**. A entrega adiciona código, não altera automaticamente o percentual de homologação. **Ordem de merge:** API → Site. Não executar merge automático, limpeza de banco nem deploy.
+
+
+## Macroentrega — Acompanhamento privado alinhado ao direito de mídia (29/10/2026)
+
+- [x] Exigir `operation.media_authorized` da API e recusar payload privado
+      com autorização incoerente com `service_activated` no BFF.
+- [x] Suspender visualmente progresso da operação mesmo quando
+      `provision.status` ainda é administrativo `active`.
+- [x] Diferenciar contestação original de restrição financeira genérica,
+      sem incentivar segundo PIX e sem mostrar motivos internos.
+- [x] Adicionar regressão estrutural Node; preservar URL, token, PIX
+      e credenciais fora da interface pública.
+- [ ] Executar teste Node, TypeScript/Vite, navegador e integração
+      real com API/Player após implementação do código do MVP.
+
+**Estimativa do MVP de código: 98% sem homologação.** Sem novo marco
+funcional, não inflar percentual por correção de integridade.
