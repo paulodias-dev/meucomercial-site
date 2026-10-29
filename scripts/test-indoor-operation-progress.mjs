@@ -33,3 +33,13 @@ test('entitlement is read from API, never inferred from administrative active st
  assert.ok(bff.includes("body.checkout.provisioning.service_activated!==body.checkout.provisioning.operation.media_authorized"))
  assert.ok(!progress.includes('payment_receipt_id')&&!checkout.includes('provider_payment_id'))
 })
+
+test('agency readiness is a boolean from API, not tenant information',()=>{
+ const progress=read('src/components/IndoorOperationProgress.tsx')
+ const bff=read('server.ts')
+ assert.ok(progress.includes('agency_ready:boolean'))
+ assert.ok(progress.includes('assign_agency_for_publication'))
+ assert.ok(progress.includes('Agência responsável pela programação'))
+ assert.ok(bff.includes("typeof body.checkout.provisioning.operation.agency_ready!=='boolean'"))
+ assert.ok(!progress.includes('tenant_id')&&!progress.includes('agency_plan_id'))
+})
