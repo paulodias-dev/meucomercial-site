@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {Tv, Calendar, TrendingUp, Award, ChevronRight, PhoneCall, Sparkles, MessageSquare, Menu, X, Mail, ArrowUp} from 'lucide-react';
+import {Tv, Calendar, TrendingUp, Award, ChevronRight, ChevronDown, PhoneCall, Sparkles, Headphones, UserCircle, Moon, Sun, MessageSquare, Menu, X, Mail, ArrowUp} from 'lucide-react';
 import { motion, AnimatePresence } from "motion/react";
 import SEO from "./components/SEO";
 import RadioGuide from "./components/RadioGuide";
@@ -28,6 +28,9 @@ const ClientPortal = React.lazy(() => import("./components/ClientPortal"));
 export default function App() {
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false);
+  const megaMenuRef = useRef<HTMLDivElement | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   // Active TV layout simulator state
@@ -92,6 +95,48 @@ export default function App() {
       window.clearInterval(interval);
     };
   }, []);
+
+  useEffect(() => {
+    if (!megaMenuOpen) return;
+
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (megaMenuRef.current && !megaMenuRef.current.contains(event.target as Node)) {
+        setMegaMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMegaMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [megaMenuOpen]);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
+    document.documentElement.style.colorScheme = darkMode ? "dark" : "light";
+  }, [darkMode]);
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+
+    document.body.style.overflow = "hidden";
+    document.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [mobileMenuOpen]);
 
   // Update clock in simulated TV in real-time
   useEffect(() => {
@@ -345,15 +390,40 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white">
+    <div className={`min-h-screen bg-[#F5F5F7] text-[#1D1D1F] font-sans overflow-x-hidden selection:bg-blue-600 selection:text-white ${darkMode ? "theme-dark" : ""}`}>
       <SEO />
       
       {/* --- HEADER --- */}
       <header className="site-header glass-nav shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-[72px] flex items-center justify-between">
+        <div ref={megaMenuRef} className="relative w-full max-w-[1440px] mx-auto px-4 sm:px-6 xl:px-8 2xl:px-10">
+          {/* Utility navigation: intentionally limited to real public destinations. */}
+          <div className="hidden xl:flex h-8 items-center justify-end gap-6 border-b border-black/5 text-[12px] font-medium text-black/55">
+            <a href="#recursos" className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-blue-600 transition-colors">
+              <Sparkles className="h-3.5 w-3.5 text-blue-600" aria-hidden="true" /> Novidades
+            </a>
+            <a href="mailto:comercial@meucomercial.com.br" className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-blue-600 transition-colors">
+              <Headphones className="h-3.5 w-3.5" aria-hidden="true" /> Suporte
+            </a>
+            <a href="/portal" className="inline-flex items-center gap-1.5 whitespace-nowrap hover:text-blue-600 transition-colors">
+              <UserCircle className="h-3.5 w-3.5" aria-hidden="true" /> Minha conta
+            </a>
+            <span aria-hidden="true" className="h-4 w-px bg-black/10" />
+            <button
+              type="button"
+              className="theme-switch"
+              aria-label={darkMode ? "Usar tema claro" : "Usar tema escuro"}
+              aria-pressed={darkMode}
+              title={darkMode ? "Usar tema claro" : "Usar tema escuro"}
+              onClick={() => setDarkMode((active) => !active)}
+            >
+              {darkMode ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
+            </button>
+          </div>
+
+          <div className="h-16 sm:h-[72px] flex items-center gap-6">
           
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
+          <a href="#" className="flex shrink-0 items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-blue-400 p-0.5 shadow-md shadow-blue-600/10 flex items-center justify-center">
               <div className="w-full h-full bg-white rounded-[10px] flex items-center justify-center">
                 <Tv className="w-5 h-5 text-blue-600 group-hover:scale-110 transition-transform duration-300" />
@@ -367,28 +437,29 @@ export default function App() {
             </div>
           </a>
 
-          {/* Nav Links (Desktop) */}
-          <nav className="hidden lg:flex items-center gap-8">
-            <a href="#recursos" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Recursos</a>
-            <a href="#beneficios" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Por que nós</a>
-            <a href="/portal" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Área do cliente</a>
-            <a href="#para-quem" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Para quem é</a>
-            <a href="#radio-indoor" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Rádio Indoor</a>
-            <a href="/demonstracao-tv" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Prévia TV</a>
-            <a href="/anunciar" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Anunciar</a>
-            <a href="#consultor-estrategico" className="text-sm text-black/60 hover:text-blue-600 flex items-center gap-1 transition-colors duration-200 font-medium">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Consultor Estratégico
-            </a>
-            <a href="#planos" className="text-sm text-black/60 hover:text-blue-600 transition-colors duration-200 font-medium">Planos</a>
+          {/* Desktop mega menu: one intentional interaction, built from existing product sections. */}
+          <nav className="hidden xl:flex min-w-0 flex-1 items-center justify-center gap-1.5 2xl:gap-3" aria-label="Navegação principal">
+            <button
+              type="button"
+              className={`desktop-nav-trigger ${megaMenuOpen ? "is-open" : ""}`}
+              aria-expanded={megaMenuOpen}
+              aria-controls="desktop-mega-menu"
+              onClick={() => setMegaMenuOpen((open) => !open)}
+            >
+              Soluções <ChevronDown aria-hidden="true" />
+            </button>
+            <a href="#beneficios" className="desktop-nav-link">Como funciona</a>
+            <a href="#para-quem" className="desktop-nav-link">Para quem é</a>
+            <a href="#radio-indoor" className="desktop-nav-link">Rádio Indoor</a>
+            <a href="/demonstracao-tv" className="desktop-nav-link">Prévia TV</a>
           </nav>
 
           {/* CTA Button (Desktop) */}
-          <div className="hidden lg:flex items-center gap-4">
-            <a href="/contratar" className="min-h-11 inline-flex items-center text-sm font-semibold text-blue-800">Solicitar proposta guiada</a>
+          <div className="hidden xl:flex shrink-0 items-center gap-3">
+            <a href="/contratar" className="desktop-proposal-link">Solicitar proposta guiada</a>
             <button 
               onClick={() => openLeadModal("Header")}
-              className="px-5 h-10 rounded-full text-xs font-semibold text-white bg-black hover:bg-black/80 transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
+              className="px-4 h-10 whitespace-nowrap rounded-full text-xs font-semibold text-white bg-black hover:bg-black/80 transition-all duration-300 flex items-center gap-2 cursor-pointer shadow-sm"
             >
               <PhoneCall className="w-3.5 h-3.5" />
               Fale com um Especialista
@@ -396,89 +467,109 @@ export default function App() {
           </div>
 
           {/* Mobile Menu Trigger */}
+          <button
+            type="button"
+            className="theme-switch mobile-theme-switch xl:hidden"
+            aria-label={darkMode ? "Usar tema claro" : "Usar tema escuro"}
+            aria-pressed={darkMode}
+            title={darkMode ? "Usar tema claro" : "Usar tema escuro"}
+            onClick={() => setDarkMode((active) => !active)}
+          >
+            {darkMode ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
+          </button>
           <button 
             type="button"
             aria-label={mobileMenuOpen ? "Fechar menu" : "Abrir menu"}
             aria-expanded={mobileMenuOpen}
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="mobile-menu-trigger"
+            className="mobile-menu-trigger xl:hidden"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+          </div>
+
+          {megaMenuOpen && (
+            <div id="desktop-mega-menu" className="desktop-mega-menu" role="region" aria-label="Soluções Meu Comercial">
+              <div className="desktop-mega-intro">
+                <span className="desktop-mega-kicker">MEU COMERCIAL</span>
+                <h2>Uma operação. Todos os pontos de contato.</h2>
+                <p>Conheça os recursos para organizar conteúdo, telas, áudio e oportunidades comerciais com escopo e permissões claros.</p>
+              </div>
+              <div className="desktop-mega-column">
+                <span className="desktop-mega-label">Plataforma</span>
+                <a href="#recursos" onClick={() => setMegaMenuOpen(false)}><strong>Recursos</strong><small>Agendamento, layouts e publicação.</small></a>
+                <a href="#beneficios" onClick={() => setMegaMenuOpen(false)}><strong>Por que nós</strong><small>Controle central e operação por unidade.</small></a>
+              </div>
+              <div className="desktop-mega-column">
+                <span className="desktop-mega-label">Experiências</span>
+                <a href="#para-quem" onClick={() => setMegaMenuOpen(false)}><strong>Para quem é</strong><small>Estabelecimentos, agências e anunciantes.</small></a>
+                <a href="#radio-indoor" onClick={() => setMegaMenuOpen(false)}><strong>Rádio Indoor</strong><small>Grade, licenças e operação sonora.</small></a>
+                <a href="/demonstracao-tv" onClick={() => setMegaMenuOpen(false)}><strong>Prévia TV</strong><small>Veja os layouts ilustrativos.</small></a>
+              </div>
+              <div className="desktop-mega-column">
+                <span className="desktop-mega-label">Próximo passo</span>
+                <a href="#planos" onClick={() => setMegaMenuOpen(false)}><strong>Planos e proposta</strong><small>Condições avaliadas conforme a operação.</small></a>
+                <a href="/anunciar" onClick={() => setMegaMenuOpen(false)}><strong>Anunciar</strong><small>Solicite uma proposta de publicidade.</small></a>
+                <a href="/contratar" onClick={() => setMegaMenuOpen(false)}><strong>Pedido guiado</strong><small>Informe seu cenário comercial.</small></a>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Mobile Navigation Drawer */}
+      </header>
+
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div 
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.16, ease: "easeOut" }}
-              className="lg:hidden absolute top-full left-0 right-0 max-h-[calc(100dvh-4rem)] overflow-y-auto border-t border-black/5 bg-white shadow-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="mobile-menu-layer xl:hidden"
+              role="presentation"
+              onClick={() => setMobileMenuOpen(false)}
             >
-              <div className="px-4 py-6 flex flex-col gap-4">
-                <a 
-                  href="#recursos" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
-                >
-                  Recursos
-                </a>
-                <a 
-                  href="#beneficios" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
-                >
-                  Por que nós
-                </a>
-                <a href="/portal" onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
-                  Área do cliente
-                </a>
-                <a href="#para-quem" onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
-                  Para quem é
-                </a>
-                <a href="#radio-indoor" onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">
-                  Rádio Indoor
-                </a>
-                <a href="/demonstracao-tv" onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">Prévia TV</a>
-                <a href="/anunciar" onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5">Anunciar</a>
-                <a 
-                  href="#consultor-estrategico" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5 flex items-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-blue-600" />
-                  Consultor Estratégico
-                </a>
-                <a 
-                  href="#planos" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-base text-black/60 hover:text-black py-2 border-b border-black/5"
-                >
-                  Planos & Orçamento
-                </a>
-                
-                <button 
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    openLeadModal("Mobile Menu");
-                  }}
-                  className="w-full mt-2 py-3 rounded-full text-sm font-semibold text-white bg-black hover:bg-black/80 text-center flex items-center justify-center gap-2"
-                >
-                  <PhoneCall className="w-4 h-4" />
-                  Fale com um Especialista
-                </button>
-              </div>
+              <motion.div
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+                className="mobile-menu-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu de navegação"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <nav className="mobile-menu-links" aria-label="Navegação mobile">
+                  <a href="/" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Início <ChevronRight aria-hidden="true" /></a>
+                  <a href="#recursos" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Recursos <ChevronRight aria-hidden="true" /></a>
+                  <a href="#beneficios" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Por que nós <ChevronRight aria-hidden="true" /></a>
+                  <a href="/portal" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Minha conta <ChevronRight aria-hidden="true" /></a>
+                  <a href="#para-quem" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Para quem é <ChevronRight aria-hidden="true" /></a>
+                  <a href="#radio-indoor" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Rádio Indoor <ChevronRight aria-hidden="true" /></a>
+                  <a href="/demonstracao-tv" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Prévia TV <ChevronRight aria-hidden="true" /></a>
+                  <a href="/anunciar" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Anunciar <ChevronRight aria-hidden="true" /></a>
+                  <a href="#consultor-estrategico" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link"><span className="inline-flex items-center gap-2"><Sparkles className="h-4 w-4 text-blue-600" aria-hidden="true" />Consultor Estratégico</span><ChevronRight aria-hidden="true" /></a>
+                  <a href="#planos" onClick={() => setMobileMenuOpen(false)} className="mobile-menu-link">Planos &amp; Orçamento <ChevronRight aria-hidden="true" /></a>
+                </nav>
+
+                <div className="mobile-menu-panel-footer">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      openLeadModal("Mobile Menu");
+                    }}
+                    className="mobile-menu-cta"
+                  >
+                    <PhoneCall className="h-4 w-4" aria-hidden="true" />
+                    Fale com um Especialista
+                  </button>
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
-      </header>
 
       <div className="sr-only">A demonstração abaixo é ilustrativa e não corresponde à reprodução em dispositivos reais.</div>
       <HeroSimulator activeLayout={activeLayout} setActiveLayout={setActiveLayout} layouts={layouts} customTickerText={customTickerText} setCustomTickerText={setCustomTickerText} simulatedClockTime={simulatedClockTime} openLeadModal={openLeadModal} />
