@@ -18,9 +18,9 @@ const playbackReports=read('src/components/ClientPlaybackReports.tsx')
 const playbackOverview=read('src/components/ClientPlaybackOverview.tsx')
 const app=read('src/App.tsx')
 
-test('same-origin portal proxies only twenty-nine allowlisted endpoints',()=>{
+test('same-origin portal proxies only allowlisted authentication and portal endpoints',()=>{
   assert.ok(server.includes("app.all('/api/portal/:action'"))
-  for(const name of ['login','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device','device-diagnostics','device-reports',
+  for(const name of ['login','register','google-login','session','forgot-password','reset-password','logout','overview','devices','campaigns','services','locations','media','pair-device','sync-device','claim-device','device-diagnostics','device-reports',
     'publication-options','publication-destinations','publication-history',
     'publication-preview','publication-create','publication-withdraw',
     'studio-catalog','studio-list','studio-create','studio-get','studio-update',
@@ -47,10 +47,26 @@ test('only configured HTTPS backend can receive credentials in production',()=>{
 test('portal does not persist client JWT and never uses admin JWT',()=>{
   assert.ok(portal.includes('useState<Session|null>(null)'))
   assert.ok(portal.includes("Authorization:'Bearer '+token"))
-  assert.ok(portal.includes("credentials:'omit'"))
+  assert.ok(portal.includes("credentials:'same-origin'"))
   assert.ok(!portal.includes('localStorage.setItem'))
   assert.ok(!portal.includes('sessionStorage.setItem'))
   assert.ok(!portal.includes("X-Agency-Tenant"))
+})
+test('portal restores an HttpOnly-backed session and exposes deliberate auth controls',()=>{
+  assert.ok(server.includes("PORTAL_SESSION_COOKIE = 'mc_portal_session'"))
+  assert.ok(server.includes("action === 'session'"))
+  assert.ok(server.includes("setPortalSessionCookies(res"))
+  assert.ok(server.includes("clearPortalSessionCookies(res)"))
+  assert.ok(portal.includes("'session',null"))
+  assert.ok(portal.includes('remember_me:rememberMe'))
+  assert.ok(portal.includes('Continuar conectado neste dispositivo'))
+  assert.ok(portal.includes('Criar cadastro'))
+  assert.ok(portal.includes('terms_accepted:termsAccepted'))
+  assert.ok(portal.includes("type={showPassword?'text':'password'}"))
+  assert.ok(portal.includes('Exibir senha'))
+  assert.ok(portal.includes('google-login'))
+  assert.ok(portal.includes('VITE_GOOGLE_CLIENT_ID'))
+  assert.ok(portal.includes("'forgot-password'"))
 })
 test('client login success depends on real API JWT and identity',()=>{
   assert.ok(portal.includes("portalRequest<{"))

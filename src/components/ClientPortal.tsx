@@ -4,7 +4,7 @@ import ClientStudio from './ClientStudio'
 import ClientDeviceDiagnostics from './ClientDeviceDiagnostics'
 import ClientOnboarding from './ClientOnboarding'
 import ClientPlaybackOverview from './ClientPlaybackOverview'
-import {ArrowLeft, ArrowRight, BadgeCheck, Building2, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
+import {ArrowLeft, ArrowRight, BadgeCheck, Building2, Eye, EyeOff, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Session = {token:string; client:{id:number;name?:string;email?:string}}
 type PortalOverview = {
@@ -34,9 +34,14 @@ type Location = {id:number;name:string;kind:string;city:string|null;state:string
 type Media = {id:number;name:string;type:string;status:string;duration_seconds:number|null}
 type View = 'devices'|'campaigns'|'services'|'locations'|'media'|'publications'|'studio'
 type PortalResponse<T>={data:T}
+type GoogleCredentialResponse={credential:string}
+type GoogleIdentityApi={accounts:{id:{initialize:(options:{client_id:string;auto_select:boolean;callback:(response:GoogleCredentialResponse)=>void})=>void;renderButton:(element:HTMLElement,options:{theme:'outline';size:'large';width:number})=>void}}}
+const GOOGLE_CLIENT_ID=String(
+  (import.meta as ImportMeta & {env?:Record<string,string|undefined>}).env?.VITE_GOOGLE_CLIENT_ID??''
+).trim()
 
-async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device'|'claim-device',
-  token:string|null,options:{page?:number;method?:'POST';body?:Record<string,string>;signal?:AbortSignal}={}):Promise<T>{
+async function portalRequest<T>(action:'login'|'register'|'google-login'|'session'|'forgot-password'|'reset-password'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device'|'claim-device',
+  token:string|null,options:{page?:number;method?:'POST';body?:Record<string,unknown>;signal?:AbortSignal}={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
   const res=await fetch(url,{
@@ -46,13 +51,18 @@ async function portalRequest<T>(action:'login'|'logout'|'overview'|'devices'|'ca
     body:options.body?JSON.stringify(options.body):undefined,
     signal:options.signal,
     cache:'no-store',
-    credentials:'omit',
+    credentials:'same-origin',
   })
   const parsed=await res.json().catch(()=>({}))
   if(!res.ok){
-    if(res.status===401||res.status===403)throw new Error('Acesso não autorizado. Entre novamente ou verifique seu cadastro.')
-    if(res.status===422)throw new Error('Revise os campos informados.')
-    throw new Error(parsed?.message||'O serviço está indisponível. Tente novamente.')
+    const authError=new Error(
+      res.status===401||res.status===403
+        ? 'Acesso não autorizado. Entre novamente ou verifique seu cadastro.'
+        : res.status===422 ? 'Revise os campos informados.'
+        : parsed?.message||'O serviço está indisponível. Tente novamente.'
+    ) as Error & {code?:string}
+    authError.code=typeof parsed?.code==='string'?parsed.code:undefined
+    throw authError
   }
   return parsed as T
 }
@@ -69,10 +79,17 @@ const labels:Record<string,string>={
   rejected:'Rejeitado',cancelled:'Cancelado',pending:'Pendente',
 }
 export default function ClientPortal(){
-  // No persistent localStorage, sessionStorage, URL or cookie token.
-  // A refresh requires a new login; the server validates every call.
+  const [resetToken,setResetToken]=useState(()=>typeof window!=='undefined'
+    ? new URLSearchParams(window.location.search).get('token')??'' : '')
+  const [resetEmail,setResetEmail]=useState(()=>typeof window!=='undefined'
+    ? new URLSearchParams(window.location.search).get('email')??'' : '')
+  const [resetPassword,setResetPassword]=useState('')
+  const [resetConfirmation,setResetConfirmation]=useState('')
+  const [resetBusy,setResetBusy]=useState(false)
+  const [resetDone,setResetDone]=useState(false)
   const [session,setSession]=useState<Session|null>(null)
   const activeToken=useRef<string|null>(null)
+  const [authReady,setAuthReady]=useState(false)
   const [deviceActionBusy,setDeviceActionBusy]=useState<number|null>(null)
   const [deviceActionMessage,setDeviceActionMessage]=useState('')
   const [pairingPin,setPairingPin]=useState<{deviceId:number;pin:string;expiresAt:string}|null>(null)
@@ -81,6 +98,20 @@ export default function ClientPortal(){
   const [diagnosticsId,setDiagnosticsId]=useState<number|null>(null)
   const [email,setEmail]=useState('')
   const [password,setPassword]=useState('')
+  const [showPassword,setShowPassword]=useState(false)
+  const [authMode,setAuthMode]=useState<'login'|'register'>('login')
+  const [registerName,setRegisterName]=useState('')
+  const [registerEmail,setRegisterEmail]=useState('')
+  const [registerPassword,setRegisterPassword]=useState('')
+  const [registerConfirmation,setRegisterConfirmation]=useState('')
+  const [showRegisterPassword,setShowRegisterPassword]=useState(false)
+  const [termsAccepted,setTermsAccepted]=useState(false)
+  const [rememberMe,setRememberMe]=useState(false)
+  const [googleReady,setGoogleReady]=useState(false)
+  const [forgotOpen,setForgotOpen]=useState(false)
+  const [forgotEmail,setForgotEmail]=useState('')
+  const [forgotBusy,setForgotBusy]=useState(false)
+  const [forgotSent,setForgotSent]=useState(false)
   const [busy,setBusy]=useState(false)
   const [error,setError]=useState('')
   const [view,setView]=useState<View>('devices')
@@ -94,6 +125,7 @@ export default function ClientPortal(){
   const [locations,setLocations]=useState<Page<Location>|null>(null)
   const [media,setMedia]=useState<Page<Media>|null>(null)
   const [loading,setLoading]=useState(false)
+  const googleButtonRef=useRef<HTMLDivElement|null>(null)
   useEffect(()=>{
     // The QR PIN is carried only in the fragment: never sent to Express/API,
     // analytics, Referer or localStorage. Clear browser history immediately.
@@ -102,6 +134,20 @@ export default function ClientPortal(){
     window.history.replaceState(window.history.state,'',window.location.pathname+window.location.search)
     setScannedPin(match[1]);setView('devices')
   },[])
+  useEffect(()=>{
+    if(resetToken){setAuthReady(true);return}
+    let active=true
+    void portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>('session',null)
+      .then(data=>{
+        if(!active||!data.access_token||!data.client?.id)return
+        activeToken.current=data.access_token
+        setSession({token:data.access_token,client:data.client})
+        setPage(1);setRefresh(x=>x+1)
+      })
+      .catch(()=>{})
+      .finally(()=>{if(active)setAuthReady(true)})
+    return ()=>{active=false}
+  },[resetToken])
   const clearSession=()=>{
     activeToken.current=null
     setPairingPin(null);setPlayerPinByDevice({});setDiagnosticsId(null);setDeviceActionBusy(null);setDeviceActionMessage('')
@@ -114,21 +160,101 @@ export default function ClientPortal(){
     clearSession()
     if(token)void portalRequest('logout',token,{method:'POST'}).catch(()=>{})
   }
+  const applyAuthResponse=(data:{access_token:string;client:{id:number;name?:string;email?:string}})=>{
+    if(!data.access_token||!data.client?.id)throw new Error('Resposta de autenticação inválida.')
+    activeToken.current=data.access_token
+    setSession({token:data.access_token,client:data.client})
+    setPassword('');setRegisterPassword('');setRegisterConfirmation('');setPage(1);setRefresh(x=>x+1)
+  }
   const login=async(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault()
     if(busy)return
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{
-        access_token:string;client:{id:number;name?:string;email?:string}
-      }>('login',null,{method:'POST',body:{email:email.trim(),password}})
-      if(!data.access_token||!data.client?.id)throw new Error('Resposta de autenticação inválida.')
-      activeToken.current=data.access_token
-      setSession({token:data.access_token,client:data.client})
-      setPassword('');setPage(1);setRefresh(x=>x+1)
+      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+        'login',null,{method:'POST',body:{email:email.trim(),password,remember_me:rememberMe}})
+      applyAuthResponse(data)
     }catch(e){setError(e instanceof Error?e.message:'Falha de autenticação.')}
     finally{setBusy(false)}
   }
+  const register=async(event:FormEvent<HTMLFormElement>)=>{
+    event.preventDefault()
+    if(busy)return
+    setBusy(true);setError('')
+    try{
+      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+        'register',null,{method:'POST',body:{
+          name:registerName.trim(),email:registerEmail.trim(),password:registerPassword,
+          password_confirmation:registerConfirmation,remember_me:rememberMe,terms_accepted:termsAccepted,
+        }})
+      applyAuthResponse(data)
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível concluir o cadastro.')}
+    finally{setBusy(false)}
+  }
+  const completeGoogleLogin=async(credential:string)=>{
+    if(busy)return
+    setBusy(true);setError('')
+    try{
+      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+        'google-login',null,{method:'POST',body:{credential,remember_me:rememberMe,terms_accepted:authMode==='register'&&termsAccepted}})
+      applyAuthResponse(data)
+    }catch(e){
+      const errorWithCode=e as Error & {code?:string}
+      if(errorWithCode.code==='CLIENT_TERMS_REQUIRED'){
+        setAuthMode('register')
+        setError('Para criar seu cadastro com Google, aceite os termos e clique novamente no botão Google.')
+      }else setError(e instanceof Error?e.message:'Não foi possível autenticar com Google.')
+    }finally{setBusy(false)}
+  }
+  const requestPasswordReset=async(event:FormEvent<HTMLFormElement>)=>{
+    event.preventDefault()
+    if(forgotBusy)return
+    setForgotBusy(true);setError('')
+    try{
+      await portalRequest('forgot-password',null,{method:'POST',body:{email:forgotEmail.trim()}})
+      setForgotSent(true)
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível solicitar a recuperação agora.')}
+    finally{setForgotBusy(false)}
+  }
+  const submitPasswordReset=async(event:FormEvent<HTMLFormElement>)=>{
+    event.preventDefault()
+    if(resetBusy)return
+    setResetBusy(true);setError('')
+    try{
+      await portalRequest('reset-password',null,{method:'POST',body:{
+        token:resetToken,email:resetEmail.trim(),password:resetPassword,password_confirmation:resetConfirmation,
+      }})
+      setResetDone(true);setResetPassword('');setResetConfirmation('')
+      window.history.replaceState(window.history.state,'',window.location.pathname)
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível redefinir sua senha.')}
+    finally{setResetBusy(false)}
+  }
+  useEffect(()=>{
+    if(!GOOGLE_CLIENT_ID)return
+    const existing=document.querySelector('script[data-google-identity]')
+    const markReady=()=>setGoogleReady(true)
+    if(existing){
+      if((window as Window & {google?:GoogleIdentityApi}).google)markReady()
+      else existing.addEventListener('load',markReady,{once:true})
+      return
+    }
+    const script=document.createElement('script')
+    script.src='https://accounts.google.com/gsi/client'
+    script.async=true;script.defer=true;script.dataset.googleIdentity='true'
+    script.addEventListener('load',markReady,{once:true})
+    document.head.appendChild(script)
+  },[])
+  useEffect(()=>{
+    if(!GOOGLE_CLIENT_ID||!googleReady||!googleButtonRef.current)return
+    const google=(window as Window & {google?:GoogleIdentityApi}).google
+    if(!google)return
+    googleButtonRef.current.innerHTML=''
+    google.accounts.id.initialize({
+      client_id:GOOGLE_CLIENT_ID,auto_select:false,
+      callback:response=>void completeGoogleLogin(response.credential),
+    })
+    google.accounts.id.renderButton(googleButtonRef.current,{theme:'outline',size:'large',width:360})
+  },[googleReady,authMode,rememberMe,termsAccepted])
   useEffect(()=>{
     if(!session||view==='publications'||view==='studio')return
     const abort=new AbortController()
@@ -244,36 +370,167 @@ export default function ClientPortal(){
       </div>
     </header>
 
-    {!session?<div className='max-w-lg mx-auto py-12 sm:py-20 px-4'>
+    {!authReady?<div className='max-w-lg mx-auto py-20 px-4 text-center'>
+      <p role='status' className='text-sm text-black/60'>Verificando sua sessão…</p>
+    </div>:resetToken?<div className='max-w-lg mx-auto py-12 sm:py-20 px-4'>
+      <div className='bg-white rounded-3xl shadow-sm border border-black/10 p-6 sm:p-10'>
+        <div className='inline-flex items-center gap-2 text-blue-800 text-xs font-bold'>
+          <ShieldCheck size={20} aria-hidden/>Recuperação segura de acesso
+        </div>
+        <h1 className='text-2xl sm:text-3xl font-bold mt-4 font-display'>Crie uma nova senha</h1>
+        {resetDone
+          ? <div className='mt-5'>
+              <p role='status' className='text-sm text-black/65 leading-6'>Sua senha foi atualizada. Você já pode entrar no portal com a nova credencial.</p>
+              <button type='button' onClick={()=>{setResetToken('');setResetDone(false);setError('')}}
+                className='mt-6 w-full min-h-11 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm'>Voltar ao login</button>
+            </div>
+          : <form onSubmit={submitPasswordReset} className='space-y-5 mt-7'>
+              <div><label htmlFor='reset-email' className='block font-semibold text-xs mb-2'>E-mail</label>
+                <input id='reset-email' type='email' value={resetEmail} autoComplete='email' required maxLength={100}
+                  onChange={e=>setResetEmail(e.target.value)}
+                  className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
+              <div><label htmlFor='reset-password' className='block font-semibold text-xs mb-2'>Nova senha</label>
+                <input id='reset-password' type='password' value={resetPassword} autoComplete='new-password' required minLength={8}
+                  onChange={e=>setResetPassword(e.target.value)}
+                  className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
+              <div><label htmlFor='reset-password-confirmation' className='block font-semibold text-xs mb-2'>Confirme a nova senha</label>
+                <input id='reset-password-confirmation' type='password' value={resetConfirmation} autoComplete='new-password' required minLength={8}
+                  onChange={e=>setResetConfirmation(e.target.value)}
+                  className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
+              {error&&<p role='alert' className='text-sm bg-red-50 text-red-800 p-3 rounded-xl'>{error}</p>}
+              <button type='submit' disabled={resetBusy}
+                className='w-full min-h-12 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm disabled:opacity-60'>
+                {resetBusy?'Atualizando senha…':'Atualizar senha'}
+              </button>
+            </form>}
+      </div>
+    </div>:!session?<div className='max-w-lg mx-auto py-12 sm:py-20 px-4'>
       <div className='bg-white rounded-3xl shadow-sm border border-black/10 p-6 sm:p-10'>
         <div className='inline-flex items-center gap-2 text-blue-800 text-xs font-bold'>
           <ShieldCheck size={20} aria-hidden/>Acesso exclusivo ao seu cadastro
         </div>
-        <h1 className='text-2xl sm:text-3xl font-bold mt-4 font-display'>Seus serviços de TV e Rádio em um só lugar</h1>
+        <h1 className='text-2xl sm:text-3xl font-bold mt-4 font-display'>
+          {authMode==='login'?'Seus serviços de TV e Rádio em um só lugar':'Crie seu acesso ao portal'}
+        </h1>
         <p className='text-sm text-black/65 leading-7 mt-3'>
-          Consulte dispositivos, situação da programação e pedidos de anúncios vinculados ao seu cadastro.
-          Utilize o e-mail e a senha do cliente já cadastrado.
+          {authMode==='login'
+            ? 'Consulte dispositivos, situação da programação e pedidos de anúncios vinculados ao seu cadastro.'
+            : 'Cadastre seus dados para acompanhar serviços, Players e solicitações vinculadas à sua empresa.'}
         </p>
-        <form onSubmit={login} className='space-y-5 mt-7'>
-          <div><label htmlFor='portal-email' className='block font-semibold text-xs mb-2'>E-mail</label>
-            <input id='portal-email' type='email' value={email} autoComplete='username'
-              onChange={e=>setEmail(e.target.value)} required maxLength={100}
-              className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'
-              placeholder='seuemail@empresa.com.br'/></div>
-          <div><label htmlFor='portal-password' className='block font-semibold text-xs mb-2'>Senha</label>
-            <input id='portal-password' type='password' value={password}
-              autoComplete='current-password' onChange={e=>setPassword(e.target.value)} required
-              className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
-          {error&&<p role='alert' className='text-sm bg-red-50 text-red-800 p-3 rounded-xl'>{error}</p>}
-          <button type='submit' disabled={busy}
-            className='w-full min-h-12 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm disabled:opacity-60'>
-            {busy?'Validando acesso…':'Acessar meus serviços'}
-          </button>
-        </form>
-        <p className='text-xs text-black/50 leading-5 mt-5'>
-          Por segurança, sua sessão não é gravada neste navegador. Atualizar a página exige novo acesso.
-          Em caso de senha esquecida, solicite recuperação ao suporte.
-        </p>
+        {authMode==='login'
+          ? <>
+              <form onSubmit={login} className='space-y-5 mt-7'>
+                <div><label htmlFor='portal-email' className='block font-semibold text-xs mb-2'>E-mail</label>
+                  <input id='portal-email' type='email' value={email} autoComplete='username'
+                    onChange={e=>setEmail(e.target.value)} required maxLength={100}
+                    className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'
+                    placeholder='seuemail@empresa.com.br'/></div>
+                <div><label htmlFor='portal-password' className='block font-semibold text-xs mb-2'>Senha</label>
+                  <div className='relative'>
+                    <input id='portal-password' type={showPassword?'text':'password'} value={password}
+                      autoComplete='current-password' onChange={e=>setPassword(e.target.value)} required
+                      className='w-full min-h-11 border border-black/15 rounded-xl px-4 pr-12 text-sm focus:outline-2 focus:outline-blue-700'/>
+                    <button type='button' onClick={()=>setShowPassword(value=>!value)} aria-label={showPassword?'Ocultar senha':'Exibir senha'}
+                      className='absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-black/50 hover:text-blue-700 hover:bg-blue-50'>
+                      {showPassword?<EyeOff size={17} aria-hidden/>:<Eye size={17} aria-hidden/>}
+                    </button>
+                  </div>
+                </div>
+                <div className='flex flex-wrap items-center justify-between gap-3 text-xs'>
+                  <label className='inline-flex items-center gap-2 text-black/65 cursor-pointer'>
+                    <input type='checkbox' checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}
+                      className='h-4 w-4 rounded border-black/20 text-blue-700 focus:ring-blue-700'/>
+                    Continuar conectado neste dispositivo
+                  </label>
+                  <button type='button' onClick={()=>{
+                    setForgotOpen(true);setForgotEmail(email);setForgotSent(false);setError('')
+                  }} className='font-semibold text-blue-700 hover:text-blue-900'>Esqueci minha senha</button>
+                </div>
+                {error&&<p role='alert' className='text-sm bg-red-50 text-red-800 p-3 rounded-xl'>{error}</p>}
+                <button type='submit' disabled={busy}
+                  className='w-full min-h-12 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm disabled:opacity-60'>
+                  {busy?'Validando acesso…':'Acessar meus serviços'}
+                </button>
+              </form>
+              {googleReady&&<div className='mt-6 border-t border-black/10 pt-5'>
+                <p className='text-center text-xs text-black/50 mb-3'>ou continue com</p>
+                <div ref={googleButtonRef} className='flex justify-center min-h-10' aria-label='Continuar com Google'/>
+              </div>}
+              {forgotOpen&&<div className='mt-6 border-t border-black/10 pt-6'>
+                <h2 className='font-bold text-base'>Recuperar acesso</h2>
+                {forgotSent
+                  ? <p role='status' className='text-sm text-black/65 leading-6 mt-2'>Se o e-mail estiver cadastrado, enviaremos as instruções para criar uma nova senha.</p>
+                  : <form onSubmit={requestPasswordReset} className='mt-4 space-y-4'>
+                      <p className='text-xs text-black/60 leading-5'>Informe o e-mail do cadastro. Não exibimos se o endereço está registrado.</p>
+                      <input type='email' value={forgotEmail} autoComplete='email' required maxLength={100}
+                        onChange={e=>setForgotEmail(e.target.value)} placeholder='seuemail@empresa.com.br'
+                        className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/>
+                      <button type='submit' disabled={forgotBusy}
+                        className='w-full min-h-11 rounded-xl border border-blue-700 text-blue-700 hover:bg-blue-50 font-bold text-sm disabled:opacity-60'>
+                        {forgotBusy?'Enviando instruções…':'Enviar instruções'}
+                      </button>
+                    </form>}
+                <button type='button' onClick={()=>{setForgotOpen(false);setForgotSent(false);setError('')}}
+                  className='mt-4 text-xs font-semibold text-black/55 hover:text-blue-700'>Voltar ao login</button>
+              </div>}
+              <div className='mt-6 pt-5 border-t border-black/10 text-center text-sm text-black/65'>
+                Ainda não tem cadastro?{' '}
+                <button type='button' onClick={()=>{setAuthMode('register');setForgotOpen(false);setError('')}}
+                  className='font-bold text-blue-700 hover:text-blue-900'>Criar cadastro</button>
+              </div>
+              <p className='text-xs text-black/50 leading-5 mt-5'>
+                Sua senha nunca é armazenada pelo site. A opção acima mantém a sessão neste dispositivo por até 30 dias; sem ela, a sessão termina ao fechar o navegador.
+              </p>
+            </>
+          : <>
+              <form onSubmit={register} className='space-y-5 mt-7'>
+                <div><label htmlFor='portal-register-name' className='block font-semibold text-xs mb-2'>Nome ou empresa</label>
+                  <input id='portal-register-name' type='text' value={registerName} autoComplete='name' required minLength={2} maxLength={150}
+                    onChange={e=>setRegisterName(e.target.value)} className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
+                <div><label htmlFor='portal-register-email' className='block font-semibold text-xs mb-2'>E-mail</label>
+                  <input id='portal-register-email' type='email' value={registerEmail} autoComplete='email' required maxLength={100}
+                    onChange={e=>setRegisterEmail(e.target.value)} placeholder='seuemail@empresa.com.br'
+                    className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
+                <div><label htmlFor='portal-register-password' className='block font-semibold text-xs mb-2'>Senha</label>
+                  <div className='relative'>
+                    <input id='portal-register-password' type={showRegisterPassword?'text':'password'} value={registerPassword}
+                      autoComplete='new-password' onChange={e=>setRegisterPassword(e.target.value)} required minLength={8}
+                      className='w-full min-h-11 border border-black/15 rounded-xl px-4 pr-12 text-sm focus:outline-2 focus:outline-blue-700'/>
+                    <button type='button' onClick={()=>setShowRegisterPassword(value=>!value)} aria-label={showRegisterPassword?'Ocultar senha':'Exibir senha'}
+                      className='absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-black/50 hover:text-blue-700 hover:bg-blue-50'>
+                      {showRegisterPassword?<EyeOff size={17} aria-hidden/>:<Eye size={17} aria-hidden/>}
+                    </button>
+                  </div>
+                </div>
+                <div><label htmlFor='portal-register-confirmation' className='block font-semibold text-xs mb-2'>Confirme a senha</label>
+                  <input id='portal-register-confirmation' type='password' value={registerConfirmation} autoComplete='new-password' required minLength={8}
+                    onChange={e=>setRegisterConfirmation(e.target.value)} className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
+                <label className='flex items-start gap-3 text-xs text-black/65 leading-5 cursor-pointer'>
+                  <input type='checkbox' checked={termsAccepted} onChange={e=>setTermsAccepted(e.target.checked)} required
+                    className='mt-1 h-4 w-4 shrink-0 rounded border-black/20 text-blue-700 focus:ring-blue-700'/>
+                  <span>Li e aceito os <a className='font-semibold text-blue-700 hover:underline' href='mailto:comercial@meucomercial.com.br?subject=Solicitacao%20dos%20termos%20de%20uso'>Termos de Uso</a> e a <a className='font-semibold text-blue-700 hover:underline' href='mailto:comercial@meucomercial.com.br?subject=Solicitacao%20de%20politica%20de%20privacidade'>Política de Privacidade</a>.</span>
+                </label>
+                <label className='inline-flex items-center gap-2 text-xs text-black/65 cursor-pointer'>
+                  <input type='checkbox' checked={rememberMe} onChange={e=>setRememberMe(e.target.checked)}
+                    className='h-4 w-4 rounded border-black/20 text-blue-700 focus:ring-blue-700'/>
+                  Continuar conectado neste dispositivo
+                </label>
+                {error&&<p role='alert' className='text-sm bg-red-50 text-red-800 p-3 rounded-xl'>{error}</p>}
+                <button type='submit' disabled={busy}
+                  className='w-full min-h-12 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm disabled:opacity-60'>
+                  {busy?'Criando cadastro…':'Criar meu cadastro'}
+                </button>
+              </form>
+              {googleReady&&<div className='mt-6 border-t border-black/10 pt-5'>
+                <p className='text-center text-xs text-black/50 mb-3'>ou cadastre-se com</p>
+                <div ref={googleButtonRef} className='flex justify-center min-h-10' aria-label='Cadastrar com Google'/>
+              </div>}
+              <div className='mt-6 pt-5 border-t border-black/10 text-center text-sm text-black/65'>
+                Já possui cadastro?{' '}
+                <button type='button' onClick={()=>{setAuthMode('login');setError('')}}
+                  className='font-bold text-blue-700 hover:text-blue-900'>Voltar ao login</button>
+              </div>
+            </>}
       </div>
     </div>:<div className='max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12'>
       <div className='flex flex-wrap justify-between gap-4 mb-7'>

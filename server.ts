@@ -1,4 +1,5 @@
 import express from "express";
+import type { Request, Response } from "express";
 import path from "path";
 import {readFileSync} from "node:fs";
 import dotenv from "dotenv";
@@ -12,6 +13,52 @@ const requestedPort = Number(process.env.PORT ?? '3000');
 const PORT = Number.isInteger(requestedPort) && requestedPort > 0 && requestedPort < 65536 ? requestedPort : 3000;
 
 app.use(express.json());
+
+const PORTAL_SESSION_COOKIE = 'mc_portal_session';
+const PORTAL_PERSIST_COOKIE = 'mc_portal_persist';
+const PORTAL_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+const PORTAL_TOKEN_PATTERN = /^[A-Za-z0-9._~-]+$/;
+
+function readCookies(request: Request): Record<string, string> {
+  return Object.fromEntries((request.headers.cookie ?? '').split(';').flatMap((part) => {
+    const separator = part.indexOf('=');
+    if (separator < 0) return [];
+    const key = part.slice(0, separator).trim();
+    const value = decodeURIComponent(part.slice(separator + 1).trim());
+    return key ? [[key, value]] : [];
+  }));
+}
+
+function portalCookieToken(request: Request): string {
+  const header = request.get('authorization') ?? '';
+  if (/^Bearer [A-Za-z0-9._~-]+$/.test(header)) return header.slice(7);
+  const cookieToken = readCookies(request)[PORTAL_SESSION_COOKIE] ?? '';
+  return PORTAL_TOKEN_PATTERN.test(cookieToken) ? cookieToken : '';
+}
+
+function portalCookieAttributes(maxAge?: number): string {
+  const attributes = ['Path=/api/portal', 'HttpOnly', 'SameSite=Lax'];
+  if (process.env.NODE_ENV === 'production') attributes.push('Secure');
+  if (maxAge !== undefined) attributes.push('Max-Age=' + maxAge);
+  return attributes.join('; ');
+}
+
+function setPortalSessionCookies(response: Response, token: string, remember: boolean): void {
+  const sessionAttributes = portalCookieAttributes(remember ? PORTAL_COOKIE_MAX_AGE : undefined);
+  const persistAttributes = portalCookieAttributes(remember ? PORTAL_COOKIE_MAX_AGE : 0);
+  response.setHeader('Set-Cookie', [
+    PORTAL_SESSION_COOKIE + '=' + encodeURIComponent(token) + '; ' + sessionAttributes,
+    PORTAL_PERSIST_COOKIE + '=' + (remember ? '1' : '') + '; ' + persistAttributes,
+  ]);
+}
+
+function clearPortalSessionCookies(response: Response): void {
+  const attributes = portalCookieAttributes(0) + '; Expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  response.setHeader('Set-Cookie', [
+    PORTAL_SESSION_COOKIE + '=; ' + attributes,
+    PORTAL_PERSIST_COOKIE + '=; ' + attributes,
+  ]);
+}
 
 // Strategic templates by business segment
 const FALLBACKS: Record<string, string> = {
@@ -338,7 +385,9 @@ app.get(['/api/indoor-catalog','/api/indoor-plans'],async(req,res)=>{
 
 // Allowlisted, same-origin proxy for CLIENT credentials only. It never
 // forwards arbitrary paths, operator JWTs, cookies or query-controlled URLs.
-// All JWTs remain in memory in the React portal; this gateway does not log them.
+// Operational JWTs are short-lived in React memory; the optional remembered
+// session is an HttpOnly cookie scoped to the portal gateway. This gateway
+// never logs credentials.
 // Fixed binary BFF endpoint: no client IDs, arbitrary upstream paths or
 // permanent public storage. Express bounds the in-memory stream at 24 MiB.
 app.post('/api/portal/studio-upload',
@@ -379,6 +428,11 @@ app.post('/api/portal/studio-upload',
 
 const portalRoutes = {
   'login': {method: 'POST', backend: 'client/login', auth: false},
+  'register': {method: 'POST', backend: 'client/register', auth: false},
+  'google-login': {method: 'POST', backend: 'client/google', auth: false},
+  'session': {method: 'GET', backend: 'client/me', auth: true},
+  'forgot-password': {method: 'POST', backend: 'client/forgot-password', auth: false},
+  'reset-password': {method: 'POST', backend: 'client/reset-password', auth: false},
   'logout': {method: 'POST', backend: 'client/logout', auth: true},
   'overview': {method: 'GET', backend: 'client/indoor/overview', auth: true},
   'devices': {method: 'GET', backend: 'client/indoor/devices', auth: true},
@@ -427,7 +481,8 @@ app.all('/api/portal/:action', async (req, res) => {
       !(process.env.NODE_ENV !== 'production' && ['localhost','127.0.0.1'].includes(base.hostname))) {
       throw new Error('invalid-upstream');
     }
-    const bearer = req.get('authorization') ?? '';
+    const cookieToken = portalCookieToken(req);
+    const bearer = cookieToken ? 'Bearer ' + cookieToken : '';
     if (route.auth && !/^Bearer [A-Za-z0-9._~-]+$/.test(bearer)) {
       return res.status(401).set('Cache-Control','no-store').json({message:'Entre novamente no portal.'});
     }
@@ -546,7 +601,19 @@ app.all('/api/portal/:action', async (req, res) => {
         ...(route.auth ? {Authorization: bearer} : {}),
       },
       body: (req.method === 'POST' || req.method === 'PUT') ? JSON.stringify(action === 'login'
-        ? {email: req.body?.email, password: req.body?.password}
+        ? {email: req.body?.email, password: req.body?.password, remember_me: req.body?.remember_me}
+        : action === 'register'
+          ? {name: req.body?.name, email: req.body?.email, password: req.body?.password,
+              password_confirmation: req.body?.password_confirmation,
+              remember_me: req.body?.remember_me, terms_accepted: req.body?.terms_accepted}
+        : action === 'google-login'
+          ? {credential: req.body?.credential, remember_me: req.body?.remember_me,
+              terms_accepted: req.body?.terms_accepted}
+        : action === 'forgot-password'
+          ? {email: req.body?.email}
+        : action === 'reset-password'
+          ? {token: req.body?.token, email: req.body?.email,
+              password: req.body?.password, password_confirmation: req.body?.password_confirmation}
         : action === 'claim-device'
           ? {pin: req.body?.pin}
         : action === 'publication-create' || action === 'publication-preview'
@@ -564,9 +631,20 @@ app.all('/api/portal/:action', async (req, res) => {
       redirect: 'error',
     });
     const payload = await upstream.json().catch(()=>({message:'Resposta inválida do serviço.'}));
+    if (['login', 'register', 'google-login'].includes(action) && upstream.ok && PORTAL_TOKEN_PATTERN.test(String(payload?.access_token ?? ''))) {
+      const remember = req.body?.remember_me === true || req.body?.remember_me === 'true' || req.body?.remember_me === 1 || req.body?.remember_me === '1';
+      setPortalSessionCookies(res, String(payload.access_token), remember);
+    } else if (action === 'session' && upstream.ok && cookieToken && payload && typeof payload === 'object') {
+      // The cookie remains HttpOnly; the short-lived in-memory token is only
+      // returned after the same-origin session has already been authenticated.
+      payload.access_token = cookieToken;
+    } else if (action === 'logout') {
+      clearPortalSessionCookies(res);
+    }
     return res.status(upstream.status).set('Cache-Control','private, no-store')
       .set('Referrer-Policy','no-referrer').json(payload);
   } catch {
+    if (action === 'logout') clearPortalSessionCookies(res);
     return res.status(503).set('Cache-Control','no-store')
       .json({message:'Não foi possível consultar o portal. Tente novamente.'});
   }
