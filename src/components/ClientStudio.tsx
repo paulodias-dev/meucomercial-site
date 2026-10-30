@@ -178,8 +178,10 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
   const upload=async()=>{
     const file=uploadFile
     if(!file||uploadBusy)return
-    if(!['image/jpeg','image/png','video/mp4'].includes(file.type)||file.size===0||file.size>24*1024*1024){
-      setError('Selecione JPG, PNG ou MP4 com até 24 MB (imagens até 12 MB).');return
+    const accepted=['image/jpeg','image/png','video/mp4','video/quicktime','video/webm','video/x-m4v']
+    const limit=file.type.startsWith('image/')?12:64
+    if(!accepted.includes(file.type)||file.size===0||file.size>limit*1024*1024){
+      setError('Selecione JPG/PNG (até 12 MB) ou MP4/MOV/WebM (até 64 MB).');return
     }
     const title=uploadTitle.trim()
     if(!title||title.length>150){setError('Informe um título de até 150 caracteres.');return}
@@ -250,9 +252,9 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
 
       {kind==='tv'&&<div className='rounded-xl border border-blue-100 bg-blue-50/50 p-4 mt-6'>
         <h3 className='font-bold text-sm flex items-center gap-2'><Upload size={16}/>Enviar minha mídia</h3>
-        <p className='text-xs text-black/60 mt-2'>JPG/PNG até 12 MB ou MP4 H.264/AAC até 24 MB e 10 minutos. O servidor valida o arquivo e a cota do plano antes de disponibilizar.</p>
+        <p className='text-xs text-black/60 mt-2'>JPG/PNG até 12 MB; MP4, MOV ou WebM até 64 MB e 10 minutos. O servidor converte quando necessário para MP4 H.264/AAC antes de disponibilizar ao Player.</p>
         <div className='grid gap-2 mt-3'>
-          <input aria-label='Arquivo de imagem ou vídeo' type='file' accept='image/png,image/jpeg,video/mp4'
+          <input aria-label='Arquivo de imagem ou vídeo' type='file' accept='image/png,image/jpeg,video/mp4,video/quicktime,video/webm,.mov,.m4v,.webm'
             onChange={e=>{const file=e.target.files?.[0]??null;setUploadFile(file);
               setUploadTitle(file?.name.replace(/\.[^.]+$/,'').slice(0,150)??'')}}
             className='text-sm w-full' disabled={uploadBusy}/>
