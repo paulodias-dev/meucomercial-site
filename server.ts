@@ -389,20 +389,20 @@ app.get(['/api/indoor-catalog','/api/indoor-plans'],async(req,res)=>{
 // session is an HttpOnly cookie scoped to the portal gateway. This gateway
 // never logs credentials.
 // Fixed binary BFF endpoint: no client IDs, arbitrary upstream paths or
-// permanent public storage. Express bounds the in-memory stream at 24 MiB.
+// permanent public storage. Express bounds the in-memory stream at 64 MiB.
 app.post('/api/portal/studio-upload',
-  express.raw({type: ['image/jpeg','image/png','video/mp4'], limit: '24mb'}),
+  express.raw({type: ['image/jpeg','image/png','video/mp4','video/quicktime','video/webm','video/x-m4v'], limit: '64mb'}),
   async (req, res) => {
     const bearer = req.get('authorization') ?? '';
     if (!/^Bearer [A-Za-z0-9._~-]+$/.test(bearer))
       return res.status(401).set('Cache-Control','no-store').json({message:'Sessão inválida.'});
     const type = req.get('content-type')?.toLowerCase() ?? '';
     const name = req.get('x-studio-name') ?? '';
-    if (!['image/jpeg','image/png','video/mp4'].includes(type)
-      || !Buffer.isBuffer(req.body) || req.body.length===0 || req.body.length>24*1024*1024
+    if (!['image/jpeg','image/png','video/mp4','video/quicktime','video/webm','video/x-m4v'].includes(type)
+      || !Buffer.isBuffer(req.body) || req.body.length===0 || req.body.length>(type.startsWith('image/')?12:64)*1024*1024
       || !/^[a-zA-Z0-9%._~-]{1,450}$/.test(name))
       return res.status(422).set('Cache-Control','no-store')
-        .json({message:'Selecione JPG, PNG ou MP4 e informe nome válido.'});
+        .json({message:'Selecione JPG/PNG (até 12 MB) ou MP4/MOV/WebM (até 64 MB) e informe um nome válido.'});
     try {
       const baseValue = process.env.MEUCOMERCIAL_API_URL?.trim();
       if(!baseValue)throw new Error('backend-missing');
@@ -415,7 +415,7 @@ app.post('/api/portal/studio-upload',
           Authorization:bearer,'Content-Type':type,'X-Studio-Name':name,
           Accept:'application/json',
         },
-        body:req.body,signal:AbortSignal.timeout(30000),redirect:'error',
+        body:req.body,signal:AbortSignal.timeout(150000),redirect:'error',
       });
       const body=await upstream.json().catch(()=>({message:'Resposta inválida.'}));
       return res.status(upstream.status).set('Cache-Control','private, no-store')
