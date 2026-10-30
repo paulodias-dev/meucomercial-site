@@ -1,6 +1,7 @@
 import {useCallback,useEffect,useRef,useState} from 'react'
 import {ArrowDown,ArrowUp,CheckCircle2,Copy,Film,Headphones,Plus,Save,ShieldCheck,Trash2,Upload,Layers} from 'lucide-react'
 import ClientStoryEditor from './ClientStoryEditor'
+import {StudioImageCrop} from './StudioImageCrop'
 
 type Kind='tv'|'radio'
 type SourceType='media'|'music'|'commercial_spot'
@@ -51,6 +52,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
   const [radioSource,setRadioSource]=useState<'music'|'commercial_spot'>('music')
   const [studioScene,setStudioScene]=useState<number|null>(null)
   const [uploadFile,setUploadFile]=useState<File|null>(null)
+  const [cropSource,setCropSource]=useState<File|null>(null)
   const [uploadTitle,setUploadTitle]=useState('')
   const [uploadBusy,setUploadBusy]=useState(false)
   const [name,setName]=useState('')
@@ -197,7 +199,7 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
       const data=await response.json().catch(()=>({}))
       if(!response.ok)throw new Error(data.message||'Não foi possível enviar a mídia.')
       if(active.current!==token)return
-      setUploadFile(null);setUploadTitle('');setCatalogPage(1)
+      setUploadFile(null);setCropSource(null);setUploadTitle('');setCatalogPage(1)
       setMessage('Arquivo verificado e salvo na biblioteca privada. Você já pode adicioná-lo à sequência.')
       reloadAll()
     }catch(e){setError(e instanceof Error?e.message:'Falha no upload.')}
@@ -255,9 +257,20 @@ export default function ClientStudio({token,onPublish}:{token:string;onPublish:(
         <p className='text-xs text-black/60 mt-2'>JPG/PNG até 12 MB; MP4, MOV ou WebM até 64 MB e 10 minutos. O servidor converte quando necessário para MP4 H.264/AAC antes de disponibilizar ao Player.</p>
         <div className='grid gap-2 mt-3'>
           <input aria-label='Arquivo de imagem ou vídeo' type='file' accept='image/png,image/jpeg,video/mp4,video/quicktime,video/webm,.mov,.m4v,.webm'
-            onChange={e=>{const file=e.target.files?.[0]??null;setUploadFile(file);
-              setUploadTitle(file?.name.replace(/\.[^.]+$/,'').slice(0,150)??'')}}
+            onChange={e=>{
+              const file=e.target.files?.[0]??null
+              setUploadTitle(file?.name.replace(/\.[^.]+$/,'').slice(0,150)??'')
+              if(file?.type.startsWith('image/')){setUploadFile(null);setCropSource(file)}
+              else{setCropSource(null);setUploadFile(file)}
+              e.target.value=''
+            }}
             className='text-sm w-full' disabled={uploadBusy}/>
+          {cropSource&&<StudioImageCrop source={cropSource}
+            onSave={file=>{setUploadFile(file);setCropSource(null)}}
+            onCancel={()=>{setCropSource(null);setUploadFile(null)}}/>}
+          {uploadFile&&<p className='text-xs text-slate-600'>
+            Pronto para enviar: {uploadFile.name} ({Math.round(uploadFile.size/1024)} KB)
+          </p>}
           <input type='text' aria-label='Nome da mídia' placeholder='Nome que aparecerá na biblioteca'
             value={uploadTitle} maxLength={150} onChange={e=>setUploadTitle(e.target.value)}
             className={control+' w-full bg-white'} disabled={uploadBusy}/>
