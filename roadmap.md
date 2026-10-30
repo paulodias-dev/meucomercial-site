@@ -1236,3 +1236,19 @@ funcional, não inflar percentual por correção de integridade.
 
 Guia: docs/SITE_INDOOR_AGENCY_READINESS_20261029.md.
 **MVP de código estimado: 99% sem homologação**, sujeito à integração e QA.
+
+
+## Macroentrega — Mídia do assinante: crop e formatos (30/10/2026)
+
+- [x] Crop real de JPG/PNG para JPEG em formatos 16:9, 9:16,
+      1:1, com zoom e reposicionamento no portal do cliente.
+- [x] Front e BFF aceitam MP4/MOV/WebM até 64 MiB e enviam
+      à API de ingest privado com verificação final/normalização.
+- [x] Limite de imagens mantido em 12 MiB; MIME allowlist e
+      token Client JWT no BFF; timeout para FFmpeg.
+- [x] Regressões de contrato integradas ao build Node.
+- [ ] Navegador com arquivos reais, FFmpeg, S3 e Players homologados
+      somente após conclusão do MVP.
+
+Guia: docs/SITE_STUDIO_CREATIVE_MEDIA_20261030.md.
+**Implementação estimada 98% no escopo ampliado**, sem homologação.
