@@ -7,7 +7,7 @@ import ClientPlaybackOverview from './ClientPlaybackOverview'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, Eye, EyeOff, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Agency = {slug:string;name:string;fantasy_name:string|null;city:string|null;state:string|null}
-type PortalClient = {id:number;name?:string;email?:string;agency_slug?:string;registration_status?:'pending'|'approved'|'rejected'|null;email_verified?:boolean;company?:{id:number;name:string}|null}
+type PortalClient = {id:number;name?:string;email?:string;agency_slug?:string;registration_status?:'pending'|'approved'|'rejected'|'suspended'|null;email_verified?:boolean;company?:{id:number;name:string}|null}
 type Session = {token:string; client:PortalClient}
 type PortalOverview = {
   devices:{total:number;online:number;offline:number;blocked:number;needs_sync:number;unpaired:number}
@@ -615,12 +615,12 @@ export default function ClientPortal(){
               </div>
             </>}
       </div>
-    </div>:session.client.registration_status==='rejected'?<div className='max-w-xl mx-auto px-4 py-12 sm:py-20'>
+    </div>:(session.client.registration_status==='rejected'||session.client.registration_status==='suspended')?<div className='max-w-xl mx-auto px-4 py-12 sm:py-20'>
       <section className='rounded-3xl border border-red-100 bg-white p-6 sm:p-10'>
         <ShieldCheck size={28} className='text-red-700' aria-hidden/>
-        <h1 className='mt-4 text-2xl font-bold'>Solicitação não aprovada</h1>
+        <h1 className='mt-4 text-2xl font-bold'>Acesso à empresa indisponível</h1>
         <p className='mt-3 text-sm text-black/65 leading-7'>
-          Esta agência não autorizou o cadastro. Nenhum serviço ou dispositivo foi liberado.
+          Esta agência ainda não autorizou o acesso ou o vínculo com a empresa foi revogado. Nenhum serviço ou dispositivo está disponível.
           Entre em contato com a agência selecionada para esclarecimentos.
         </p>
         <button type='button' onClick={signOut} className='mt-6 text-sm font-bold text-blue-700'>
