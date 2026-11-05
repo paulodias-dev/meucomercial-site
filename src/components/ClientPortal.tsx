@@ -6,7 +6,9 @@ import ClientOnboarding from './ClientOnboarding'
 import ClientPlaybackOverview from './ClientPlaybackOverview'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, Eye, EyeOff, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
-type Session = {token:string; client:{id:number;name?:string;email?:string}}
+type Agency = {slug:string;name:string;fantasy_name:string|null;city:string|null;state:string|null}
+type PortalClient = {id:number;name?:string;email?:string;agency_slug?:string;registration_status?:'pending'|'approved'|'rejected'|null;email_verified?:boolean}
+type Session = {token:string; client:PortalClient}
 type PortalOverview = {
   devices:{total:number;online:number;offline:number;blocked:number;needs_sync:number;unpaired:number}
   locations:number;playlists:number;schedules_active:number
@@ -40,7 +42,7 @@ const GOOGLE_CLIENT_ID=String(
   (import.meta as ImportMeta & {env?:Record<string,string|undefined>}).env?.VITE_GOOGLE_CLIENT_ID??''
 ).trim()
 
-async function portalRequest<T>(action:'login'|'register'|'google-login'|'session'|'forgot-password'|'reset-password'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device'|'claim-device',
+async function portalRequest<T>(action:'agencies'|'verify-email'|'resend-verification'|'login'|'register'|'google-login'|'session'|'forgot-password'|'reset-password'|'logout'|'overview'|'devices'|'campaigns'|'services'|'locations'|'media'|'pair-device'|'sync-device'|'claim-device',
   token:string|null,options:{page?:number;method?:'POST';body?:Record<string,unknown>;signal?:AbortSignal}={}):Promise<T>{
   const url=new URL('/api/portal/'+action,window.location.origin)
   if(options.page)url.searchParams.set('page',String(options.page))
@@ -79,6 +81,14 @@ const labels:Record<string,string>={
   rejected:'Rejeitado',cancelled:'Cancelado',pending:'Pendente',
 }
 export default function ClientPortal(){
+  const [agencySlug,setAgencySlug]=useState(()=>typeof window!=='undefined'
+    ? new URLSearchParams(window.location.search).get('agency_slug')??'' : '')
+  const [agencyOptions,setAgencyOptions]=useState<Agency[]>([])
+  const [agencyLoading,setAgencyLoading]=useState(true)
+  const [verificationToken,setVerificationToken]=useState(()=>typeof window!=='undefined'
+    ? new URLSearchParams(window.location.search).get('verify_token')??'' : '')
+  const [verificationResult,setVerificationResult]=useState<'checking'|'ok'|'failed'>('checking')
+  const [resendBusy,setResendBusy]=useState(false)
   const [resetToken,setResetToken]=useState(()=>typeof window!=='undefined'
     ? new URLSearchParams(window.location.search).get('token')??'' : '')
   const [resetEmail,setResetEmail]=useState(()=>typeof window!=='undefined'
@@ -135,9 +145,9 @@ export default function ClientPortal(){
     setScannedPin(match[1]);setView('devices')
   },[])
   useEffect(()=>{
-    if(resetToken){setAuthReady(true);return}
+    if(resetToken||verificationToken){setAuthReady(true);return}
     let active=true
-    void portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>('session',null)
+    void portalRequest<{access_token:string;client:PortalClient}>('session',null)
       .then(data=>{
         if(!active||!data.access_token||!data.client?.id)return
         activeToken.current=data.access_token
@@ -147,7 +157,52 @@ export default function ClientPortal(){
       .catch(()=>{})
       .finally(()=>{if(active)setAuthReady(true)})
     return ()=>{active=false}
-  },[resetToken])
+  },[resetToken,verificationToken])
+  useEffect(()=>{
+    let live=true
+    void portalRequest<{data:Agency[]}>('agencies',null)
+      .then(result=>{if(live)setAgencyOptions(Array.isArray(result.data)?result.data:[])})
+      .catch(()=>{if(live)setAgencyOptions([])})
+      .finally(()=>{if(live)setAgencyLoading(false)})
+    return()=>{live=false}
+  },[])
+  useEffect(()=>{
+    if(!verificationToken)return
+    let live=true
+    setVerificationResult('checking')
+    // Link token is one-time and must not remain in history after consumption.
+    void portalRequest('verify-email',null,{method:'POST',body:{
+      agency_slug:agencySlug,email:resetEmail.trim(),token:verificationToken,
+    }}).then(()=>{if(live)setVerificationResult('ok')})
+      .catch(()=>{if(live)setVerificationResult('failed')})
+      .finally(()=>{
+        window.history.replaceState(window.history.state,'',window.location.pathname)
+      })
+    return()=>{live=false}
+  },[verificationToken,agencySlug,resetEmail])
+  const agencyPicker = <div>
+    <label htmlFor='portal-agency' className='block font-semibold text-xs mb-2'>Agência responsável *</label>
+    <select id='portal-agency' required value={agencySlug}
+      onChange={event=>{setAgencySlug(event.target.value);setError('');setForgotSent(false)}}
+      className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm bg-white focus:outline-2 focus:outline-blue-700'>
+      <option value=''>Selecione a agência da sua empresa</option>
+      {agencyOptions.map(agency=><option key={agency.slug} value={agency.slug}>
+        {agency.name}{agency.city&&agency.state?' — '+agency.city+'/'+agency.state:''}
+      </option>)}
+    </select>
+    {agencyLoading?<p role='status' className='mt-2 text-xs text-black/55'>Consultando agências…</p>:
+      agencyOptions.length===0?<p role='alert' className='mt-2 text-xs text-red-700'>Nenhuma agência disponível. Tente novamente mais tarde.</p>:
+      <p className='mt-2 text-xs text-black/50'>A agência escolhida acompanhará seu acesso, recuperação e solicitação de cadastro.</p>}
+  </div>
+  const resendVerification=async()=>{
+    if(!session||resendBusy)return
+    setResendBusy(true);setError('')
+    try{
+      await portalRequest('resend-verification',session.token,{method:'POST',body:{}})
+      setError('Se o e-mail ainda não foi confirmado, enviamos um novo link de verificação.')
+    }catch(e){setError(e instanceof Error?e.message:'Não foi possível reenviar a confirmação.')}
+    finally{setResendBusy(false)}
+  }
   const clearSession=()=>{
     activeToken.current=null
     setPairingPin(null);setPlayerPinByDevice({});setDiagnosticsId(null);setDeviceActionBusy(null);setDeviceActionMessage('')
@@ -160,9 +215,10 @@ export default function ClientPortal(){
     clearSession()
     if(token)void portalRequest('logout',token,{method:'POST'}).catch(()=>{})
   }
-  const applyAuthResponse=(data:{access_token:string;client:{id:number;name?:string;email?:string}})=>{
+  const applyAuthResponse=(data:{access_token:string;client:PortalClient})=>{
     if(!data.access_token||!data.client?.id)throw new Error('Resposta de autenticação inválida.')
     activeToken.current=data.access_token
+    if(data.client.agency_slug)setAgencySlug(data.client.agency_slug)
     setSession({token:data.access_token,client:data.client})
     setPassword('');setRegisterPassword('');setRegisterConfirmation('');setPage(1);setRefresh(x=>x+1)
   }
@@ -171,8 +227,8 @@ export default function ClientPortal(){
     if(busy)return
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
-        'login',null,{method:'POST',body:{email:email.trim(),password,remember_me:rememberMe}})
+      const data=await portalRequest<{access_token:string;client:PortalClient}>(
+        'login',null,{method:'POST',body:{agency_slug:agencySlug,email:email.trim(),password,remember_me:rememberMe}})
       applyAuthResponse(data)
     }catch(e){setError(e instanceof Error?e.message:'Falha de autenticação.')}
     finally{setBusy(false)}
@@ -182,9 +238,9 @@ export default function ClientPortal(){
     if(busy)return
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+      const data=await portalRequest<{access_token:string;client:PortalClient}>(
         'register',null,{method:'POST',body:{
-          name:registerName.trim(),email:registerEmail.trim(),password:registerPassword,
+          agency_slug:agencySlug,name:registerName.trim(),email:registerEmail.trim(),password:registerPassword,
           password_confirmation:registerConfirmation,remember_me:rememberMe,terms_accepted:termsAccepted,
         }})
       applyAuthResponse(data)
@@ -195,8 +251,8 @@ export default function ClientPortal(){
     if(busy)return
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
-        'google-login',null,{method:'POST',body:{credential,remember_me:rememberMe,terms_accepted:authMode==='register'&&termsAccepted}})
+      const data=await portalRequest<{access_token:string;client:PortalClient}>(
+        'google-login',null,{method:'POST',body:{agency_slug:agencySlug,credential,remember_me:rememberMe,terms_accepted:authMode==='register'&&termsAccepted}})
       applyAuthResponse(data)
     }catch(e){
       const errorWithCode=e as Error & {code?:string}
@@ -211,7 +267,7 @@ export default function ClientPortal(){
     if(forgotBusy)return
     setForgotBusy(true);setError('')
     try{
-      await portalRequest('forgot-password',null,{method:'POST',body:{email:forgotEmail.trim()}})
+      await portalRequest('forgot-password',null,{method:'POST',body:{agency_slug:agencySlug,email:forgotEmail.trim()}})
       setForgotSent(true)
     }catch(e){setError(e instanceof Error?e.message:'Não foi possível solicitar a recuperação agora.')}
     finally{setForgotBusy(false)}
@@ -222,7 +278,7 @@ export default function ClientPortal(){
     setResetBusy(true);setError('')
     try{
       await portalRequest('reset-password',null,{method:'POST',body:{
-        token:resetToken,email:resetEmail.trim(),password:resetPassword,password_confirmation:resetConfirmation,
+        agency_slug:agencySlug,token:resetToken,email:resetEmail.trim(),password:resetPassword,password_confirmation:resetConfirmation,
       }})
       setResetDone(true);setResetPassword('');setResetConfirmation('')
       window.history.replaceState(window.history.state,'',window.location.pathname)
@@ -254,7 +310,7 @@ export default function ClientPortal(){
       callback:response=>void completeGoogleLogin(response.credential),
     })
     google.accounts.id.renderButton(googleButtonRef.current,{theme:'outline',size:'large',width:360})
-  },[googleReady,authMode,rememberMe,termsAccepted])
+  },[googleReady,authMode,rememberMe,termsAccepted,agencySlug])
   useEffect(()=>{
     if(!session||view==='publications'||view==='studio')return
     const abort=new AbortController()
@@ -372,6 +428,20 @@ export default function ClientPortal(){
 
     {!authReady?<div className='max-w-lg mx-auto py-20 px-4 text-center'>
       <p role='status' className='text-sm text-black/60'>Verificando sua sessão…</p>
+    </div>:verificationToken?<div className='max-w-lg mx-auto px-4 py-16'>
+      <section className='rounded-3xl border border-black/10 bg-white p-6 sm:p-10 text-center'>
+        <ShieldCheck size={28} className='mx-auto text-blue-700' aria-hidden/>
+        <h1 className='mt-4 text-xl font-bold'>Confirmação do e-mail</h1>
+        <p role='status' className='mt-3 text-sm text-black/70'>
+          {verificationResult==='checking'?'Validando confirmação…':
+           verificationResult==='ok'?'E-mail confirmado. Sua agência poderá analisar seu cadastro.':
+           'Link inválido ou expirado. Entre no portal e solicite uma nova confirmação.'}
+        </p>
+        <button type='button' onClick={()=>{setVerificationToken('');setError('')}}
+          className='mt-6 min-h-11 rounded-xl bg-blue-700 px-6 text-sm font-bold text-white'>
+          Voltar ao portal
+        </button>
+      </section>
     </div>:resetToken?<div className='max-w-lg mx-auto py-12 sm:py-20 px-4'>
       <div className='bg-white rounded-3xl shadow-sm border border-black/10 p-6 sm:p-10'>
         <div className='inline-flex items-center gap-2 text-blue-800 text-xs font-bold'>
@@ -385,6 +455,7 @@ export default function ClientPortal(){
                 className='mt-6 w-full min-h-11 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm'>Voltar ao login</button>
             </div>
           : <form onSubmit={submitPasswordReset} className='space-y-5 mt-7'>
+               {agencyPicker}
               <div><label htmlFor='reset-email' className='block font-semibold text-xs mb-2'>E-mail</label>
                 <input id='reset-email' type='email' value={resetEmail} autoComplete='email' required maxLength={100}
                   onChange={e=>setResetEmail(e.target.value)}
@@ -420,6 +491,7 @@ export default function ClientPortal(){
         {authMode==='login'
           ? <>
               <form onSubmit={login} className='space-y-5 mt-7'>
+                 {agencyPicker}
                 <div><label htmlFor='portal-email' className='block font-semibold text-xs mb-2'>E-mail</label>
                   <input id='portal-email' type='email' value={email} autoComplete='username'
                     onChange={e=>setEmail(e.target.value)} required maxLength={100}
@@ -484,6 +556,7 @@ export default function ClientPortal(){
             </>
           : <>
               <form onSubmit={register} className='space-y-5 mt-7'>
+                 {agencyPicker}
                 <div><label htmlFor='portal-register-name' className='block font-semibold text-xs mb-2'>Nome ou empresa</label>
                   <input id='portal-register-name' type='text' value={registerName} autoComplete='name' required minLength={2} maxLength={150}
                     onChange={e=>setRegisterName(e.target.value)} className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
@@ -532,6 +605,28 @@ export default function ClientPortal(){
               </div>
             </>}
       </div>
+    </div>:session.client.registration_status==='pending'?<div className='max-w-xl mx-auto px-4 py-12 sm:py-20'>
+      <section className='rounded-3xl border border-blue-100 bg-white p-6 sm:p-10'>
+        <BadgeCheck size={28} className='text-blue-700' aria-hidden/>
+        <h1 className='mt-4 text-2xl font-bold'>Cadastro recebido pela agência</h1>
+        <p className='mt-3 text-sm leading-7 text-black/65'>
+          Sua conta pertence à agência selecionada. Antes de liberar serviços,
+          é necessário confirmar o e-mail e aguardar a aprovação da agência,
+          sujeita ao plano e à disponibilidade da carteira.
+        </p>
+        <dl className='mt-5 rounded-xl bg-blue-50 p-4 text-sm'>
+          <dt className='font-semibold'>Agência</dt><dd>{agencyOptions.find(a=>a.slug===session.client.agency_slug)?.name??session.client.agency_slug}</dd>
+          <dt className='font-semibold mt-3'>E-mail</dt>
+          <dd>{session.client.email_verified?'Confirmado':'Aguardando confirmação'}</dd>
+          <dt className='font-semibold mt-3'>Operação</dt><dd>Aguardando análise — sem contratação automática</dd>
+        </dl>
+        {!session.client.email_verified&&<button type='button' disabled={resendBusy} onClick={()=>{void resendVerification()}}
+          className='mt-5 min-h-11 rounded-xl border border-blue-700 px-5 text-sm font-bold text-blue-700 disabled:opacity-50'>
+          {resendBusy?'Enviando…':'Reenviar confirmação de e-mail'}
+        </button>}
+        {error&&<p role='status' className='mt-3 text-sm text-black/70'>{error}</p>}
+        <button type='button' onClick={signOut} className='mt-5 block text-sm font-semibold text-blue-800'>Sair da conta</button>
+      </section>
     </div>:<div className='max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12'>
       <div className='flex flex-wrap justify-between gap-4 mb-7'>
         <div>
