@@ -38,6 +38,13 @@ type View = 'devices'|'campaigns'|'services'|'locations'|'media'|'publications'|
 type PortalResponse<T>={data:T}
 type GoogleCredentialResponse={credential:string}
 type GoogleIdentityApi={accounts:{id:{initialize:(options:{client_id:string;auto_select:boolean;callback:(response:GoogleCredentialResponse)=>void})=>void;renderButton:(element:HTMLElement,options:{theme:'outline';size:'large';width:number})=>void}}}
+// Signed/one-time email tokens are read from the fragment, never sent in
+// HTTP referrers, server logs or analytics. Query is supported for old links.
+function authLinkParam(name:string):string {
+  if(typeof window==='undefined')return ''
+  const hash=new URLSearchParams(window.location.hash.replace(/^#/,''))
+  return hash.get(name)??new URLSearchParams(window.location.search).get(name)??''
+}
 const GOOGLE_CLIENT_ID=String(
   (import.meta as ImportMeta & {env?:Record<string,string|undefined>}).env?.VITE_GOOGLE_CLIENT_ID??''
 ).trim()
@@ -82,17 +89,17 @@ const labels:Record<string,string>={
 }
 export default function ClientPortal(){
   const [agencySlug,setAgencySlug]=useState(()=>typeof window!=='undefined'
-    ? new URLSearchParams(window.location.search).get('agency_slug')??'' : '')
+    ? authLinkParam('agency_slug') : '')
   const [agencyOptions,setAgencyOptions]=useState<Agency[]>([])
   const [agencyLoading,setAgencyLoading]=useState(true)
   const [verificationToken,setVerificationToken]=useState(()=>typeof window!=='undefined'
-    ? new URLSearchParams(window.location.search).get('verify_token')??'' : '')
+    ? authLinkParam('verify_token') : '')
   const [verificationResult,setVerificationResult]=useState<'checking'|'ok'|'failed'>('checking')
   const [resendBusy,setResendBusy]=useState(false)
   const [resetToken,setResetToken]=useState(()=>typeof window!=='undefined'
-    ? new URLSearchParams(window.location.search).get('token')??'' : '')
+    ? authLinkParam('token') : '')
   const [resetEmail,setResetEmail]=useState(()=>typeof window!=='undefined'
-    ? new URLSearchParams(window.location.search).get('email')??'' : '')
+    ? authLinkParam('email') : '')
   const [resetPassword,setResetPassword]=useState('')
   const [resetConfirmation,setResetConfirmation]=useState('')
   const [resetBusy,setResetBusy]=useState(false)
@@ -224,6 +231,7 @@ export default function ClientPortal(){
   }
   const login=async(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault()
+    if(!agencySlug){setError('Selecione a agência antes de acessar sua conta.');return}
     if(busy)return
     setBusy(true);setError('')
     try{
@@ -235,6 +243,7 @@ export default function ClientPortal(){
   }
   const register=async(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault()
+    if(!agencySlug){setError('Escolha a agência responsável pelo cadastro.');return}
     if(busy)return
     setBusy(true);setError('')
     try{
@@ -248,6 +257,7 @@ export default function ClientPortal(){
     finally{setBusy(false)}
   }
   const completeGoogleLogin=async(credential:string)=>{
+    if(!agencySlug){setError('Selecione a agência antes de entrar ou cadastrar-se com Google.');return}
     if(busy)return
     setBusy(true);setError('')
     try{
@@ -605,6 +615,18 @@ export default function ClientPortal(){
               </div>
             </>}
       </div>
+    </div>:session.client.registration_status==='rejected'?<div className='max-w-xl mx-auto px-4 py-12 sm:py-20'>
+      <section className='rounded-3xl border border-red-100 bg-white p-6 sm:p-10'>
+        <ShieldCheck size={28} className='text-red-700' aria-hidden/>
+        <h1 className='mt-4 text-2xl font-bold'>Solicitação não aprovada</h1>
+        <p className='mt-3 text-sm text-black/65 leading-7'>
+          Esta agência não autorizou o cadastro. Nenhum serviço ou dispositivo foi liberado.
+          Entre em contato com a agência selecionada para esclarecimentos.
+        </p>
+        <button type='button' onClick={signOut} className='mt-6 text-sm font-bold text-blue-700'>
+          Voltar ao login
+        </button>
+      </section>
     </div>:session.client.registration_status==='pending'?<div className='max-w-xl mx-auto px-4 py-12 sm:py-20'>
       <section className='rounded-3xl border border-blue-100 bg-white p-6 sm:p-10'>
         <BadgeCheck size={28} className='text-blue-700' aria-hidden/>
