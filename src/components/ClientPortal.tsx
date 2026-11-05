@@ -7,7 +7,7 @@ import ClientPlaybackOverview from './ClientPlaybackOverview'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, Eye, EyeOff, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
 type Agency = {slug:string;name:string;fantasy_name:string|null;city:string|null;state:string|null}
-type PortalClient = {id:number;name?:string;email?:string;agency_slug?:string;registration_status?:'pending'|'approved'|'rejected'|null;email_verified?:boolean}
+type PortalClient = {id:number;name?:string;email?:string;agency_slug?:string;registration_status?:'pending'|'approved'|'rejected'|null;email_verified?:boolean;company?:{id:number;name:string}|null}
 type Session = {token:string; client:PortalClient}
 type PortalOverview = {
   devices:{total:number;online:number;offline:number;blocked:number;needs_sync:number;unpaired:number}
@@ -496,7 +496,7 @@ export default function ClientPortal(){
         <p className='text-sm text-black/65 leading-7 mt-3'>
           {authMode==='login'
             ? 'Consulte dispositivos, situação da programação e pedidos de anúncios vinculados ao seu cadastro.'
-            : 'Cadastre seus dados para acompanhar serviços, Players e solicitações vinculadas à sua empresa.'}
+            : 'Crie sua identidade de acesso na agência escolhida. Ela só será associada à empresa após confirmação de e-mail e aprovação.'}
         </p>
         {authMode==='login'
           ? <>
@@ -567,7 +567,7 @@ export default function ClientPortal(){
           : <>
               <form onSubmit={register} className='space-y-5 mt-7'>
                  {agencyPicker}
-                <div><label htmlFor='portal-register-name' className='block font-semibold text-xs mb-2'>Nome ou empresa</label>
+                <div><label htmlFor='portal-register-name' className='block font-semibold text-xs mb-2'>Seu nome completo</label>
                   <input id='portal-register-name' type='text' value={registerName} autoComplete='name' required minLength={2} maxLength={150}
                     onChange={e=>setRegisterName(e.target.value)} className='w-full min-h-11 border border-black/15 rounded-xl px-4 text-sm focus:outline-2 focus:outline-blue-700'/></div>
                 <div><label htmlFor='portal-register-email' className='block font-semibold text-xs mb-2'>E-mail</label>
@@ -654,6 +654,7 @@ export default function ClientPortal(){
         <div>
           <p className='text-xs font-bold uppercase tracking-wide text-blue-700'>Área do cliente</p>
           <h1 className='font-display font-bold text-2xl sm:text-3xl mt-2'>Olá, {session.client.name||'cliente'}</h1>
+          {session.client.company&&<p className='text-sm font-semibold text-blue-700 mt-1'>Empresa autorizada: {session.client.company.name}</p>}
           <p className='text-black/60 text-sm mt-2'>Informações operacionais do seu cadastro — sem acesso aos dados de outras empresas.</p>
         </div>
         <button type='button' disabled={loading} onClick={()=>setRefresh(x=>x+1)}
