@@ -427,6 +427,9 @@ app.post('/api/portal/studio-upload',
   });
 
 const portalRoutes = {
+  'agencies': {method: 'GET', backend: 'client/agencies', auth: false},
+  'verify-email': {method: 'POST', backend: 'client/verify-email', auth: false},
+  'resend-verification': {method: 'POST', backend: 'client/resend-verification', auth: true},
   'login': {method: 'POST', backend: 'client/login', auth: false},
   'register': {method: 'POST', backend: 'client/register', auth: false},
   'google-login': {method: 'POST', backend: 'client/google', auth: false},
@@ -601,19 +604,28 @@ app.all('/api/portal/:action', async (req, res) => {
         ...(route.auth ? {Authorization: bearer} : {}),
       },
       body: (req.method === 'POST' || req.method === 'PUT') ? JSON.stringify(action === 'login'
-        ? {email: req.body?.email, password: req.body?.password, remember_me: req.body?.remember_me}
+        ? {agency_slug: req.body?.agency_slug, email: req.body?.email,
+               password: req.body?.password, remember_me: req.body?.remember_me}
         : action === 'register'
-          ? {name: req.body?.name, email: req.body?.email, password: req.body?.password,
+          ? {agency_slug: req.body?.agency_slug,
+               name: req.body?.name, email: req.body?.email, password: req.body?.password,
               password_confirmation: req.body?.password_confirmation,
               remember_me: req.body?.remember_me, terms_accepted: req.body?.terms_accepted}
         : action === 'google-login'
-          ? {credential: req.body?.credential, remember_me: req.body?.remember_me,
+          ? {agency_slug: req.body?.agency_slug,
+               credential: req.body?.credential, remember_me: req.body?.remember_me,
               terms_accepted: req.body?.terms_accepted}
         : action === 'forgot-password'
-          ? {email: req.body?.email}
+          ? {agency_slug: req.body?.agency_slug, email: req.body?.email}
         : action === 'reset-password'
-          ? {token: req.body?.token, email: req.body?.email,
+          ? {agency_slug: req.body?.agency_slug,
+               token: req.body?.token, email: req.body?.email,
               password: req.body?.password, password_confirmation: req.body?.password_confirmation}
+        : action === 'verify-email'
+          ? {agency_slug: req.body?.agency_slug, email: req.body?.email,
+              token: req.body?.token}
+        : action === 'resend-verification'
+          ? {}
         : action === 'claim-device'
           ? {pin: req.body?.pin}
         : action === 'publication-create' || action === 'publication-preview'
