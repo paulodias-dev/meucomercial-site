@@ -31,6 +31,11 @@ export function buildAcquisitionPayload(form,key,search=''){
  const screens=form.kind==='establishment'?Number(form.screensCount):null;
  if(form.kind==='establishment'&&(!Number.isInteger(screens)||screens<1||screens>10000))
   throw Error('Quantidade de dispositivos inválida.');
+ const agencySlug=clean(form.agencySlug,100);
+ if(form.kind!=='agency'&&!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(agencySlug))
+  throw Error('Selecione a agência responsável por sua solicitação.');
+ if(form.kind==='agency'&&agencySlug)
+  throw Error('O cadastro de novas agências é avaliado pelo Master, sem agência intermediária.');
  const medium=media.has(form.medium)?form.medium:'mixed';
  const message=[
   'Solicitação comercial guiada (sem checkout)',
@@ -38,7 +43,9 @@ export function buildAcquisitionPayload(form,key,search=''){
   city?'Cidade: '+city:'',details?'Necessidade: '+details:''
  ].filter(Boolean).join('. ').slice(0,3000);
  const utm=new URLSearchParams(search);
- return {idempotency_key:key,kind:form.kind,name,company,email,whatsapp,
+ return {idempotency_key:key,kind:form.kind,
+  ...(form.kind==='agency'?{}:{agency_slug:agencySlug}),
+  name,company,email,whatsapp,
   source:'site-acquisition-guided',screens_count:screens,segment:null,
   plan_id:form.kind==='establishment'&&id(form.planId)?form.planId:null,
   offer_id:form.kind==='advertiser'&&id(form.offerId)?form.offerId:null,
