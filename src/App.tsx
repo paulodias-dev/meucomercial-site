@@ -84,6 +84,7 @@ export default function App() {
     return ()=>controller.abort();
   },[isModalOpen,leadKind]);
   const submissionKey = useRef<string | null>(null);
+  const submissionFingerprint = useRef<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
     email: "",
@@ -278,7 +279,16 @@ export default function App() {
     if (leadKind !== 'agency' && !agencyOptions.some(a=>a.slug===agencySlug)) {
       setFormError('Selecione uma agência ativa para continuar.');return;
     }
-    if (!submissionKey.current) submissionKey.current = crypto.randomUUID();
+    // Retain UUID on network retries, but change it when the chosen agency
+    // or any other lead field changes to avoid a false 409.
+    const fingerprint=JSON.stringify({
+      leadKind,agencySlug:leadKind==='agency'?null:agencySlug,
+      formData,privacyConsent,modalSource,companyWebsite,search:window.location.search,
+    });
+    if (!submissionKey.current || submissionFingerprint.current!==fingerprint) {
+      submissionKey.current=crypto.randomUUID();
+      submissionFingerprint.current=fingerprint;
+    }
     setFormSubmitting(true);
     setFormError("");
     const params = new URLSearchParams(window.location.search);
@@ -327,6 +337,7 @@ export default function App() {
       }
       setFormSubmitted(true);
       submissionKey.current = null;
+      submissionFingerprint.current = null;
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Falha de conexão. Tente novamente.");
     } finally {
