@@ -9,6 +9,7 @@ type Kind='establishment'|'agency'|'advertiser'
 type Medium='tv'|'radio'|'mixed'
 type Plan={plan_id:number;name:string;description:string|null;price:string;interval:'monthly'|'yearly';max_devices:number|null}
 type Offer={offer_id:number;title:string;region:string;medium:'tv'|'radio';description:string}
+type Agency={slug:string;name:string}
 type Form={name:string;company:string;email:string;whatsapp:string;city:string;details:string;screensCount:string}
 const names:Record<Kind,string>={establishment:'Estabelecimento',agency:'Agência',advertiser:'Anunciante'}
 const inputStyle='w-full mt-2 min-h-11 p-3 rounded-xl border border-slate-300 bg-white text-sm focus-visible:outline-2 focus-visible:outline-blue-700'
@@ -26,7 +27,25 @@ export default function AcquisitionWizard(){
  const [form,setForm]=useState<Form>(formEmpty),[consent,setConsent]=useState(false)
  const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState('')
  const [receipt,setReceipt]=useState<string|null>(null)
+ const [agencySlug,setAgencySlug]=useState('')
+ const [agencies,setAgencies]=useState<Agency[]>([])
+ const [agencyError,setAgencyError]=useState('')
+ const [agencyLoading,setAgencyLoading]=useState(true)
  const request=useRef<{fingerprint:string;key:string}|null>(null)
+ useEffect(()=>{
+  const controller=new AbortController()
+  fetch('/api/portal/agencies',{headers:{Accept:'application/json'},credentials:'omit',cache:'no-store',signal:controller.signal})
+   .then(async response=>{
+    if(!response.ok)throw Error('Agências indisponíveis.')
+    return response.json()
+   }).then(data=>{
+    if(!Array.isArray(data?.data))throw Error('Catálogo de agências inválido.')
+    setAgencies(data.data.filter((v:unknown):v is Agency=>typeof v==='object'&&v!==null
+     &&typeof (v as Agency).slug==='string'&&typeof (v as Agency).name==='string'))
+   }).catch(()=>{if(!controller.signal.aborted)setAgencyError('Não foi possível consultar as agências. Atualize a página.')})
+   .finally(()=>{if(!controller.signal.aborted)setAgencyLoading(false)})
+  return()=>controller.abort()
+ },[])
  const changeKind=(value:Kind)=>{
   setKind(value);setSelected(null);setPage(1);setRegion('');setRegionInput('')
   setError('');setSubmitError('');setConsent(false)
@@ -71,7 +90,7 @@ export default function AcquisitionWizard(){
   try{
    const planId=kind==='establishment'&&plans.some(p=>p.plan_id===selected)?selected:null
    const offerId=kind==='advertiser'&&offers.some(o=>o.offer_id===selected)?selected:null
-   const draft=buildAcquisitionPayload({...form,kind,medium,consent,planId,offerId},
+   const draft=buildAcquisitionPayload({...form,kind,medium,consent,planId,offerId,agencySlug},
     '00000000-0000-4000-8000-000000000000',window.location.search)
    const {idempotency_key:ignored,...stable}=draft;void ignored
    const fingerprint=JSON.stringify(stable)
@@ -175,6 +194,19 @@ export default function AcquisitionWizard(){
      {names[kind]} · {activePlan?'Plano '+activePlan.name:activeOffer?'Oferta '+activeOffer.title:'Sem opção específica'}
     </p>
     <form className="mt-5 space-y-4" onSubmit={submit}>
+      {kind!=='agency'&&<label className="block text-sm font-semibold">Agência responsável pelo atendimento *
+       <select required className={inputStyle} value={agencySlug}
+        disabled={agencyLoading||agencies.length===0}
+        onChange={e=>{setAgencySlug(e.target.value);setSubmitError('')}}>
+        <option value="">Selecione uma agência</option>
+        {agencies.map(agency=><option key={agency.slug} value={agency.slug}>{agency.name}</option>)}
+       </select>
+       <span className="block mt-2 text-xs text-slate-600">
+        A agência é registrada como preferência. A atribuição e as condições finais exigem validação comercial.
+       </span>
+       {agencyLoading&&<span role="status" className="block text-xs mt-2">Consultando agências…</span>}
+       {agencyError&&<span role="alert" className="block text-xs mt-2 text-red-700">{agencyError}</span>}
+      </label>
      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {([['name','Nome completo','text',120],['company','Empresa','text',160],
          ['email','E-mail','email',190],['whatsapp','WhatsApp / telefone','tel',24]] as const).map(([field,label,type,max])=>
@@ -206,7 +238,7 @@ export default function AcquisitionWizard(){
       <ShieldCheck size={20} className="text-blue-700 shrink-0" aria-hidden/>
       Equipamentos, licenças, preços e direitos de veiculação exigem validação posterior. Não forneça dados confidenciais.</p>
      {submitError&&<p role="alert" className="rounded-lg border border-red-200 p-3 text-sm text-red-800">{submitError}</p>}
-     <button disabled={!consent||submitting} className="w-full min-h-12 rounded-xl bg-blue-700 text-white font-semibold disabled:opacity-40">
+     <button disabled={!consent||submitting||(kind!=='agency'&&!agencies.some(a=>a.slug===agencySlug))} className="w-full min-h-12 rounded-xl bg-blue-700 text-white font-semibold disabled:opacity-40">
       {submitting?'Enviando…':'Enviar pedido para análise'}
      </button>
     </form>

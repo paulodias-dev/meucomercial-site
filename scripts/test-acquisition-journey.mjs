@@ -6,7 +6,7 @@ const read=p=>readFileSync(new URL('../'+p,import.meta.url),'utf8')
 const key='a5be6cde-66de-4ca9-8f21-69b0bb938eb2'
 const basic={kind:'establishment',name:'Ana Silva',company:'Mercado Modelo',email:'ana@example.org',
  whatsapp:'(79) 99999-9000',city:'Aracaju',details:'TV na recepção',screensCount:'3',medium:'tv',
- consent:true,planId:4,offerId:8}
+ consent:true,planId:4,offerId:8,agencySlug:'acao-total-aracaju-se'}
 test('URLs possuem apenas IDs públicos de interesse e UTM, nunca PII',()=>{
  const u=acquisitionUrl({kind:'establishment',planId:4,offerId:8},'?utm_source=meta&token=secreto&email=ana@example.org')
  assert.ok(u.startsWith('/contratar?'));assert.ok(!u.includes('secreto')&&!u.includes('example.org'))
@@ -21,18 +21,21 @@ test('pedido estabelecimento usa contrato exato de lead público, sem checkout',
  assert.equal(p.source,'site-acquisition-guided');assert.equal(p.consent,true)
  assert.equal(p.website,'');assert.equal(p.utm_medium,'cpc')
  assert.equal(p.idempotency_key,key)
+ assert.equal(p.agency_slug,'acao-total-aracaju-se')
 })
 test('contratos e identidades de anunciante e agência são isolados',()=>{
  const a=buildAcquisitionPayload({...basic,kind:'advertiser'},key)
  assert.equal(a.plan_id,null);assert.equal(a.offer_id,8);assert.equal(a.screens_count,null)
  const b=buildAcquisitionPayload({...basic,kind:'agency'},key)
  assert.equal(b.plan_id,null);assert.equal(b.offer_id,null);assert.equal(b.screens_count,null)
+ assert.equal('agency_slug' in b,false)
 })
 test('recusa consentimento, campos inválidos, cidade com URL, IDs e quantidades inválidas',()=>{
  for(const patch of [{consent:false},{name:'A'},{email:'invalido'},{whatsapp:'123'},
    {company:''},{screensCount:'0'},{screensCount:'10001'},{city:'https://teste.org'}]){
   assert.throws(()=>buildAcquisitionPayload({...basic,...patch},key))
  }
+ assert.throws(()=>buildAcquisitionPayload({...basic,agencySlug:''},key))
  assert.throws(()=>buildAcquisitionPayload(basic,'id-invalido'))
 })
 test('status de gateway não é sinal de contratação concluída',()=>{
