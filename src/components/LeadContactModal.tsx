@@ -5,7 +5,9 @@ import type React from 'react'
 import type {CommercialAudience} from './AudienceJourneys'
 import type {LeadFormData} from './MarketingTypes'
 
-export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, setLeadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; setLeadKind:(v:CommercialAudience)=>void; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>}) {
+export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, setLeadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit, agencyOptions,agencySlug,setAgencySlug,agencyLoading,agencyError}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; setLeadKind:(v:CommercialAudience)=>void; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>;
+ agencyOptions:{slug:string;name:string}[];agencySlug:string;
+ setAgencySlug:(slug:string)=>void;agencyLoading:boolean;agencyError:string}) {
   useEffect(() => {
     if (!isModalOpen) return
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -85,6 +87,24 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                 </motion.div>
               ) : (
                 <form onSubmit={handleLeadSubmit} className="space-y-4">
+                  {leadKind!=='agency'&&<div>
+                    <label htmlFor="lead-agency" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">
+                      Agência responsável *
+                    </label>
+                    <select id="lead-agency" required value={agencySlug}
+                      disabled={agencyLoading||agencyOptions.length===0}
+                      onChange={e=>setAgencySlug(e.target.value)}
+                      className="w-full rounded-xl border border-black/10 bg-white p-2.5 text-xs min-h-11">
+                      <option value="">Selecione sua agência</option>
+                      {agencyOptions.map(a=><option key={a.slug} value={a.slug}>{a.name}</option>)}
+                    </select>
+                    {agencyLoading&&<p role="status" className="text-xs mt-1">Consultando agências…</p>}
+                    {agencyError&&<p role="alert" className="text-xs text-red-800 mt-1">{agencyError}</p>}
+                    <p className="text-xs mt-2 text-black/55">A preferência orienta o atendimento; não ativa contratos ou cobranças.</p>
+                  </div>}
+                  {leadKind==='agency'&&<p className="text-xs text-black/60">
+                    Sua solicitação de parceria será analisada pelo Master da plataforma.
+                  </p>}
                   <div>
                     <label htmlFor="lead-kind" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Como deseja usar o Meu Comercial?</label>
                     <select id="lead-kind" value={leadKind} onChange={e => setLeadKind(e.target.value as typeof leadKind)} className="w-full rounded-xl border border-black/10 bg-white p-2.5 text-xs">
