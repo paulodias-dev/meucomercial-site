@@ -60,7 +60,29 @@ export default function App() {
   const [formError, setFormError] = useState("");
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [leadKind, setLeadKind] = useState<"establishment" | "agency" | "advertiser">("establishment");
+  const [agencyOptions, setAgencyOptions] = useState<{slug:string;name:string}[]>([]);
+  const [agencySlug, setAgencySlug] = useState('');
+  const [agencyLoading, setAgencyLoading] = useState(false);
+  const [agencyError, setAgencyError] = useState('');
   const [companyWebsite, setCompanyWebsite] = useState(""); // Bot honeypot
+  useEffect(() => {
+    if (!isModalOpen || leadKind==='agency') return;
+    const controller=new AbortController();
+    setAgencyLoading(true);setAgencyError('');
+    fetch('/api/portal/agencies',{signal:controller.signal,credentials:'omit',cache:'no-store'})
+      .then(async result=>{if(!result.ok)throw Error('Catálogo indisponível.');return result.json();})
+      .then(response=>{
+        if(controller.signal.aborted)return;
+        if(!Array.isArray(response?.data))throw Error('Catálogo inválido.');
+        setAgencyOptions(response.data.filter((row:unknown):row is {slug:string;name:string}=>{
+          if(!row||typeof row!=='object')return false;
+          const v=row as Record<string,unknown>;
+          return typeof v.slug==='string'&&typeof v.name==='string';
+        }));
+      }).catch(()=>{if(!controller.signal.aborted)setAgencyError('Falha ao carregar agências. Tente novamente.');})
+      .finally(()=>{if(!controller.signal.aborted)setAgencyLoading(false);});
+    return ()=>controller.abort();
+  },[isModalOpen,leadKind]);
   const submissionKey = useRef<string | null>(null);
   const [formData, setFormData] = useState({
     nome: "",
@@ -253,6 +275,9 @@ export default function App() {
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formSubmitting || !privacyConsent) return;
+    if (leadKind !== 'agency' && !agencyOptions.some(a=>a.slug===agencySlug)) {
+      setFormError('Selecione uma agência ativa para continuar.');return;
+    }
     if (!submissionKey.current) submissionKey.current = crypto.randomUUID();
     setFormSubmitting(true);
     setFormError("");
@@ -265,6 +290,7 @@ export default function App() {
         body: JSON.stringify({
           idempotency_key: submissionKey.current,
           kind: leadKind,
+          ...(leadKind==='agency'?{}:{agency_slug:agencySlug}),
           // Only opt-in public plans; Laravel re-checks current publication
           // state and snapshots the exact DECIMAL as non-binding interest.
           plan_id: leadKind === 'establishment'
@@ -680,7 +706,9 @@ export default function App() {
       </button>
 
 
-      <LeadContactModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} leadKind={leadKind} setLeadKind={setLeadKind} formSubmitted={formSubmitted} formSubmitting={formSubmitting} formError={formError} formData={formData} setFormData={setFormData} privacyConsent={privacyConsent} setPrivacyConsent={setPrivacyConsent} companyWebsite={companyWebsite} setCompanyWebsite={setCompanyWebsite} handleLeadSubmit={handleLeadSubmit} />
+      <LeadContactModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} leadKind={leadKind} setLeadKind={setLeadKind} formSubmitted={formSubmitted} formSubmitting={formSubmitting} formError={formError} formData={formData} setFormData={setFormData} privacyConsent={privacyConsent} setPrivacyConsent={setPrivacyConsent} companyWebsite={companyWebsite} setCompanyWebsite={setCompanyWebsite} handleLeadSubmit={handleLeadSubmit} agencyOptions={agencyOptions}
+        agencySlug={agencySlug} setAgencySlug={setAgencySlug}
+        agencyLoading={agencyLoading} agencyError={agencyError} />
 
     </div>
   );
