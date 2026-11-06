@@ -6,7 +6,7 @@ import ClientOnboarding from './ClientOnboarding'
 import ClientPlaybackOverview from './ClientPlaybackOverview'
 import {ArrowLeft, ArrowRight, BadgeCheck, Building2, Eye, EyeOff, LogOut, Monitor, Radio, RefreshCcw, ShieldCheck} from 'lucide-react'
 
-type Session = {token:string; client:{id:number;name?:string;email?:string;agency_slug?:string}}
+type Session = {token:string; client:{id:number;name?:string;email?:string;agency_slug?:string;pending_agency_approval?:boolean}}
 type PortalOverview = {
   devices:{total:number;online:number;offline:number;blocked:number;needs_sync:number;unpaired:number}
   locations:number;playlists:number;schedules_active:number
@@ -155,7 +155,7 @@ export default function ClientPortal(){
   useEffect(()=>{
     if(resetToken){setAuthReady(true);return}
     let active=true
-    void portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>('session',null)
+    void portalRequest<{access_token:string;client:{id:number;name?:string;email?:string;agency_slug?:string;pending_agency_approval?:boolean}}>('session',null)
       .then(data=>{
         if(!active||!data.access_token||!data.client?.id)return
         activeToken.current=data.access_token
@@ -178,7 +178,7 @@ export default function ClientPortal(){
     clearSession()
     if(token)void portalRequest('logout',token,{method:'POST'}).catch(()=>{})
   }
-  const applyAuthResponse=(data:{access_token:string;client:{id:number;name?:string;email?:string}})=>{
+  const applyAuthResponse=(data:{access_token:string;client:{id:number;name?:string;email?:string;agency_slug?:string;pending_agency_approval?:boolean}})=>{
     if(!data.access_token||!data.client?.id)throw new Error('Resposta de autenticação inválida.')
     activeToken.current=data.access_token
     setSession({token:data.access_token,client:data.client})
@@ -203,7 +203,7 @@ export default function ClientPortal(){
     if(!agencyValid){setError('Selecione uma agência ativa antes de continuar.');return}
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string;agency_slug?:string;pending_agency_approval?:boolean}}>(
         'login',null,{method:'POST',body:{email:email.trim(),password,remember_me:rememberMe,agency_slug:agencySlug}})
       applyAuthResponse(data)
     }catch(e){setError(e instanceof Error?e.message:'Falha de autenticação.')}
@@ -215,7 +215,7 @@ export default function ClientPortal(){
     if(!agencyValid){setError('Selecione uma agência ativa antes do cadastro.');return}
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string;agency_slug?:string;pending_agency_approval?:boolean}}>(
         'register',null,{method:'POST',body:{
           name:registerName.trim(),email:registerEmail.trim(),password:registerPassword,agency_slug:agencySlug,
           password_confirmation:registerConfirmation,remember_me:rememberMe,terms_accepted:termsAccepted,
@@ -229,7 +229,7 @@ export default function ClientPortal(){
     if(!agencyValid){setError('Selecione uma agência antes de continuar com Google.');return}
     setBusy(true);setError('')
     try{
-      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
+      const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string;agency_slug?:string;pending_agency_approval?:boolean}}>(
         'google-login',null,{method:'POST',body:{credential,agency_slug:agencySlug,remember_me:rememberMe,terms_accepted:authMode==='register'&&termsAccepted}})
       applyAuthResponse(data)
     }catch(e){
@@ -452,7 +452,7 @@ export default function ClientPortal(){
         <p className='text-sm text-black/65 leading-7 mt-3'>
           {authMode==='login'
             ? 'Consulte dispositivos, situação da programação e pedidos de anúncios vinculados ao seu cadastro.'
-            : 'Cadastre seus dados para acompanhar serviços, Players e solicitações vinculadas à sua empresa.'}
+            : 'Escolha sua agência e solicite acesso. A equipe precisará validar seu cadastro antes da ativação de serviços.'}
         </p>
         {authMode==='login'
           ? <>
@@ -577,6 +577,11 @@ export default function ClientPortal(){
           <p className='text-xs font-bold uppercase tracking-wide text-blue-700'>Área do cliente</p>
           <h1 className='font-display font-bold text-2xl sm:text-3xl mt-2'>Olá, {session.client.name||'cliente'}</h1>
           <p className='text-black/60 text-sm mt-2'>Informações operacionais do seu cadastro — sem acesso aos dados de outras empresas.</p>
+          {session.client.pending_agency_approval===true&&<p role='status'
+            className='mt-3 text-sm bg-amber-50 text-amber-900 border border-amber-200 rounded-xl p-3'>
+            Seu cadastro foi recebido pela agência selecionada. A equipe ainda precisa aprovar
+            sua entrada na carteira e confirmar disponibilidade de plano antes de ativar serviços.
+          </p>}
         </div>
         <button type='button' disabled={loading} onClick={()=>setRefresh(x=>x+1)}
           className='self-start rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold hover:bg-blue-50 disabled:opacity-50'>
