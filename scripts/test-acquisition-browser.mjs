@@ -106,6 +106,14 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
    res.writeHead(200,{'Content-Type':'application/json'}).end(JSON.stringify(prior.record))
    return
   }
+  if(req.method==='GET'&&req.url?.startsWith('/api/client/agencies')){
+   res.writeHead(200,{'Content-Type':'application/json'})
+   res.end(JSON.stringify({data:[
+    {slug:'acao-total-aracaju-se',name:'Ação Total — Aracaju/SE'},
+    {slug:'acao-total-anapolis-go',name:'Ação Total — Anápolis/GO'},
+   ]}))
+   return
+  }
   if(req.method==='GET'&&req.url?.startsWith('/api/site/indoor/plans')){
    res.writeHead(200,{'Content-Type':'application/json'})
    res.end(JSON.stringify({evidence:'approved_active_plan_not_purchase',
@@ -152,6 +160,9 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
   if(page.url().includes('kind=establishment'))await page.getByRole('button',{name:/Plano A/}).waitFor()
   if(page.url().includes('kind=advertiser'))await page.getByRole('button',{name:/Oferta Rádio/}).waitFor()
   await page.getByRole('button',{name:'Continuar'}).click()
+  if(await page.getByLabel('Agência responsável').count()){
+   await page.getByLabel('Agência responsável').selectOption('acao-total-aracaju-se')
+  }
   await page.getByLabel('Nome completo').fill(name)
   await page.getByLabel('Empresa').fill('Empresa Teste')
   await page.getByLabel('E-mail').fill('teste@example.org')
@@ -180,6 +191,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     assert.equal(lead.kind,'establishment')
     assert.equal(lead.consent,true)
     assert.equal(lead.utm_source,'campanha')
+    assert.equal(lead.agency_slug,'acao-total-aracaju-se')
     // Lead persistido não é pré-contratação. Segundo opt-in explícito.
     await page.getByLabel(/Confirmo que desejo submeter/).check()
     await page.getByRole('button',{name:'Solicitar análise pré-contratual'}).click()
@@ -341,6 +353,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     assert.equal(lead.offer_id,31)
     assert.equal(lead.plan_id,null)
     assert.equal(lead.screens_count,null)
+    assert.equal(lead.agency_slug,'acao-total-aracaju-se')
    }finally{await page.close()}
   })
   await t.test('agência: não recebe preço, plano nem oferta de outro público',async()=>{
@@ -351,6 +364,7 @@ test('jornada pública de aquisição end-to-end: três públicos, catálogo, co
     await page.getByRole('heading',{name:'Solicitação recebida pela API!'}).waitFor()
     const lead=receipts.at(-1)
     assert.equal(lead.kind,'agency');assert.equal(lead.plan_id,null);assert.equal(lead.offer_id,null)
+    assert.equal(lead.agency_slug,undefined)
    }finally{await page.close()}
   })
   await t.test('429 não produz recibo, retry preserva UUID e edição gera nova intenção',async()=>{
