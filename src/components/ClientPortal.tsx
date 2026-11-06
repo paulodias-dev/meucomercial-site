@@ -212,6 +212,7 @@ export default function ClientPortal(){
   const register=async(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault()
     if(busy)return
+    if(!agencyValid){setError('Selecione uma agência ativa antes do cadastro.');return}
     setBusy(true);setError('')
     try{
       const data=await portalRequest<{access_token:string;client:{id:number;name?:string;email?:string}}>(
@@ -242,6 +243,7 @@ export default function ClientPortal(){
   const requestPasswordReset=async(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault()
     if(forgotBusy)return
+    if(!agencyValid){setError('Selecione a agência para recuperar seu acesso.');return}
     setForgotBusy(true);setError('')
     try{
       await portalRequest('forgot-password',null,{method:'POST',body:{email:forgotEmail.trim(),agency_slug:agencySlug}})
@@ -252,6 +254,7 @@ export default function ClientPortal(){
   const submitPasswordReset=async(event:FormEvent<HTMLFormElement>)=>{
     event.preventDefault()
     if(resetBusy)return
+    if(!agencyValid){setError('Selecione a agência deste link de recuperação.');return}
     setResetBusy(true);setError('')
     try{
       await portalRequest('reset-password',null,{method:'POST',body:{
