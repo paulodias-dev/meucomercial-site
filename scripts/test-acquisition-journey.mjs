@@ -35,6 +35,26 @@ test('recusa consentimento, campos inválidos, cidade com URL, IDs e quantidades
  }
  assert.throws(()=>buildAcquisitionPayload(basic,'id-invalido'))
 })
+test('agência escolhida integra o fingerprint idempotente e nunca uma candidatura Master',()=>{
+ const a=buildAcquisitionPayload({...basic,agencySlug:'acao-total-aracaju-se'},key)
+ const b=buildAcquisitionPayload({...basic,agencySlug:'acao-total-anapolis-go'},key)
+ assert.equal(a.agency_slug,'acao-total-aracaju-se')
+ assert.equal(b.agency_slug,'acao-total-anapolis-go')
+ assert.notEqual(JSON.stringify(a),JSON.stringify(b))
+ const master=buildAcquisitionPayload({...basic,kind:'agency',agencySlug:'acao-total-aracaju-se'},key)
+ assert.equal(Object.hasOwn(master,'agency_slug'),false)
+ assert.throws(()=>buildAcquisitionPayload({...basic,agencySlug:'../painel'},key))
+})
+test('as duas entradas públicas exibem seleção de agência da API, nunca constante .env',()=>{
+ const wizard=read('src/components/AcquisitionWizard.tsx')
+ const modal=read('src/components/LeadContactModal.tsx')
+ const app=read('src/App.tsx')
+ assert.match(wizard,/\/api\/portal\/agencies/)
+ assert.match(modal,/agencyOptions/)
+ assert.match(app,/\/api\/portal\/agencies/)
+ assert.match(app,/submissionFingerprint/)
+})
+
 test('status de gateway não é sinal de contratação concluída',()=>{
  assert.match(acquisitionError(422),/despublicado/)
  assert.match(acquisitionError(409),/alterado/)
