@@ -24,9 +24,29 @@ export default function AcquisitionWizard(){
  const [reload,setReload]=useState(0),[page,setPage]=useState(1),[lastPage,setLastPage]=useState(1)
  const [region,setRegion]=useState(''),[regionInput,setRegionInput]=useState(''),[filterError,setFilterError]=useState('')
  const [form,setForm]=useState<Form>(formEmpty),[consent,setConsent]=useState(false)
+ const [agencies,setAgencies]=useState<{slug:string;name:string}[]>([])
+ const [agencySlug,setAgencySlug]=useState('')
+ const [agencyLoading,setAgencyLoading]=useState(true)
+ const [agencyError,setAgencyError]=useState('')
  const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState('')
  const [receipt,setReceipt]=useState<string|null>(null)
  const request=useRef<{fingerprint:string;key:string}|null>(null)
+ useEffect(()=>{
+  let active=true
+  fetch('/api/portal/agencies',{credentials:'omit',cache:'no-store',headers:{Accept:'application/json'}})
+   .then(async res=>{if(!res.ok)throw Error('Catálogo indisponível.');return res.json()})
+   .then(payload=>{
+    if(!active)return
+    if(!Array.isArray(payload?.data))throw Error('Catálogo inválido.')
+    setAgencies(payload.data.filter((row:unknown):row is {slug:string;name:string}=>{
+     if(!row||typeof row!=='object')return false
+     const value=row as Record<string,unknown>
+     return typeof value.slug==='string'&&typeof value.name==='string'
+    }))
+   }).catch(()=>{if(active)setAgencyError('Não foi possível carregar agências. Atualize a página.')})
+   .finally(()=>{if(active)setAgencyLoading(false)})
+  return()=>{active=false}
+ },[])
  const changeKind=(value:Kind)=>{
   setKind(value);setSelected(null);setPage(1);setRegion('');setRegionInput('')
   setError('');setSubmitError('');setConsent(false)
@@ -67,11 +87,15 @@ export default function AcquisitionWizard(){
  }
  const submit=async(e:FormEvent<HTMLFormElement>)=>{
   e.preventDefault();if(submitting||receipt)return
+  if(kind!=='agency'&&!agencies.some(a=>a.slug===agencySlug)){
+   setSubmitError('Selecione uma agência ativa antes de enviar sua solicitação.')
+   return
+  }
   setSubmitting(true);setSubmitError('')
   try{
    const planId=kind==='establishment'&&plans.some(p=>p.plan_id===selected)?selected:null
    const offerId=kind==='advertiser'&&offers.some(o=>o.offer_id===selected)?selected:null
-   const draft=buildAcquisitionPayload({...form,kind,medium,consent,planId,offerId},
+   const draft=buildAcquisitionPayload({...form,kind,medium,consent,planId,offerId,agencySlug},
     '00000000-0000-4000-8000-000000000000',window.location.search)
    const {idempotency_key:ignored,...stable}=draft;void ignored
    const fingerprint=JSON.stringify(stable)
@@ -175,6 +199,23 @@ export default function AcquisitionWizard(){
      {names[kind]} · {activePlan?'Plano '+activePlan.name:activeOffer?'Oferta '+activeOffer.title:'Sem opção específica'}
     </p>
     <form className="mt-5 space-y-4" onSubmit={submit}>
+     {kind!=='agency'&&<label className="block text-sm font-semibold">
+      Agência responsável pelo atendimento *
+      <select className={inputStyle} required value={agencySlug}
+       disabled={agencyLoading||agencies.length===0}
+       onChange={e=>{setAgencySlug(e.target.value);setSubmitError('')}}>
+       <option value="">Selecione uma agência</option>
+       {agencies.map(agency=><option key={agency.slug} value={agency.slug}>{agency.name}</option>)}
+      </select>
+      <span className="block mt-2 text-xs font-normal text-slate-600">
+       Sua escolha será registrada para análise. Não atribui contrato ou pagamento automaticamente.
+      </span>
+      {agencyLoading&&<span role="status" className="block mt-1 text-xs">Consultando agências…</span>}
+      {agencyError&&<span role="alert" className="block mt-1 text-xs text-red-800">{agencyError}</span>}
+     </label>}
+     {kind==='agency'&&<p className="text-xs text-slate-600">
+      Sua candidatura como nova agência será analisada pelo Master da plataforma.
+     </p>
      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {([['name','Nome completo','text',120],['company','Empresa','text',160],
          ['email','E-mail','email',190],['whatsapp','WhatsApp / telefone','tel',24]] as const).map(([field,label,type,max])=>
