@@ -9,6 +9,7 @@ type Kind='establishment'|'agency'|'advertiser'
 type Medium='tv'|'radio'|'mixed'
 type Plan={plan_id:number;name:string;description:string|null;price:string;interval:'monthly'|'yearly';max_devices:number|null}
 type Offer={offer_id:number;title:string;region:string;medium:'tv'|'radio';description:string}
+type AgencyOption={slug:string;name:string}
 type Form={name:string;company:string;email:string;whatsapp:string;city:string;details:string;screensCount:string}
 const names:Record<Kind,string>={establishment:'Estabelecimento',agency:'Agência',advertiser:'Anunciante'}
 const inputStyle='w-full mt-2 min-h-11 p-3 rounded-xl border border-slate-300 bg-white text-sm focus-visible:outline-2 focus-visible:outline-blue-700'
@@ -24,11 +25,34 @@ export default function AcquisitionWizard(){
  const [reload,setReload]=useState(0),[page,setPage]=useState(1),[lastPage,setLastPage]=useState(1)
  const [region,setRegion]=useState(''),[regionInput,setRegionInput]=useState(''),[filterError,setFilterError]=useState('')
  const [form,setForm]=useState<Form>(formEmpty),[consent,setConsent]=useState(false)
+ const [agencies,setAgencies]=useState<AgencyOption[]>([])
+ const [agencySlug,setAgencySlug]=useState('')
+ const [agencyLoading,setAgencyLoading]=useState(true)
+ const [agencyError,setAgencyError]=useState('')
  const [submitting,setSubmitting]=useState(false),[submitError,setSubmitError]=useState('')
  const [receipt,setReceipt]=useState<string|null>(null)
  const request=useRef<{fingerprint:string;key:string}|null>(null)
+ useEffect(()=>{
+  const abort=new AbortController()
+  fetch('/api/portal/agencies',{headers:{Accept:'application/json'},cache:'no-store',
+    credentials:'omit',signal:abort.signal})
+   .then(async response=>{
+     if(!response.ok)throw Error('Não foi possível consultar as agências.')
+     return response.json()
+   }).then(value=>{
+     if(!Array.isArray(value?.data))throw Error('Catálogo de agências inválido.')
+     setAgencies(value.data.filter((item:unknown):item is AgencyOption=>{
+       if(!item||typeof item!=='object')return false
+       const row=item as Partial<AgencyOption>
+       return typeof row.slug==='string'&&typeof row.name==='string'
+     }))
+   }).catch(()=>{if(!abort.signal.aborted)setAgencyError('Agências indisponíveis. Recarregue a página.')})
+    .finally(()=>{if(!abort.signal.aborted)setAgencyLoading(false)})
+  return()=>abort.abort()
+ },[])
  const changeKind=(value:Kind)=>{
   setKind(value);setSelected(null);setPage(1);setRegion('');setRegionInput('')
+  if(value==='agency')setAgencySlug('')
   setError('');setSubmitError('');setConsent(false)
  }
  const change=(field:keyof Form,value:string)=>{setForm(current=>({...current,[field]:value}));setSubmitError('')}
@@ -67,11 +91,14 @@ export default function AcquisitionWizard(){
  }
  const submit=async(e:FormEvent<HTMLFormElement>)=>{
   e.preventDefault();if(submitting||receipt)return
+  if(kind!=='agency'&&!agencies.some(a=>a.slug===agencySlug)){
+   setSubmitError('Selecione uma agência ativa para enviar a solicitação.');return
+  }
   setSubmitting(true);setSubmitError('')
   try{
    const planId=kind==='establishment'&&plans.some(p=>p.plan_id===selected)?selected:null
    const offerId=kind==='advertiser'&&offers.some(o=>o.offer_id===selected)?selected:null
-   const draft=buildAcquisitionPayload({...form,kind,medium,consent,planId,offerId},
+   const draft=buildAcquisitionPayload({...form,kind,medium,consent,planId,offerId,agencySlug},
     '00000000-0000-4000-8000-000000000000',window.location.search)
    const {idempotency_key:ignored,...stable}=draft;void ignored
    const fingerprint=JSON.stringify(stable)
@@ -175,6 +202,24 @@ export default function AcquisitionWizard(){
      {names[kind]} · {activePlan?'Plano '+activePlan.name:activeOffer?'Oferta '+activeOffer.title:'Sem opção específica'}
     </p>
     <form className="mt-5 space-y-4" onSubmit={submit}>
+    {kind!=='agency'&&<label className="block text-sm font-semibold">
+     Agência responsável pela sua solicitação *
+     <select required value={agencySlug}
+      disabled={agencyLoading||agencies.length===0}
+      onChange={e=>{setAgencySlug(e.target.value);setSubmitError('')}}
+      className={inputStyle} aria-label="Agência responsável">
+      <option value="">Selecione uma agência</option>
+      {agencies.map(a=><option key={a.slug} value={a.slug}>{a.name}</option>)}
+     </select>
+     <span className="mt-2 block text-xs font-normal text-slate-600">
+      Sua escolha será registrada para análise comercial. Não gera contrato, cobrança ou transferência automática.
+     </span>
+     {agencyLoading&&<span role="status" className="block mt-2 text-xs">Consultando agências…</span>}
+     {agencyError&&<span role="alert" className="block mt-2 text-xs text-red-800">{agencyError}</span>}
+    </label>}
+    {kind==='agency'&&<p className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-sm">
+     A adesão de uma nova agência parceira é analisada diretamente pelo Master da plataforma.
+    </p>}
      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {([['name','Nome completo','text',120],['company','Empresa','text',160],
          ['email','E-mail','email',190],['whatsapp','WhatsApp / telefone','tel',24]] as const).map(([field,label,type,max])=>
