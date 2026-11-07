@@ -21,6 +21,7 @@ import LeadContactModal from './components/LeadContactModal';
 import type {TVLayout} from './components/MarketingTypes';
 import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
 const ClientPortal = React.lazy(() => import("./components/ClientPortal"));
+const InvitationPage = React.lazy(() => import("./components/InvitationPage"));
 
 // --- Shared marketing domain contracts ---
 
@@ -373,6 +374,9 @@ export default function App() {
   };
 
   // Dedicated client JWT area, not the agency Admin or the lead flow.
+  if (window.location.pathname === '/convite' || window.location.pathname === '/convite/') {
+    return <React.Suspense fallback={<main role="status">Carregando...</main>}><InvitationPage /></React.Suspense>;
+  }
   if (window.location.pathname === '/portal' || window.location.pathname === '/portal/') {
     return <React.Suspense fallback={<main role="status" className="min-h-screen flex items-center justify-center text-sm text-slate-600">Carregando módulo…</main>}><ClientPortal /></React.Suspense>;
   }
