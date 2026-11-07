@@ -60,6 +60,7 @@ export default function App() {
   const [formError, setFormError] = useState("");
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [leadKind, setLeadKind] = useState<"establishment" | "agency" | "advertiser">("establishment");
+  const [agencySlug,setAgencySlug]=useState('');
   const [companyWebsite, setCompanyWebsite] = useState(""); // Bot honeypot
   const submissionKey = useRef<string | null>(null);
   const [formData, setFormData] = useState({
@@ -230,6 +231,7 @@ export default function App() {
     setPrivacyConsent(false);
     setCompanyWebsite("");
     submissionKey.current = null;
+    setAgencySlug('');
   };
 
   // Accept a single, enumerated public journey request. No query-supplied
@@ -252,7 +254,7 @@ export default function App() {
   // Keep the same UUID across retries to make network timeouts safe.
   const handleLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (formSubmitting || !privacyConsent) return;
+    if (formSubmitting || !privacyConsent || (leadKind !== 'agency' && !agencySlug)) return;
     if (!submissionKey.current) submissionKey.current = crypto.randomUUID();
     setFormSubmitting(true);
     setFormError("");
@@ -265,6 +267,7 @@ export default function App() {
         body: JSON.stringify({
           idempotency_key: submissionKey.current,
           kind: leadKind,
+          ...(leadKind === 'agency' ? {} : {agency_slug:agencySlug}),
           // Only opt-in public plans; Laravel re-checks current publication
           // state and snapshots the exact DECIMAL as non-binding interest.
           plan_id: leadKind === 'establishment'
@@ -680,7 +683,7 @@ export default function App() {
       </button>
 
 
-      <LeadContactModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} leadKind={leadKind} setLeadKind={setLeadKind} formSubmitted={formSubmitted} formSubmitting={formSubmitting} formError={formError} formData={formData} setFormData={setFormData} privacyConsent={privacyConsent} setPrivacyConsent={setPrivacyConsent} companyWebsite={companyWebsite} setCompanyWebsite={setCompanyWebsite} handleLeadSubmit={handleLeadSubmit} />
+      <LeadContactModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} leadKind={leadKind} setLeadKind={setLeadKind} formSubmitted={formSubmitted} formSubmitting={formSubmitting} formError={formError} formData={formData} setFormData={setFormData} privacyConsent={privacyConsent} setPrivacyConsent={setPrivacyConsent} companyWebsite={companyWebsite} setCompanyWebsite={setCompanyWebsite} handleLeadSubmit={handleLeadSubmit} agencySlug={agencySlug} setAgencySlug={setAgencySlug} />
 
     </div>
   );
