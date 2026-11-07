@@ -687,7 +687,7 @@ export default function App() {
       </button>
 
 
-      <LeadContactModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} leadKind={leadKind} setLeadKind={setLeadKind} formSubmitted={formSubmitted} formSubmitting={formSubmitting} formError={formError} formData={formData} setFormData={setFormData} privacyConsent={privacyConsent} setPrivacyConsent={setPrivacyConsent} companyWebsite={companyWebsite} setCompanyWebsite={setCompanyWebsite} handleLeadSubmit={handleLeadSubmit} agencySlug={agencySlug} setAgencySlug={setAgencySlug} />
+      <LeadContactModal isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} leadKind={leadKind} setLeadKind={setLeadKind} formSubmitted={formSubmitted} formSubmitting={formSubmitting} formError={formError} formData={formData} setFormData={setFormData} privacyConsent={privacyConsent} setPrivacyConsent={setPrivacyConsent} companyWebsite={companyWebsite} setCompanyWebsite={setCompanyWebsite} handleLeadSubmit={handleLeadSubmit} agencySlug={agencySlug} setAgencySlug={slug=>{setAgencySlug(slug);submissionKey.current=null;setFormError('');}} />
 
     </div>
   );
