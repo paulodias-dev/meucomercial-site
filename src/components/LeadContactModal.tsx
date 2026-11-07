@@ -1,11 +1,25 @@
 import {Check, X} from 'lucide-react'
 import {motion, AnimatePresence} from 'motion/react'
-import {useEffect} from 'react'
+import {useEffect,useState} from 'react'
 import type React from 'react'
 import type {CommercialAudience} from './AudienceJourneys'
 import type {LeadFormData} from './MarketingTypes'
 
-export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, setLeadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; setLeadKind:(v:CommercialAudience)=>void; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>}) {
+export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind, setLeadKind, formSubmitted, formSubmitting, formError, formData, setFormData, privacyConsent, setPrivacyConsent, companyWebsite, setCompanyWebsite, handleLeadSubmit,agencySlug,setAgencySlug}: {isModalOpen:boolean; setIsModalOpen:(v:boolean)=>void; leadKind:CommercialAudience; setLeadKind:(v:CommercialAudience)=>void; formSubmitted:boolean; formSubmitting:boolean; formError:string; formData:LeadFormData; setFormData:React.Dispatch<React.SetStateAction<LeadFormData>>; privacyConsent:boolean; setPrivacyConsent:(v:boolean)=>void; companyWebsite:string; setCompanyWebsite:(v:string)=>void; handleLeadSubmit:(e:React.FormEvent)=>Promise<void>; agencySlug:string; setAgencySlug:(v:string)=>void}) {
+  const [agencies,setAgencies]=useState<{slug:string;name:string}[]>([])
+  const [agencyError,setAgencyError]=useState('')
+  const [agencyLoading,setAgencyLoading]=useState(false)
+  useEffect(()=>{
+    if(!isModalOpen)return
+    const controller=new AbortController()
+    setAgencyLoading(true);setAgencyError('')
+    fetch('/api/portal/agencies',{cache:'no-store',credentials:'omit',headers:{Accept:'application/json'},signal:controller.signal})
+      .then(async r=>{if(!r.ok)throw Error('Não foi possível consultar as agências.');return r.json()})
+      .then(v=>{if(!Array.isArray(v?.data))throw Error('Lista de agências inválida.');setAgencies(v.data.filter((a:unknown):a is {slug:string;name:string}=>typeof a==='object'&&a!==null&&typeof (a as {slug?:unknown}).slug==='string'&&typeof (a as {name?:unknown}).name==='string'))})
+      .catch(()=>{if(!controller.signal.aborted)setAgencyError('Agências indisponíveis. Tente abrir o formulário novamente.')})
+      .finally(()=>{if(!controller.signal.aborted)setAgencyLoading(false)})
+    return()=>controller.abort()
+  },[isModalOpen])
   useEffect(() => {
     if (!isModalOpen) return
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -94,6 +108,14 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                     </select>
                   </div>
                   
+                  {leadKind !== 'agency' && <div>
+                    <label htmlFor="lead-agency" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Agência responsável *</label>
+                    <select id="lead-agency" required value={agencySlug} onChange={e=>setAgencySlug(e.target.value)} disabled={agencyLoading||!!agencyError} className="w-full rounded-xl border border-black/10 bg-white p-3 text-xs">
+                      <option value="">{agencyLoading?'Consultando agências...':'Selecione uma agência'}</option>
+                      {agencies.map(a=><option key={a.slug} value={a.slug}>{a.name}</option>)}
+                    </select>
+                    {agencyError&&<p role="alert" className="mt-1 text-xs text-red-700">{agencyError}</p>}
+                  </div>}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label htmlFor="lead-name" className="text-[10px] text-black/50 uppercase font-mono block mb-1 font-bold">Seu Nome *</label>
@@ -218,7 +240,7 @@ export default function LeadContactModal({isModalOpen, setIsModalOpen, leadKind,
                     </button>
                     <button
                       type="submit"
-                      disabled={formSubmitting || !privacyConsent}
+                      disabled={formSubmitting || !privacyConsent || (leadKind!=='agency' && (!agencySlug || agencyLoading || !!agencyError || !agencies.some(a=>a.slug===agencySlug)))}
                       className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold text-center shadow-sm transition-all cursor-pointer"
                     >
                       {formSubmitting ? "Registrando..." : "Enviar solicitação"}

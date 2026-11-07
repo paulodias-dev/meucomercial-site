@@ -434,6 +434,7 @@ const portalRoutes = {
   'session': {method: 'GET', backend: 'client/me', auth: true},
   'forgot-password': {method: 'POST', backend: 'client/forgot-password', auth: false},
   'reset-password': {method: 'POST', backend: 'client/reset-password', auth: false},
+  'accept-invitation': {method: 'POST', backend: 'client/accept-invitation', auth: false},
   'logout': {method: 'POST', backend: 'client/logout', auth: true},
   'overview': {method: 'GET', backend: 'client/indoor/overview', auth: true},
   'devices': {method: 'GET', backend: 'client/indoor/devices', auth: true},
@@ -619,6 +620,10 @@ app.all('/api/portal/:action', async (req, res) => {
           ? {token: req.body?.token, email: req.body?.email,
               agency_slug: req.body?.agency_slug,
               password: req.body?.password, password_confirmation: req.body?.password_confirmation}
+        : action === 'accept-invitation'
+          ? {token: req.body?.token, agency_slug: req.body?.agency_slug,
+              password: req.body?.password, password_confirmation: req.body?.password_confirmation,
+              terms_accepted: req.body?.terms_accepted}
         : action === 'claim-device'
           ? {pin: req.body?.pin}
         : action === 'publication-create' || action === 'publication-preview'

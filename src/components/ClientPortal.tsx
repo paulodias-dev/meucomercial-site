@@ -490,6 +490,7 @@ export default function ClientPortal(){
                   {busy?'Validando acesso…':'Acessar meus serviços'}
                 </button>
               </form>
+              <p className='mt-3 text-center text-xs text-slate-600'>Recebeu um convite da sua agência? <a href='/convite' className='font-semibold text-blue-700 hover:underline'>Ativar meu acesso</a></p>
               {googleReady&&agencyValid&&<div className='mt-6 border-t border-black/10 pt-5'>
                 <p className='text-center text-xs text-black/50 mb-3'>ou continue com</p>
                 <div ref={googleButtonRef} className='flex justify-center min-h-10' aria-label='Continuar com Google'/>
