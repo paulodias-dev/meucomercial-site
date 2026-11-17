@@ -31,11 +31,10 @@ async function backendLanding(agency:string,slug:string){
   headers:{Accept:'application/json'},redirect:'error',cache:'no-store',
   signal:AbortSignal.timeout(12000),
  });
- if(upstream.status===404)return {status:404 as const,page:null,body:null};
+ if(upstream.status===404)return {status:404 as const,page:null};
  if(!upstream.ok)throw Error('Consulta indisponível.');
- const body=await upstream.json();
- const page=agencyLandingPublic(body,agency,slug);
- return {status:200 as const,page,body};
+ const page=agencyLandingPublic(await upstream.json(),agency,slug);
+ return {status:200 as const,page};
 }
 
 export function registerAgencyLandingApiRoutes(app:Express){
@@ -45,7 +44,18 @@ export function registerAgencyLandingApiRoutes(app:Express){
    const result=await backendLanding(agency,slug);
    res.set('Cache-Control','no-store');
    if(result.status===404)return res.status(404).json({message:errorMessage(404)});
-   return res.status(200).json(result.body);
+   // Return only fields validated as public, never mirror an upstream
+   // Laravel object that might gain private properties in a future release.
+   const page=result.page!;
+   return res.status(200).json({data:{
+    agency_slug:page.agencySlug,slug:page.slug,agency_name:page.agencyName,
+    title:page.title,headline:page.headline,subtitle:page.subtitle,
+    cta_label:page.ctaLabel,cta_url:page.ctaUrl,
+    primary_color:page.primaryColor,secondary_color:page.secondaryColor,
+    sections:page.sections,published_at:page.publishedAt,
+    version:page.version,public_path:page.publicPath,
+    lead_capture_enabled:page.leadCaptureEnabled,
+   }});
   }catch{
    return res.status(503).set('Cache-Control','no-store')
     .json({message:'Página temporariamente indisponível.'});
