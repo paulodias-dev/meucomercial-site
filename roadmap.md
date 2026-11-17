@@ -1252,3 +1252,15 @@ Guia: docs/SITE_INDOOR_AGENCY_READINESS_20261029.md.
 
 Guia: docs/SITE_STUDIO_CREATIVE_MEDIA_20261030.md.
 **Implementação estimada 98% no escopo ampliado**, sem homologação.
+
+
+## ENTREGA VERTICAL M10 — LANDING PAGES DE AGÊNCIAS COM SEO SSR (17/11/2026)
+
+- [x] Nova rota pública /p/:agency/:slug no Express original, antes do Vite/static catch-all; origem do Laravel configurada por MEUCOMERCIAL_API_URL exclusivamente server-side, sem revelar credenciais no Vite.
+- [x] Fetch público read-only de páginas approved/published e tenant ativo, sem cookies nem redirects, com HTTPS obrigatório em produção e timeout. 404/noindex para rascunhos/retiradas, 503/noindex para indisponibilidade da API.
+- [x] HTML SSR mobile-first com hero, seções, CTA externo HTTPS, paleta de cores validada, escape XSS, CSP e metadados indexáveis title, description, canonical, OG/Twitter/locale pt-BR.
+- [x] Sitemap dinâmico paginado com índice /sitemap-agency-pages.xml, URL sets /sitemap-agency-pages-N.xml e robots.txt existente preservado/anunciando o novo sitemap.
+- [x] Testes Node puros do render, URL, tenant, XSS, CTA e XML/sitemap adicionados ao build do site existente. Não cria novo frontend nem templates fictícios.
+- [ ] Executar npm ci, npm run lint, npm run build, teste HTTP real do Express, SEO mobile e 404 depois de 30s de cache em ambiente QA.
+- [ ] Domínio próprio, checkout, CRM lead conversion e mídia privada não foram integrados à LP nesta etapa. É publicação no domínio do Meu Comercial, não promessa de todos os módulos legados.
+- [ ] Progresso global homologado não aferido; sem merge/deploy nesta sessão.

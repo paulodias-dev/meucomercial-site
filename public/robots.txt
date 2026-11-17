@@ -2,3 +2,9 @@ User-agent: *
 Allow: /
 
 Sitemap: https://meucomercial.com.br/sitemap.xml
+
+Disallow: /api/
+Disallow: /portal
+Disallow: /acompanhar
+Disallow: /convite
+Sitemap: https://meucomercial.com.br/sitemap-agency-pages.xml
