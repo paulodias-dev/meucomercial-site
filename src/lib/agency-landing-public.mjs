@@ -49,6 +49,7 @@ export function publicPagePayload(raw,agency,slug){
   ctaLabel:string('cta_label',60,true),
   ctaUrl:cta,primaryColor:color('primary_color'),
   secondaryColor:color('secondary_color'),sections,
+  captureEnabled:row.capture_enabled===true,
   agency,slug,
  };
 }
@@ -56,12 +57,32 @@ export const escapePublicHtml=value=>String(value)
  .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;')
  .replaceAll('"','&quot;').replaceAll("'",'&#39;');
 
-export function renderPublicAgencyPage(page){
+export function renderPublicAgencyPage(page,options={}){
  const e=escapePublicHtml;
  const origin='https://meucomercial.com.br';
  const canonical=`${origin}/p/${page.agency}/${page.slug}`;
  const description=(page.subtitle||page.headline).slice(0,280);
  const pageTitle=`${page.title} | ${page.agencyName}`;
+ const utm=options.utm??{};
+ const form=page.captureEnabled?`<section id="contato" class="section contact" aria-labelledby="contact-heading"><div class="shell">
+ <h2 id="contact-heading" class="section-heading">Receba um contato da equipe</h2>
+ <p>Informe seus dados para que a agência converse com você sobre esta proposta.</p>
+ <form method="post" action="/p/${page.agency}/${page.slug}/leads" class="contact-form">
+ <input type="hidden" name="idempotency_key" value="${e(options.requestId??'')}"/>
+ <input type="hidden" name="utm_source" value="${e(utm.source??'')}"/>
+ <input type="hidden" name="utm_medium" value="${e(utm.medium??'')}"/>
+ <input type="hidden" name="utm_campaign" value="${e(utm.campaign??'')}"/>
+ <label>Seu nome <input name="name" autocomplete="name" minlength="2" maxlength="150" required/></label>
+ <label>Empresa (opcional) <input name="company" autocomplete="organization" maxlength="150"/></label>
+ <label>E-mail <input name="email" type="email" autocomplete="email" maxlength="100"/></label>
+ <label>WhatsApp / telefone <input name="phone" type="tel" autocomplete="tel" maxlength="30"/></label>
+ <label class="full">Mensagem (opcional) <textarea name="message" maxlength="2000" rows="3"></textarea></label>
+ <div class="website-check" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"/></label></div>
+ <label class="consent full"><input type="checkbox" name="consent" value="1" required/>
+ Autorizo esta agência a utilizar meus dados para responder ao contato. Não há contratação automática.</label>
+ <button type="submit" class="cta">Enviar meus dados</button>
+ <p class="privacy">Informe ao menos e-mail ou telefone. Seus dados não aparecem nesta página pública.</p>
+ </form></div></section>`:'';
  const sections=page.sections.map((section,index)=>
   `<article class="feature" aria-labelledby="feature-${index}">
    <span class="eyebrow">${e(section.type==='faq'?'Pergunta frequente':section.type==='proof'?'Referência':'Benefício')}</span>
@@ -106,12 +127,19 @@ export function renderPublicAgencyPage(page){
  .feature{background:white;padding:clamp(22px,4vw,34px);border:1px solid #e5eaf3;border-radius:20px;box-shadow:0 4px 24px #253c5a08}
  .feature .eyebrow{color:var(--primary)}.feature h3{font-size:21px;letter-spacing:-.4px;overflow-wrap:anywhere}
  .feature p{font-size:15px;color:#55637b;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+ .contact{background:#f5f7fc}.contact-form{max-width:790px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:26px}
+ .contact-form label{display:grid;gap:8px;font-size:14px;font-weight:650}.contact-form .full{grid-column:1/-1}
+ .contact-form input:not([type=checkbox]),.contact-form textarea{width:100%;min-height:48px;border:1px solid #aebbd0;border-radius:10px;padding:12px;font:inherit;background:white;color:#172033}
+ .contact-form textarea{min-height:100px;resize:vertical}.contact-form .consent{display:flex;align-items:flex-start;gap:10px;line-height:1.5;font-weight:450}
+ .contact-form .consent input{margin-top:4px;width:20px;height:20px;flex:none}.contact-form button{cursor:pointer;grid-column:1/-1;border:0;background:var(--primary);color:white;font:inherit}
+ .contact-form input:focus-visible,.contact-form textarea:focus-visible,.contact-form button:focus-visible{outline:3px solid #f6c947;outline-offset:2px}
+ .contact-form .privacy{grid-column:1/-1;font-size:12px;color:#56637a;margin:0}.website-check{position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden}
  .end{background:#f0f4fa;text-align:center}.end .shell{display:grid;justify-items:center;gap:18px}
  .end h2{font-size:clamp(26px,4vw,42px);margin:0;letter-spacing:-1px}
  .end .cta{background:var(--primary);color:white}
  footer{padding:30px 0;font-size:12px;color:#65728b;border-top:1px solid #e8edf4}
  footer .shell{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px}
- @media(max-width:500px){header .shell{min-height:68px}.nav{display:none}h1{letter-spacing:-1.1px}.cta{width:100%}}
+ @media(max-width:500px){header .shell{min-height:68px}.nav{display:none}h1{letter-spacing:-1.1px}.cta{width:100%}.contact-form{grid-template-columns:1fr}}
  </style></head><body>
  <header><div class="shell"><div class="brand">${e(page.agencyName)}</div>
  <span class="nav">Apresentação comercial</span></div></header>
@@ -124,6 +152,7 @@ export function renderPublicAgencyPage(page){
  ${sections?`<section class="section" aria-label="Benefícios e informações"><div class="shell">
  <h2 class="section-heading">Conheça nossa proposta</h2>
  <div class="features">${sections}</div></div></section>`:''}
+ ${form}
  <section class="section end"><div class="shell">
  <h2>${e(page.headline)}</h2>
  <a class="cta" href="${e(page.ctaUrl)}" rel="noopener noreferrer">${e(page.ctaLabel)}</a>
