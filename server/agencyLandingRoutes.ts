@@ -1,6 +1,6 @@
 import type {Express,Request,Response} from 'express';
 import {
- agencyLandingApiPath,agencyLandingPath,agencyLandingPublic,
+ agencyLandingPath,agencyLandingPublic,
  type AgencyLandingPublic,
 } from '../src/lib/agencyLandingPublic';
 
@@ -31,10 +31,11 @@ async function backendLanding(agency:string,slug:string){
   headers:{Accept:'application/json'},redirect:'error',cache:'no-store',
   signal:AbortSignal.timeout(12000),
  });
- if(upstream.status===404)return {status:404 as const,page:null};
+ if(upstream.status===404)return {status:404 as const,page:null,body:null};
  if(!upstream.ok)throw Error('Consulta indisponível.');
- const page=agencyLandingPublic(await upstream.json(),agency,slug);
- return {status:200 as const,page};
+ const body=await upstream.json();
+ const page=agencyLandingPublic(body,agency,slug);
+ return {status:200 as const,page,body};
 }
 
 export function registerAgencyLandingApiRoutes(app:Express){
@@ -44,7 +45,7 @@ export function registerAgencyLandingApiRoutes(app:Express){
    const result=await backendLanding(agency,slug);
    res.set('Cache-Control','no-store');
    if(result.status===404)return res.status(404).json({message:errorMessage(404)});
-   return res.status(200).json({data:result.page});
+   return res.status(200).json(result.body);
   }catch{
    return res.status(503).set('Cache-Control','no-store')
     .json({message:'Página temporariamente indisponível.'});
