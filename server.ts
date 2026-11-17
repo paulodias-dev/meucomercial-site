@@ -765,8 +765,10 @@ app.get('/p/:agency/:slug',async(req,res)=>{
       .type('text').send('Página temporariamente indisponível.');
     const payload=await upstream.json();
     const page=publicPagePayload(payload,agency,slug);
-    const safeUtm=(name:string)=>typeof req.query[name]==='string'&&req.query[name].length<=80
-      ?req.query[name]:'';
+    const safeUtm=(name:string)=>{
+      const value=req.query[name];
+      return typeof value==='string'&&value.length<=80?value:'';
+    };
     const html=renderPublicAgencyPage(page,{
       requestId:page.captureEnabled?randomUUID():undefined,
       utm:{source:safeUtm('utm_source'),medium:safeUtm('utm_medium'),campaign:safeUtm('utm_campaign')},
