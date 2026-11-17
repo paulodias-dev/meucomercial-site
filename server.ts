@@ -4,6 +4,7 @@ import path from "path";
 import {readFileSync} from "node:fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
+import {registerAgencyLandingApiRoutes,registerAgencyLandingHtmlRoute} from "./server/agencyLandingRoutes";
 
 // Load environment variables
 dotenv.config();
@@ -13,6 +14,7 @@ const requestedPort = Number(process.env.PORT ?? '3000');
 const PORT = Number.isInteger(requestedPort) && requestedPort > 0 && requestedPort < 65536 ? requestedPort : 3000;
 
 app.use(express.json());
+registerAgencyLandingApiRoutes(app);
 
 const PORTAL_SESSION_COOKIE = 'mc_portal_session';
 const PORTAL_PERSIST_COOKIE = 'mc_portal_persist';
@@ -689,11 +691,18 @@ async function startServer() {
       server: { middlewareMode: true },
       appType: "spa",
     });
+    registerAgencyLandingHtmlRoute(app,async requestPath=>{
+      const html=readFileSync(path.join(process.cwd(),'index.html'),'utf8');
+      return vite.transformIndexHtml(requestPath,html);
+    });
     app.use(vite.middlewares);
   } else {
     console.log("Iniciando servidor em modo PRODUÇÃO...");
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath, {index: false}));
+    registerAgencyLandingHtmlRoute(app,async()=>{
+      return readFileSync(path.join(distPath,'index.html'),'utf8');
+    });
     // The authenticated client portal must never inherit the indexable public
     // homepage metadata, even for bots that never execute JavaScript.
     app.get(['/portal', '/portal/'], (_req, res) => {
