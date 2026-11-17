@@ -3,6 +3,7 @@ import {ArrowUpRight,CheckCircle2,Mail,ShieldCheck} from 'lucide-react';
 import SEO from './SEO';
 import {
  agencyLandingApiPath,agencyLandingPublic,agencyLandingLeadPayload,
+ readableLandingText,
  type AgencyLandingPublic,
 } from '../lib/agencyLandingPublic';
 
@@ -74,18 +75,19 @@ export default function AgencyLandingPublicPage({agency,slug}:{agency:string;slu
    </div>
   </header>
   <main>
-   <section className="px-5 py-16 text-white sm:px-8 sm:py-24" style={{backgroundColor:page.primaryColor}}>
+   <section className="px-5 py-16 sm:px-8 sm:py-24" style={{backgroundColor:page.primaryColor,color:readableLandingText(page.primaryColor)}}>
     <div className="mx-auto max-w-6xl space-y-7">
      <p className="text-sm font-semibold uppercase tracking-[.18em] opacity-85">{page.agencyName}</p>
      <h1 className="max-w-4xl break-words text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">{page.headline}</h1>
      {page.subtitle&&<p className="max-w-2xl whitespace-pre-wrap break-words text-lg opacity-90 sm:text-xl">{page.subtitle}</p>}
      <div className="flex flex-wrap gap-3">
       <a href={page.ctaUrl} target="_blank" rel="noopener noreferrer"
-       className="inline-flex items-center gap-2 rounded-lg px-6 py-3 font-bold text-white shadow-lg hover:opacity-90"
-       style={{backgroundColor:page.secondaryColor}}>
+       className="inline-flex items-center gap-2 rounded-lg px-6 py-3 font-bold shadow-lg hover:opacity-90"
+       style={{backgroundColor:page.secondaryColor,color:readableLandingText(page.secondaryColor)}}>
        {page.ctaLabel} <ArrowUpRight size={18}/>
       </a>
-      <a href="#contato" className="rounded-lg border border-white/70 px-6 py-3 font-semibold text-white hover:bg-white/10">
+      <a href="#contato" className="rounded-lg border px-6 py-3 font-semibold hover:opacity-80"
+       style={{borderColor:readableLandingText(page.primaryColor),color:readableLandingText(page.primaryColor)}}>
        Receber atendimento
       </a>
      </div>
@@ -148,8 +150,8 @@ export default function AgencyLandingPublicPage({agency,slug}:{agency:string;slu
        </label>
        {sendError&&<p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">{sendError}</p>}
        <button type="submit" disabled={sending||!consent}
-        className="rounded-lg px-5 py-3 font-bold text-white disabled:opacity-50 hover:opacity-90"
-        style={{backgroundColor:page.primaryColor}}>
+        className="rounded-lg px-5 py-3 font-bold disabled:opacity-50 hover:opacity-90"
+        style={{backgroundColor:page.primaryColor,color:readableLandingText(page.primaryColor)}}>
         {sending?'Registrando solicitação...':'Enviar solicitação'}
        </button>
       </form>}
