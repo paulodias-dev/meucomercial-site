@@ -735,7 +735,7 @@ app.get('/p/:agency/:slug',async(req,res)=>{
   const configured=process.env.MEUCOMERCIAL_API_URL?.trim();
   if(!configured)return res.status(503).set('X-Robots-Tag','noindex')
     .type('text').send('Página temporariamente indisponível.');
-  let upstreamUrl;
+  let upstreamUrl: URL;
   try{
     const base=new URL(configured.endsWith('/')?configured:configured+'/');
     if(base.protocol!=='https:'&&!(process.env.NODE_ENV!=='production'&&
