@@ -2,9 +2,11 @@ import express from "express";
 import type { Request, Response } from "express";
 import path from "path";
 import {readFileSync} from "node:fs";
+import {randomUUID} from "node:crypto";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import {publicPagePayload,renderPublicAgencyPage,agencySlugPattern,publicSitemapPayload,renderAgencySitemapIndex,renderAgencySitemapPage} from "./src/lib/agency-landing-public.mjs";
+import {registerAgencyLandingContact} from "./src/lib/agency-landing-contact.mjs";
 
 // Load environment variables
 dotenv.config();
@@ -725,6 +727,9 @@ app.get('/sitemap-agency-pages-:page.xml',async(req,res)=>{
   }
 });
 
+// Consent-based Landing Page POST is registered before the HTML GET and Vite fallback.
+registerAgencyLandingContact(app,express);
+
 // Public SSR route is registered BEFORE Vite and static SPA fallback.
 // Secrets stay server-side. No authentication cookies are forwarded to Laravel.
 // The endpoint provides exactly one published agency page, never a draft.
@@ -760,12 +765,19 @@ app.get('/p/:agency/:slug',async(req,res)=>{
       .type('text').send('Página temporariamente indisponível.');
     const payload=await upstream.json();
     const page=publicPagePayload(payload,agency,slug);
-    const html=renderPublicAgencyPage(page);
+    const safeUtm=(name:string)=>{
+      const value=req.query[name];
+      return typeof value==='string'&&value.length<=80?value:'';
+    };
+    const html=renderPublicAgencyPage(page,{
+      requestId:page.captureEnabled?randomUUID():undefined,
+      utm:{source:safeUtm('utm_source'),medium:safeUtm('utm_medium'),campaign:safeUtm('utm_campaign')},
+    });
     return res.status(200)
-      .set('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self' https:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+      .set('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self' https:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'")
       .set('X-Content-Type-Options','nosniff')
       .set('Referrer-Policy','strict-origin-when-cross-origin')
-      .set('Cache-Control','public,max-age=30,s-maxage=30')
+      .set('Cache-Control',page.captureEnabled?'private,no-store':'public,max-age=30,s-maxage=30')
       .type('html').send(html);
   }catch{
     return res.status(503).set('X-Robots-Tag','noindex')
