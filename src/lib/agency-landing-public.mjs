@@ -132,3 +132,32 @@ export function renderPublicAgencyPage(page){
  <span>Informações e condições devem ser confirmadas diretamente com a empresa.</span></div></footer>
  </body></html>`;
 }
+
+/** Discovery never includes drafts or private URLs: Laravel filters status. */
+export function publicSitemapPayload(raw,page){
+ if(!Number.isInteger(page)||page<1)throw Error('Sitemap page inválida.');
+ const rows=raw?.data,paging=raw?.pagination;
+ if(!Array.isArray(rows)||!paging||typeof paging!=='object'
+    ||!Number.isSafeInteger(paging.total)||paging.total<0
+    ||!Number.isSafeInteger(paging.last_page)||paging.last_page<1
+    ||paging.page!==page||rows.length>100)
+  throw Error('Sitemap da API incompatível.');
+ const entries=rows.map(row=>{
+  if(!row||typeof row.path!=='string'||!/^\/p\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/.test(row.path)||
+    typeof row.lastmod!=='string'||!/^\d{4}-\d{2}-\d{2}/.test(row.lastmod))
+   throw Error('Entrada de sitemap inválida.');
+  return {loc:'https://meucomercial.com.br'+row.path,lastmod:row.lastmod.slice(0,10)};
+ });
+ return {entries,lastPage:paging.last_page,total:paging.total};
+}
+export function renderAgencySitemapIndex(lastPage){
+ if(!Number.isSafeInteger(lastPage)||lastPage<1||lastPage>10000)
+  throw Error('Sitemap requer divisão/validação de lotes.');
+ const urls=Array.from({length:lastPage},(_,i)=>
+  `<sitemap><loc>https://meucomercial.com.br/sitemap-agency-pages-${i+1}.xml</loc></sitemap>`).join('');
+ return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</sitemapindex>`;
+}
+export function renderAgencySitemapPage(entries){
+ const urls=entries.map(row=>`<url><loc>${escapePublicHtml(row.loc)}</loc><lastmod>${escapePublicHtml(row.lastmod)}</lastmod></url>`).join('');
+ return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`;
+}
