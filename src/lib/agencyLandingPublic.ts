@@ -89,3 +89,14 @@ export function agencyLandingLeadPayload(input:{
   privacy_consent:true,website:input.website.trim(),
  };
 }
+
+/** Choose AA-friendly text against a saved brand color (light/dark). */
+export function readableLandingText(hexColor:string):'#0F172A'|'#FFFFFF'{
+ if(!hex.test(hexColor))throw Error('Paleta inválida.');
+ const rgb=[1,3,5].map(i=>parseInt(hexColor.slice(i,i+2),16)/255);
+ const channels=rgb.map(c=>c<=0.04045?c/12.92:((c+0.055)/1.055)**2.4);
+ const luminance=channels[0]*0.2126+channels[1]*0.7152+channels[2]*0.0722;
+ const blackContrast=(luminance+0.05)/0.05;
+ const whiteContrast=1.05/(luminance+0.05);
+ return blackContrast>=whiteContrast?'#0F172A':'#FFFFFF';
+}
