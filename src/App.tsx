@@ -22,6 +22,7 @@ import type {TVLayout} from './components/MarketingTypes';
 import AudienceJourneys, {type CommercialAudience} from "./components/AudienceJourneys";
 const ClientPortal = React.lazy(() => import("./components/ClientPortal"));
 const InvitationPage = React.lazy(() => import("./components/InvitationPage"));
+const AgencyLandingPublicPage=React.lazy(()=>import("./components/AgencyLandingPublicPage"));
 
 // --- Shared marketing domain contracts ---
 
@@ -374,6 +375,14 @@ export default function App() {
   };
 
   // Dedicated client JWT area, not the agency Admin or the lead flow.
+  const agencyLandingMatch=window.location.pathname.match(
+    /^\/p\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/
+  );
+  if(agencyLandingMatch){
+    return <React.Suspense fallback={<div role="status">Carregando página...</div>}>
+      <AgencyLandingPublicPage agency={agencyLandingMatch[1]} slug={agencyLandingMatch[2]}/>
+    </React.Suspense>;
+  }
   if (window.location.pathname === '/convite' || window.location.pathname === '/convite/') {
     return <React.Suspense fallback={<main role="status">Carregando...</main>}><InvitationPage /></React.Suspense>;
   }
