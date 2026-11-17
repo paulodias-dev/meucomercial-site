@@ -1264,3 +1264,15 @@ Guia: docs/SITE_STUDIO_CREATIVE_MEDIA_20261030.md.
 - [ ] Executar npm ci, npm run lint, npm run build, teste HTTP real do Express, SEO mobile e 404 depois de 30s de cache em ambiente QA.
 - [ ] Domínio próprio, checkout, CRM lead conversion e mídia privada não foram integrados à LP nesta etapa. É publicação no domínio do Meu Comercial, não promessa de todos os módulos legados.
 - [ ] Progresso global homologado não aferido; sem merge/deploy nesta sessão.
+
+---
+
+## MACROENTREGA INTEGRADA M11 — LP → CRM → RESPONSÁVEL → CLIENTE/ORÇAMENTO (17/11/2026)
+
+- [x] Uma jornada completa em código e PRs coordenados dos três repositórios: formulário público SSR opt-in por Landing Page, envio same-origin sem JavaScript, persistência no `agency_marketing_leads` existente, filtro e responsável por agência no Metronic Demo1, indicadores SQL de etapas, reaproveitamento de conversão de cliente e orçamento existentes. Nenhuma tabela nova de leads, novo Admin, checkout ou recebível fictício.
+- [x] Proteções: tenant derivado da página publicada e ativa, autorização Laravel em todas as leituras/alterações privadas, consentimento, honeypot, payload allowlist, UUID idempotente por tenant, 409 para intenção divergente, CAS e recusa de usuário atribuído de outra agência; respostas públicas sem PII.
+- [x] Contratos tipados/Swagger e regressões em PHPUnit/Node/React adicionados ao código. Métricas de `won` representam **etapa informada no CRM**, não vendas pagas. Sem contagem de visitas sem analytics real.
+- [ ] Implantar migration aditiva em ambiente MySQL8 QA e executar testes API, npm/TS, navegação mobile, POST real sem JS, isolamento de duas agências, publicação/retirada, atribuição, conversão em cliente, orçamento e pedido; usar evidências com SHA/data/ambiente. Nenhum teste externo/deploy foi executado via conector GitHub.
+- [ ] Cutover continua NO-GO até os gates M10; progresso global homologado **não aferido**, sem avançar percentual pela mera existência de código.
+- **Documentação de release**: `docs/M11_LANDING_CRM_CONVERSAO_INTEGRADA.md` no próprio repositório. Ordem de deploy API+migration → Site → Metronic; desativar captação em falha; rollback nunca descarta leads anônimos.
+- **Próxima macro vertical proposta**: completar operação Rádio/TV em Player físico — edição, grades, sincronização e reprodução comprovada por evento do próprio Player, sem alegar audiência auditada.
