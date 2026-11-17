@@ -93,11 +93,11 @@ test('M11: formulário LP é estritamente opt-in e SSR sem JavaScript',()=>{
   utm:{source:'<script>alert(1)</script>',medium:'organic',campaign:'oferta'},
  });
  assert.match(html,/method="post"/);
- assert.match(html,/action="\\/p\\/agencia-aracaju\\/campanha-de-natal\\/leads"/);
+ assert.ok(html.includes('action="/p/agencia-aracaju/campanha-de-natal/leads"'));
  assert.match(html,/name="consent" value="1" required/);
  assert.match(html,/name="website"/);
  assert.match(html,/name="idempotency_key"/);
- assert.match(html,/&lt;script&gt;alert\\(1\\)&lt;\\/script&gt;/);
+ assert.ok(html.includes('&lt;script&gt;alert(1)&lt;/script&gt;'));
  assert.doesNotMatch(html,/<script>/);
  assert.doesNotMatch(html,/type="password"/);
  assert.doesNotMatch(landingContactResult('agencia-aracaju','campanha-de-natal',true,
