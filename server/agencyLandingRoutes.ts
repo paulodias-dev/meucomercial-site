@@ -122,6 +122,22 @@ export function renderAgencyLandingHtml(template:string,page:AgencyLandingPublic
  html=html.replace(/<meta\s+(?:name|property)="(?:description|keywords|robots|googlebot|theme-color|og:[^"]+|twitter:[^"]+)"[^>]*\/?\s*>/gi,'');
  html=html.replace(/<link\s+rel="(?:canonical|alternate)"[^>]*\/?\s*>/gi,'');
  html=html.replace(/<script\s+id="seo-jsonld"[^>]*>[\s\S]*?<\/script>/gi,'');
+ // Render real, escaped editorial content for no-JS crawlers as well. React
+ // createRoot replaces this initial markup with the interactive landing form.
+ // Never render untrusted editor HTML or JavaScript.
+ const sections=page.sections.map(part=>
+  '<section><h2>'+escapeHtml(part.title)+'</h2><p>'+escapeHtml(part.body)+'</p></section>'
+ ).join('');
+ const article='<main lang="pt-BR" data-server-landing="true">'+
+  '<header><p>'+escapeHtml(page.agencyName)+'</p></header>'+
+  '<h1>'+escapeHtml(page.headline)+'</h1>'+
+  '<p>'+escapeHtml(page.subtitle)+'</p>'+
+  '<p><a href="'+escapeHtml(page.ctaUrl)+'" rel="noopener noreferrer">'+
+   escapeHtml(page.ctaLabel)+'</a></p>'+sections+
+  '<p>Solicite atendimento à agência pelo formulário nesta página.</p>'+
+  '</main>';
+ html=html.replace('<div id="root"></div>',
+  '<div id="root">'+article+'</div>');
  return html.replace('</head>',dynamic+'\n</head>');
 }
 
