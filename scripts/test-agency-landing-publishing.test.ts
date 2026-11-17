@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {agencyLandingApiPath,agencyLandingLeadPayload,agencyLandingPublic} from '../src/lib/agencyLandingPublic';
+import {agencyLandingApiPath,agencyLandingLeadPayload,agencyLandingPublic,readableLandingText} from '../src/lib/agencyLandingPublic';
 import {renderAgencyLandingHtml} from '../server/agencyLandingRoutes';
 
 const landing={
@@ -36,6 +36,9 @@ test('HTML SEO servido sem hydration descreve agência correta e não reaproveit
  assert.match(html,/<meta name="robots" content="index, follow"/);
  assert.match(html,/<script id="seo-jsonld" type="application\/ld\+json">/);
  assert.equal((html.match(/<link rel="canonical"/g)||[]).length,1);
+ assert.match(html,/<main lang="pt-BR" data-server-landing="true">/);
+ assert.match(html,/<h1>Sua empresa em destaque<\/h1>/);
+ assert.match(html,/<h2>Atendimento<\/h2>/);
 });
 test('SEO escapa conteúdo editorial malicioso, sem injetar HTML ou JSON-LD executável',()=>{
  const malicious={...landing,title:'<script>alert("x")</script>',
@@ -59,4 +62,10 @@ test('formulário público exige consentimento e UUID estável para reenvio',()=
  assert.equal((payload as Record<string,unknown>).client_id,undefined);
  assert.throws(()=>agencyLandingLeadPayload({...valid,consent:false}),/consentir/);
  assert.throws(()=>agencyLandingLeadPayload({...valid,requestId:'abc'}),/inválido/);
+});
+
+test('contraste do texto adapta paletas claras e escuras da agência',()=>{
+ assert.equal(readableLandingText('#FFFFFF'),'#0F172A');
+ assert.equal(readableLandingText('#000000'),'#FFFFFF');
+ assert.throws(()=>readableLandingText('white'),/Paleta/);
 });
