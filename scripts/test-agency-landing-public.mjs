@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {publicPagePayload,renderPublicAgencyPage,publicSitemapPayload,renderAgencySitemapIndex,renderAgencySitemapPage} from '../src/lib/agency-landing-public.mjs';
+import {landingContactResult,registerAgencyLandingContact} from '../src/lib/agency-landing-contact.mjs';
 
 const sample={
  data:{
@@ -81,4 +82,72 @@ test('sitemap rejeita URLs injetadas, paginas inválidas e contagens inconsisten
  assert.throws(()=>publicSitemapPayload({
   data:[],pagination:{page:2,last_page:2,total:150,per_page:100},
  },1),/incompatível/);
+});
+
+test('M11: formulário LP é estritamente opt-in e SSR sem JavaScript',()=>{
+ const hidden=renderPublicAgencyPage(publicPagePayload(sample,'agencia-aracaju','campanha-de-natal'));
+ assert.doesNotMatch(hidden,/name="idempotency_key"/);
+ const payload=publicPagePayload({data:{...sample.data,capture_enabled:true}},'agencia-aracaju','campanha-de-natal');
+ const html=renderPublicAgencyPage(payload,{
+  requestId:'e2c9e705-64d7-412a-8c61-ad47e85eae0d',
+  utm:{source:'<script>alert(1)</script>',medium:'organic',campaign:'oferta'},
+ });
+ assert.match(html,/method="post"/);
+ assert.match(html,/action="\\/p\\/agencia-aracaju\\/campanha-de-natal\\/leads"/);
+ assert.match(html,/name="consent" value="1" required/);
+ assert.match(html,/name="website"/);
+ assert.match(html,/name="idempotency_key"/);
+ assert.match(html,/&lt;script&gt;alert\\(1\\)&lt;\\/script&gt;/);
+ assert.doesNotMatch(html,/<script>/);
+ assert.doesNotMatch(html,/type="password"/);
+ assert.doesNotMatch(landingContactResult('agencia-aracaju','campanha-de-natal',true,
+  'Recebido'),/idempotency_key|name="email"/);
+});
+
+test('M11: handler público só confirma lead quando API realmente recebeu',async()=>{
+ let route,handler,call;
+ const app={post:(path,_parser,action)=>{route=path;handler=action;}};
+ registerAgencyLandingContact(app,{urlencoded:()=>null});
+ assert.equal(route,'/p/:agency/:slug/leads');
+ const original=globalThis.fetch,configured=process.env.MEUCOMERCIAL_API_URL;
+ const data={idempotency_key:'e2c9e705-64d7-412a-8c61-ad47e85eae0d',
+  name:'Contato público',email:'contato@example.com',consent:'1'};
+ const invoke=async(body=data)=>{
+  const result={statusCode:0,html:'',headers:{}};
+  const res={
+   status(code){result.statusCode=code;return this;},
+   set(a,b){if(typeof a==='string')result.headers[a]=b;return this;},
+   type(){return this;},
+   send(html){result.html=html;return this;},
+  };
+  await handler({params:{agency:'agencia-aracaju',slug:'campanha-de-natal'},body},res);
+  return result;
+ };
+ try{
+  process.env.MEUCOMERCIAL_API_URL='https://api.example.com/api/';
+  globalThis.fetch=async(url,options)=>{
+   call={url:String(url),options};
+   return {status:201,json:async()=>({received:true})};
+  };
+  const ok=await invoke();
+  assert.equal(ok.statusCode,200);
+  assert.match(ok.html,/Solicitação recebida/);
+  assert.doesNotMatch(ok.html,/contato@example.com|Contato público/);
+  assert.equal(call.url,'https://api.example.com/api/site/agency-pages/agencia-aracaju/campanha-de-natal/leads');
+  assert.equal(call.options.headers.Authorization,undefined);
+  assert.equal(call.options.headers.Cookie,undefined);
+  const request=JSON.parse(call.options.body);
+  assert.equal(request.name,'Contato público');
+  assert.equal(request.tenant_id,undefined);
+  globalThis.fetch=async()=>({status:201,json:async()=>({received:false})});
+  const rejected=await invoke();
+  assert.equal(rejected.statusCode,422);
+  globalThis.fetch=async()=>({status:429});
+  assert.equal((await invoke()).statusCode,429);
+  assert.equal((await invoke({...data,consent:'0'})).statusCode,422);
+ }finally{
+  globalThis.fetch=original;
+  if(configured===undefined)delete process.env.MEUCOMERCIAL_API_URL;
+  else process.env.MEUCOMERCIAL_API_URL=configured;
+ }
 });
