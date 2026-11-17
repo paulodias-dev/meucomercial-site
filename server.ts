@@ -4,6 +4,7 @@ import path from "path";
 import {readFileSync} from "node:fs";
 import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
+import {publicPagePayload,renderPublicAgencyPage,agencySlugPattern} from "./src/lib/agency-landing-public.mjs";
 
 // Load environment variables
 dotenv.config();
@@ -679,6 +680,55 @@ app.post("/api/consult", async (req, res) => {
     success: true, 
     answer: answer + `\n\n*(Nota: Esta estratégia foi preparada com base no segmento selecionado. Para soluções personalizadas e integradas, fale com nosso time!)*`
   });
+});
+
+// Public SSR route is registered BEFORE Vite and static SPA fallback.
+// Secrets stay server-side. No authentication cookies are forwarded to Laravel.
+// The endpoint provides exactly one published agency page, never a draft.
+app.get('/p/:agency/:slug',async(req,res)=>{
+  const {agency,slug}=req.params;
+  if(!agencySlugPattern.test(agency)||!agencySlugPattern.test(slug))
+    return res.status(404).set('X-Robots-Tag','noindex').type('text').send('Página não encontrada.');
+  const configured=process.env.MEUCOMERCIAL_API_URL?.trim();
+  if(!configured)return res.status(503).set('X-Robots-Tag','noindex')
+    .type('text').send('Página temporariamente indisponível.');
+  let upstreamUrl;
+  try{
+    const base=new URL(configured.endsWith('/')?configured:configured+'/');
+    if(base.protocol!=='https:'&&!(process.env.NODE_ENV!=='production'&&
+      ['localhost','127.0.0.1'].includes(base.hostname)))
+      throw Error('O Laravel deve usar HTTPS.');
+    upstreamUrl=new URL('site/agency-pages/'+agency+'/'+slug,base);
+  }catch{
+    return res.status(503).set('X-Robots-Tag','noindex')
+      .type('text').send('Página temporariamente indisponível.');
+  }
+  try{
+    const upstream=await fetch(upstreamUrl,{method:'GET',
+      headers:{Accept:'application/json'},redirect:'error',
+      signal:AbortSignal.timeout(9000)});
+    if(upstream.status===404)return res.status(404)
+      .set('X-Robots-Tag','noindex,noarchive')
+      .set('Cache-Control','public,max-age=15')
+      .type('text').send('Página não encontrada.');
+    if(!upstream.ok)return res.status(503)
+      .set('X-Robots-Tag','noindex')
+      .set('Cache-Control','no-store')
+      .type('text').send('Página temporariamente indisponível.');
+    const payload=await upstream.json();
+    const page=publicPagePayload(payload,agency,slug);
+    const html=renderPublicAgencyPage(page);
+    return res.status(200)
+      .set('Content-Security-Policy',"default-src 'none'; style-src 'unsafe-inline'; img-src 'self' https:; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+      .set('X-Content-Type-Options','nosniff')
+      .set('Referrer-Policy','strict-origin-when-cross-origin')
+      .set('Cache-Control','public,max-age=30,s-maxage=30')
+      .type('html').send(html);
+  }catch{
+    return res.status(503).set('X-Robots-Tag','noindex')
+      .set('Cache-Control','no-store')
+      .type('text').send('Página temporariamente indisponível.');
+  }
 });
 
 // Setup Vite Dev Server / Static files handler
