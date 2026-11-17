@@ -23,4 +23,4 @@ npm run build
 ```
 Depois publicar página pela API+Admin, abrir a URL real no navegador em celular e desktop, verificar código 200, metadata no HTML bruto, conteúdo, link externo, renovação de cache, e retirada com 404, em dois tenants.
 
-Esta etapa **não cria checkout de Landing Pages, não mapeia domínio customizado e não cria sitemap dinâmico**. São capacidades separadas e devem ser aprovadas antes de anunciar esse escopo. Sem execuções de npm/build, navegador ou deploy nesta sessão.
+Esta etapa **não cria checkout de Landing Pages nem mapeia domínio customizado**. O sitemap dinâmico de páginas publicadas usa `/sitemap-agency-pages.xml` e arquivos paginados `/sitemap-agency-pages-N.xml`; o robots.txt existente passa a anunciá-lo sem retirar o sitemap principal. São capacidades separadas e devem ser aprovadas antes de anunciar esse escopo. Sem execuções de npm/build, navegador ou deploy nesta sessão.
