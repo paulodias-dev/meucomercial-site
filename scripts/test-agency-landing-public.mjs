@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {publicPagePayload,renderPublicAgencyPage} from '../src/lib/agency-landing-public.mjs';
+import {publicPagePayload,renderPublicAgencyPage,publicSitemapPayload,renderAgencySitemapIndex,renderAgencySitemapPage} from '../src/lib/agency-landing-public.mjs';
 
 const sample={
  data:{
@@ -60,4 +60,25 @@ test('URL pública só permite slug estrito e nunca aceita path traversal',()=>{
  for(const slug of ['../admin','%2e%2e','a/b','<script>']){
   assert.throws(()=>publicPagePayload(sample,'agencia-aracaju',slug),/Identificador/);
  }
+});
+
+test('sitemap de agências indexa só URLs publicadas fornecidas pela API',()=>{
+ const rows=publicSitemapPayload({data:[
+  {path:'/p/agencia-aracaju/campanha-de-natal',lastmod:'2026-11-17 15:32:00'},
+ ],pagination:{page:1,last_page:2,total:150,per_page:100}},1);
+ assert.equal(rows.lastPage,2);
+ assert.equal(rows.entries.length,1);
+ assert.match(renderAgencySitemapIndex(rows.lastPage),/sitemap-agency-pages-2.xml/);
+ assert.match(renderAgencySitemapPage(rows.entries),/<loc>https:\/\/meucomercial.com.br\/p\/agencia-aracaju\/campanha-de-natal<\/loc>/);
+ assert.match(renderAgencySitemapPage(rows.entries),/<lastmod>2026-11-17<\/lastmod>/);
+});
+test('sitemap rejeita URLs injetadas, paginas inválidas e contagens inconsistentes',()=>{
+ const envelope={data:[{path:'/admin/private',lastmod:'2026-11-17'}],
+  pagination:{page:1,last_page:1,total:1,per_page:100}};
+ assert.throws(()=>publicSitemapPayload(envelope,1),/Entrada/);
+ assert.throws(()=>publicSitemapPayload({...envelope,data:[]},0),/Sitemap page/);
+ assert.throws(()=>renderAgencySitemapIndex(10001),/divisão/);
+ assert.throws(()=>publicSitemapPayload({
+  data:[],pagination:{page:2,last_page:2,total:150,per_page:100},
+ },1),/incompatível/);
 });
