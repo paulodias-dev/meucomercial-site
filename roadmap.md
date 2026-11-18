@@ -1276,3 +1276,17 @@ Guia: docs/SITE_STUDIO_CREATIVE_MEDIA_20261030.md.
 - [ ] Cutover continua NO-GO até os gates M10; progresso global homologado **não aferido**, sem avançar percentual pela mera existência de código.
 - **Documentação de release**: `docs/M11_LANDING_CRM_CONVERSAO_INTEGRADA.md` no próprio repositório. Ordem de deploy API+migration → Site → Metronic; desativar captação em falha; rollback nunca descarta leads anônimos.
 - **Próxima macro vertical proposta**: completar operação Rádio/TV em Player físico — edição, grades, sincronização e reprodução comprovada por evento do próprio Player, sem alegar audiência auditada.
+
+---
+
+## M18 — RC 1.0: FECHAMENTO DE CÓDIGO COM GATES OBJETIVOS (18/11/2026)
+
+- [x] Admin único e definitivo **paulodias-dev/metronic-admin-react-9.5.0 Demo1**, não executar/editar o Admin legado ou admin-next. Player Web v0.3 foi mesclado no PR #188 e segue autônomo. As M15–M17 já estão na main dos repositórios oficiais.
+- [x] M18 cobre lacuna funcional real de patrimônio: tela /operacao/equipamentos no Metronic nativo, busca, filtros, resumo, cadastro, edição, locação com plano/assinatura válidos, Player do mesmo cliente, arquivamento; ligação com Cliente 360/Players; API options escopada por agência sem pedir IDs digitados; testes de contratos e isolamento tenant A/B.
+- [x] Fechamento financeiro: central Master passa a calcular manual + PIX confirmado e recebe gate read-only RC1 que verifica rotas/migrações M15–M18, tentativas PIX e valor do recebível, custos de produção cross-tenant, patrimônio, grade TV/Rádio. Não atribuir extrato bancário a PIX aprovado; nenhum teste pode aprovar deploy.
+- [x] Site preserva fluxo de aquisição já existente (agência → catálogo de plano real → lead → proposta → aceite → PIX → ativação após consulta remota); sem checkout instantâneo fictício. Corrigida leitura de Cookie malformado no Portal SSR, fallback de progresso de onboarding, regressões site no build.
+- [x] Metronic: check:all passa a incluir check:rc10 (PIX, Pedido 360, patrimônio, operação TV/Rádio, publicação, master release) e auditoria read-only de contratos. Site: npm build inclui teste RC10. API: php artisan meucomercial:rc-code-readiness --json para inspeção real de schema/ledger/rotas sem escrita.
+- [x] Matriz de paridade atualizada para o escopo novo, distinguindo funções legadas deliberadamente fora do MVP (WMS, assistência técnica, chat global, newsletter, LP custom domain) de faltas reais de código. A homologação pendente NÃO é apagada para melhorar a porcentagem.
+- [ ] **GATE NÃO EXECUTADO:** composer/npm install, PHPUnit/MySQL8, OpenAPI, scripts de check e build de API/Metronic/Site/Player, QA navegador, multiagência, mídias, MP sandbox, workers/S3, dispositivos físicos, backup/deploy. Repos via conector GitHub não executam comandos locais nem validam ambiente; testes escritos ≠ passaram.
+- **Percentual histórico ~97% é substituído por 'não certificado'.** Só declarar 100% do CÓDIGO após eliminar TODOS os erros de execução dos builds/testes/rotas e demonstrar jornadas MVP fechadas. O aceite humano/hardware/gateway real permanece separado. A RC 1.0 é candidata, não homologada nem liberada em produção.
+
