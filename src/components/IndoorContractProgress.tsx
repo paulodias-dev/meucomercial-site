@@ -1,4 +1,4 @@
-import {useRef,useState} from 'react'
+import {useEffect,useRef,useState} from 'react'
 import {CheckCircle2,RefreshCcw,ShieldCheck,XCircle} from 'lucide-react'
 import IndoorProposalResponsePanel, {type IndoorContractStatus,type IndoorQuote} from './IndoorProposalResponsePanel'
 import IndoorCheckoutPanel, {type CheckoutView,type CheckoutStatusShape} from './IndoorCheckoutPanel'
@@ -35,8 +35,20 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
  const [error,setError]=useState('')
  const [notice,setNotice]=useState('')
  const [record,setRecord]=useState<Contract|null>(null)
+ const [accessSaved,setAccessSaved]=useState(false)
  // Credenciais em memória apenas; nunca em URL, cookie, storage ou logs.
  const creds=useRef<Credentials|null>(null)
+ // The 256-bit capability is NEVER stored in URL, cookie or browser storage.
+ // Warn before leaving an active flow until its receipt was copied explicitly.
+ useEffect(()=>{
+  if(!record||accessSaved)return
+  const guard=(event:BeforeUnloadEvent)=>{
+   event.preventDefault()
+   event.returnValue=''
+  }
+  window.addEventListener('beforeunload',guard)
+  return()=>window.removeEventListener('beforeunload',guard)
+ },[record,accessSaved])
  const start=async()=>{
   if(working||!terms)return
   if(!creds.current)creds.current={
@@ -58,6 +70,7 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
      ||body.subscription_created!==false||body.contract_signed!==false)
     throw Error(requestError(response.status))
    setRecord(body as Contract)
+   setAccessSaved(false)
   }catch(ex){setError(ex instanceof Error?ex.message:'Falha na operação.')}
   finally{setWorking(false)}
  }
@@ -102,7 +115,8 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
    await navigator.clipboard.writeText('Meu Comercial — solicitação privada\nReferência: '+
     current.requestId+'\nCódigo de acesso: '+current.accessKey+
     '\nNão compartilhe publicamente este código.')
-   setNotice('Referência e código privado copiados a seu pedido. Armazene em local seguro.')
+   setAccessSaved(true)
+   setNotice('Referência e código privado copiados. Guarde-os em local seguro antes de fechar esta página.')
   }catch{setNotice('Não foi possível copiar. Você pode acompanhar enquanto esta página permanecer aberta.')}
  }
  return <section aria-label="Acompanhamento pré-contratual" className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/50 p-5 sm:p-6">
@@ -144,7 +158,13 @@ export default function IndoorContractProgress({leadReference,planId,email}:{
     {record.status==='pending'&&<button type="button" onClick={cancel} disabled={working}
      className="min-h-11 rounded-lg px-4 border border-red-200 text-red-800 text-sm font-semibold">Cancelar pedido</button>}
    </div>
-   <a href="/acompanhar" className="mt-3 min-h-11 inline-flex items-center text-sm font-semibold text-blue-800 underline">Acompanhar em outra visita</a>
+   {accessSaved
+    ?<a href="/acompanhar" className="mt-3 min-h-11 inline-flex items-center text-sm font-semibold text-blue-800 underline">
+      Acompanhar em outra visita</a>
+    :<p role="status" className="mt-3 text-sm font-semibold text-amber-900">
+      Antes de sair, use “Copiar acesso privado” e guarde a referência e o código.
+      Sem eles não será possível retomar esta solicitação em outra visita.
+     </p>}
    <p className="text-xs text-slate-600 mt-4">O código só fica em memória neste navegador.
     Guarde-o em local seguro se desejar consultar após fechar a página.
     Nunca divulgue o código publicamente.</p>
