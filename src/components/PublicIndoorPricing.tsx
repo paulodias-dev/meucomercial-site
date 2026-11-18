@@ -26,7 +26,7 @@ export default function PublicIndoorPricing(){
     <div className='flex gap-4 justify-between items-start flex-wrap'>
       <div><span className='text-xs font-bold uppercase tracking-widest text-blue-800'>Planos com divulgação autorizada</span>
         <h2 className='font-display text-2xl sm:text-3xl font-bold mt-2'>Condições reais cadastradas na plataforma</h2>
-        <p className='text-sm mt-2 text-slate-600 max-w-2xl'>Exibimos apenas planos Indoor ativos liberados para divulgação. A disponibilidade de aparelhos, implantação e contratação dependerá da proposta.</p></div>
+        <p className='text-sm mt-2 text-slate-600 max-w-2xl'>Consulte planos Indoor autorizados. A contratação segue pedido guiado, análise, proposta, aceite e PIX quando ofertado pelo Master. Não há cobrança automática ao selecionar um plano.</p></div>
       <button type='button' onClick={()=>setReload(v=>v+1)} aria-label='Atualizar planos' className='min-h-11 rounded-lg border border-slate-200 px-4 flex items-center gap-2 text-sm'>
         <RefreshCcw size={16} aria-hidden/> Atualizar</button>
     </div>
@@ -46,7 +46,7 @@ export default function PublicIndoorPricing(){
         <p className='text-xs text-slate-600 flex gap-2 items-start'><ShieldCheck size={17} className='shrink-0' aria-hidden/> Informações de cadastro comercial; não constituem oferta vinculante nem checkout automático.</p>
         <a href={acquisitionUrl({kind:'establishment',planId:plan.plan_id},window.location.search)}
           className='min-h-11 bg-slate-900 text-white rounded-lg px-4 py-3 inline-flex gap-2 items-center justify-center text-sm font-bold'>
-          Iniciar pedido guiado <ArrowRight size={16} aria-hidden/></a>
+          Solicitar contratação guiada <ArrowRight size={16} aria-hidden/></a>
         <a href={commercialContactUrl({kind:'establishment',medium:'mixed',source:'homepage',planId:plan.plan_id},window.location.search)}
           className='mt-auto min-h-11 bg-blue-700 text-white rounded-lg px-4 py-3 inline-flex gap-2 items-center justify-center text-sm font-bold'>
           Solicitar proposta deste plano <ArrowRight size={16} aria-hidden/></a>
