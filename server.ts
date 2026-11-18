@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import { createServer as createViteServer } from "vite";
 import {publicPagePayload,renderPublicAgencyPage,agencySlugPattern,publicSitemapPayload,renderAgencySitemapIndex,renderAgencySitemapPage} from "./src/lib/agency-landing-public.mjs";
 import {registerAgencyLandingContact} from "./src/lib/agency-landing-contact.mjs";
+import {readPortalCookies} from "./src/lib/portal-cookie.mjs";
 
 // Load environment variables
 dotenv.config();
@@ -23,13 +24,7 @@ const PORTAL_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const PORTAL_TOKEN_PATTERN = /^[A-Za-z0-9._~-]+$/;
 
 function readCookies(request: Request): Record<string, string> {
-  return Object.fromEntries((request.headers.cookie ?? '').split(';').flatMap((part) => {
-    const separator = part.indexOf('=');
-    if (separator < 0) return [];
-    const key = part.slice(0, separator).trim();
-    const value = decodeURIComponent(part.slice(separator + 1).trim());
-    return key ? [[key, value]] : [];
-  }));
+  return readPortalCookies(request.headers.cookie ?? '');
 }
 
 function portalCookieToken(request: Request): string {
