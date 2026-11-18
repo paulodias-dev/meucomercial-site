@@ -1,0 +1,42 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {readFileSync} from 'node:fs'
+const src=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8')
+
+test('RC1 site preserva plano selecionado e agência até o lead e o contrato',()=>{
+ const plan=src('src/components/PublicIndoorPricing.tsx')
+ const intent=src('src/lib/acquisitionRequest.mjs')
+ const wizard=src('src/components/AcquisitionWizard.tsx')
+ const contract=src('src/components/IndoorContractProgress.tsx')
+ assert.match(plan,/acquisitionUrl\(\{kind:'establishment',planId:plan\.plan_id\}/)
+ assert.match(intent,/plan_id:form\.kind==='establishment'/)
+ assert.match(wizard,/agencySlug/)
+ assert.match(wizard,/kind==='establishment'&&activePlan/)
+ assert.match(contract,/lead_reference:leadReference/)
+ assert.match(contract,/plan_id:planId/)
+})
+test('RC1 credencial pós-contratação não pode ser perdida sem alerta e não fica em storage',()=>{
+ const contract=src('src/components/IndoorContractProgress.tsx')
+ assert.match(contract,/crypto\.getRandomValues\(new Uint8Array\(32\)\)/)
+ assert.match(contract,/addEventListener\('beforeunload',guard\)/)
+ assert.match(contract,/setAccessSaved\(true\)/)
+ assert.match(contract,/accessSaved/)
+ assert.match(contract,/Copiar acesso privado/)
+ assert.match(contract,/Sem eles não será possível retomar/)
+ assert.ok(!contract.includes('localStorage'))
+ assert.ok(!contract.includes('sessionStorage'))
+ assert.ok(!contract.includes('window.location.assign'))
+})
+test('RC1 BFF mantém checkout privado e PIX dentro do mesmo ciclo sem Master JWT',()=>{
+ const site=src('server.ts')
+ const checkout=src('src/components/IndoorCheckoutPanel.tsx')
+ const tracking=src('src/components/ContractTrackingPage.tsx')
+ assert.match(site,/site\/indoor\/contract-requests/)
+ assert.match(site,/app\.post\('\/api\/indoor-contract-requests\/:reference\/checkout-accept'/)
+ assert.match(site,/app\.post\('\/api\/indoor-contract-requests\/:reference\/pix'/)
+ assert.match(site,/credentials:'omit'/)
+ assert.match(site,/redirect:'error'/)
+ assert.match(checkout,/remote_get_verified!==true/)
+ assert.match(tracking,/<IndoorCheckoutPanel/)
+ assert.ok(!checkout.includes('localStorage'))
+})
