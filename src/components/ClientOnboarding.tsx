@@ -29,7 +29,7 @@ export default function ClientOnboarding({
     return ()=>abort.abort()
   },[token,reload,refreshKey])
   const done=data?.steps.filter(s=>s.done).length??0
-  const total=data?.steps.length??8
+  const total=Math.max(1,data?.steps.length??8)
   const nextAction=data?.next_action
   const reports=data?.recent_player_reports_7d??0
   const rawDate=data?.last_player_reported_at
