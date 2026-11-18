@@ -43,7 +43,7 @@ const checks=[
   app.includes("window.location.pathname === '/contratar'")&&
   app.includes("window.location.pathname === '/acompanhar'")],
  ['RC1 suite included in build','package.json',
-  (pkg.scripts?.build||'').includes('check:rc1')&&
+  (pkg.scripts?.build||'').includes('audit:rc1')&&
   (pkg.scripts?.['check:rc1']||'').includes('test:indoor-checkout')],
 ];
 const items=checks.map(([id,path,ok])=>({id,artifact:path,ok}));
