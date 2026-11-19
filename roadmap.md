@@ -1276,3 +1276,12 @@ Guia: docs/SITE_STUDIO_CREATIVE_MEDIA_20261030.md.
 - [ ] Cutover continua NO-GO até os gates M10; progresso global homologado **não aferido**, sem avançar percentual pela mera existência de código.
 - **Documentação de release**: `docs/M11_LANDING_CRM_CONVERSAO_INTEGRADA.md` no próprio repositório. Ordem de deploy API+migration → Site → Metronic; desativar captação em falha; rollback nunca descarta leads anônimos.
 - **Próxima macro vertical proposta**: completar operação Rádio/TV em Player físico — edição, grades, sincronização e reprodução comprovada por evento do próprio Player, sem alegar audiência auditada.
+
+---
+
+## M18 — RC 1.0: site público, contratação real (18/11/2026)
+- [x] Preservado fluxo real catálogo da API -> agência -> lead -> proposta -> aceite -> checkout PIX -> provisionamento/Portal, sem compra direta enganosa.
+- [x] Novo scripts/check-rc1-public-journeys.mjs audita BFF, seleção de agência, proposta e PIX; test:rc1/check:rc1 disponíveis, build exige auditoria sem testes duplicados.
+- [x] Runbook docs/M18_RC1_PUBLIC_CONTRACT_JOURNEY.md.
+- [ ] npm ci, check:rc1, lint, build, HTTP/SSR e testes com gateway e duas agências pendentes de execução.
+- Sem newsletter fictícia, segundo Site ou taxa de conclusão inventada.
